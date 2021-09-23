@@ -44,22 +44,25 @@ import java.util.concurrent.CountDownLatch;
  */
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class CustomFrameRender implements Handler.Callback, RenderFrameListener {
+public abstract class CustomFrameRender implements Handler.Callback, RenderFrameListener {
     public static final String TAG = "CustomFrameRender";
 
     private static final int MSG_RENDER = 2;
     private static final int MSG_DESTROY = 3;
 
-    private Size mSurfaceSize = new Size();
+    protected Size mSurfaceSize = new Size();
     private Size mLastInputSize = new Size();
     private Size mLastOutputSize = new Size();
     private final HandlerThread mGLThread;
-    private final GLHandler mGLHandler;
+    protected final GLHandler mGLHandler;
     private final FloatBuffer mGLCubeBuffer;
     private final FloatBuffer mGLTextureBuffer;
     private EglCore mEglCore;
-    private Surface mSurface;
     private GPUImageFilter mNormalFilter;
+
+    protected ScaleType useScaleType = ScaleType.CENTER;
+
+    abstract Surface getRenderSurface();
 
     @Override
     public void onRenderVideoFrame(TextureVideoFrame frame) {
@@ -70,21 +73,16 @@ public class CustomFrameRender implements Handler.Callback, RenderFrameListener 
 
     public CustomFrameRender() {
         mGLCubeBuffer = ByteBuffer.allocateDirect(OpenGlUtils.CUBE.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+            .order(ByteOrder.nativeOrder()).asFloatBuffer();
         mGLCubeBuffer.put(OpenGlUtils.CUBE).position(0);
 
         mGLTextureBuffer = ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
+            .order(ByteOrder.nativeOrder()).asFloatBuffer();
         mGLTextureBuffer.put(OpenGlUtils.TEXTURE).position(0);
 
         mGLThread = new HandlerThread(TAG);
         mGLThread.start();
         mGLHandler = new GLHandler(mGLThread.getLooper(), this);
-    }
-
-    public void setOutPutSurface(Surface surface, int renderWidth, int renderHeight) {
-        mSurface = surface;
-        mSurfaceSize = new Size(renderWidth, renderHeight);
     }
 
     public void stop() {
@@ -95,9 +93,9 @@ public class CustomFrameRender implements Handler.Callback, RenderFrameListener 
 
         try {
             if (eglContext instanceof javax.microedition.khronos.egl.EGLContext) {
-                mEglCore = new EglCore((javax.microedition.khronos.egl.EGLContext) eglContext, mSurface);
+                mEglCore = new EglCore((javax.microedition.khronos.egl.EGLContext) eglContext, getRenderSurface());
             } else {
-                mEglCore = new EglCore((android.opengl.EGLContext) eglContext, mSurface);
+                mEglCore = new EglCore((android.opengl.EGLContext) eglContext, getRenderSurface());
             }
         } catch (Exception e) {
             return;
@@ -106,12 +104,11 @@ public class CustomFrameRender implements Handler.Callback, RenderFrameListener 
         mEglCore.makeCurrent();
         mNormalFilter = new GPUImageFilter();
         mNormalFilter.init();
-
     }
 
     private void renderInternal(TextureVideoFrame frame) {
 
-        if (mEglCore == null && mSurface != null) {
+        if (mEglCore == null && getRenderSurface() != null) {
             Object eglContext = null;
             if (frame.getTextureId() != -1) {
                 eglContext = frame.getEglContext14();
@@ -124,9 +121,9 @@ public class CustomFrameRender implements Handler.Callback, RenderFrameListener 
         }
 
         if (mLastInputSize.width != frame.getWidth() || mLastInputSize.height != frame.getHeight()
-                || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height) {
-            Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(ScaleType.CENTER,
-                    Rotation.ROTATION_180, true, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
+            || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height) {
+            Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(useScaleType,
+                Rotation.ROTATION_180, true, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
             mGLCubeBuffer.clear();
             mGLCubeBuffer.put(cubeAndTextureBuffer.first);
             mGLTextureBuffer.clear();
@@ -149,7 +146,7 @@ public class CustomFrameRender implements Handler.Callback, RenderFrameListener 
         PushLogUtils.Companion.render();
     }
 
-    private void uninitGlComponent() {
+    protected void uninitGlComponent() {
         if (mNormalFilter != null) {
             mNormalFilter.destroy();
             mNormalFilter = null;
@@ -186,12 +183,9 @@ public class CustomFrameRender implements Handler.Callback, RenderFrameListener 
 
         public void runAndWaitDone(final Runnable runnable) {
             final CountDownLatch countDownLatch = new CountDownLatch(1);
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    runnable.run();
-                    countDownLatch.countDown();
-                }
+            post(() -> {
+                runnable.run();
+                countDownLatch.countDown();
             });
 
             try {

@@ -11,44 +11,59 @@ import kotlinx.android.synthetic.main.activity_main.*
 @RequiresApi(Build.VERSION_CODES.M)
 class MainActivity : Activity() {
 
-    private var url = "rtmp://tx-test-publish.xxqapp.cn/xxq-live/SLT30T1804027493040682240T192531130384600009T3554994123251659008?txSecret=cba0b776a35628b2f3b67b76b274477d&txTime=61471F11"
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 10)
+        requestPermissions(
+            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA),
+            10
+        )
 
-        start?.setOnClickListener{
+        start?.setOnClickListener {
             PerReqForegroundService.startService()
 
             startPush()
         }
 
-        stop?.setOnClickListener{
+        stop?.setOnClickListener {
             PerReqForegroundService.stopService()
 
             stopPush()
         }
 
-        pause?.setOnClickListener{
+        pause?.setOnClickListener {
+
+            StreamPushInstance.instance.initRecoderAndEncoder()
+            StreamPushInstance.instance.prepareRecord(8000, 30, 1280, 720, 64000)
+
+            val cameraView = StreamPushInstance.instance.getView()
+            cameraPreviewView.addView(cameraView)
+
+            StreamPushInstance.instance.startRecordAndSendData("")
 
         }
 
-        resume?.setOnClickListener{
-
+        resume?.setOnClickListener {
+           // cameraCapture?.switchCamera()
+            StreamPushInstance.instance.switchCamera()
         }
+
 
     }
 
-    fun startPush() {
+    private fun startPush() {
+
+        val pushUrl = pushUrlEdit.text.toString()
+
         StreamPushInstance.instance.initRecoderAndEncoder()
-        StreamPushInstance.instance.prepareRecord(8000, 30, 1280, 720, 64000)
-        StreamPushInstance.instance.startRecordAndSendData(url)
+        StreamPushInstance.instance.prepareRecord(8000, 15, 1280, 720, 64000)
+        StreamPushInstance.instance.startRecordAndSendData(pushUrl)
+
     }
 
-    fun stopPush() {
+    private fun stopPush() {
         StreamPushInstance.instance.stopRecordAndDestory()
     }
+
 }

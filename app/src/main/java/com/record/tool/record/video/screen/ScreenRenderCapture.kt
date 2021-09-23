@@ -12,6 +12,7 @@ import android.os.Looper
 import android.view.Surface
 import com.record.tool.record.video.gl.CustomFrameRender
 import com.record.tool.record.video.gl.TextureVideoFrame
+import com.record.tool.record.video.gl.ToSurfaceFrameRender
 import com.record.tool.record.video.gl.basic.FrameBuffer
 import com.record.tool.record.video.gl.basic.ImgTexFormat
 import com.record.tool.record.video.gl.basic.ImgTexFrame
@@ -89,7 +90,7 @@ class ScreenRenderCapture {
 
     private var mFillFrameRunnable: Runnable? = null
 
-    private var mCustomFrameRender: CustomFrameRender? = null
+    private var mCustomFrameRender: ToSurfaceFrameRender? = null
     private var canRender = false
 
     private var needFillFrame = true
@@ -123,7 +124,7 @@ class ScreenRenderCapture {
         mGLRender?.addListener(mGLRenderListener)
 
         if (mCustomFrameRender == null) {
-            mCustomFrameRender = CustomFrameRender()
+            mCustomFrameRender = ToSurfaceFrameRender()
         }
         mCustomFrameRender?.setOutPutSurface(outSurface, mWidth, mHeight)
 
@@ -307,6 +308,9 @@ class ScreenRenderCapture {
         mMediaProjection?.stop()
         mVirtualDisplay = null
         mMediaProjection = null
+
+        mCustomFrameRender?.stop()
+        mCustomFrameRender = null
     }
 
 }

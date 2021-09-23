@@ -1,4 +1,4 @@
-package com.record.tool.record
+package com.record.tool.record.video.screen.service
 
 import android.app.Service
 import android.content.Intent
@@ -7,6 +7,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.view.Surface
 import com.living.streamlivingpush.StreamPushInstance
+import com.record.tool.record.video.screen.ScreenRecordManager
 import com.record.tool.record.audio.AudioCapture
 import com.record.tool.record.video.screen.ScreenRenderCapture
 import com.record.tool.utils.PushLogUtils

@@ -2,10 +2,9 @@ package com.living.streamlivingpush
 
 import android.media.projection.MediaProjection
 import android.os.Build
-import android.text.TextUtils
+import android.view.TextureView
 import androidx.annotation.RequiresApi
-import com.record.tool.bean.RecordAudioFrame
-import com.record.tool.record.ScreenRecordManager
+import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
 import com.rtmppush.tool.AudioFrame
@@ -31,7 +30,9 @@ class StreamPushInstance {
     private var rtmpPushTool: RtmpPushTool? = null
 
     private var recordStateCallBack: RecordStateCallBack? = null
-    private var recordTool: ScreenRecordManager? = null
+    // private var recordScreenTool: ScreenRecordManager? = null
+
+    private var recordCameraTool: CameraRecordManager? = null
 
     enum class StateCode {
 
@@ -55,10 +56,21 @@ class StreamPushInstance {
     }
 
     fun initRecoderAndEncoder() {
-        recordTool = ScreenRecordManager()
+
+        //recordScreenTool = ScreenRecordManager()
+        recordCameraTool = CameraRecordManager()
+
         encodeVideoTool = VideoEncoder()
         encodeAudioTool = AudioEncoder()
         rtmpPushTool = RtmpPushTool()
+    }
+
+    fun getView():TextureView? {
+        return recordCameraTool?.getPreviewView()
+    }
+
+    fun switchCamera(){
+        recordCameraTool?.switchCamera()
     }
 
     fun prepareRecord(
@@ -77,7 +89,14 @@ class StreamPushInstance {
             return
         }
 
-        recordTool?.setEcodeInputSurface(
+        /* recordScreenTool?.setEcodeInputSurface(
+             surface,
+             screenWith,
+             screenHeight,
+             fps
+         )*/
+
+        recordCameraTool?.setEcodeInputSurface(
             surface,
             screenWith,
             screenHeight,
@@ -90,13 +109,13 @@ class StreamPushInstance {
 
     fun startRecordAndSendData(pushUrl: String) {
 
-        if(TextUtils.isEmpty(pushUrl)){
+       /* if (TextUtils.isEmpty(pushUrl)) {
             return
-        }
+        }*/
 
         isRecordAndEncoding = true
 
-        recordTool?.setDataRecordCallBack(object : ScreenRecordManager.DataRecordCallBack {
+        /*recordScreenTool?.setDataRecordCallBack(object : ScreenRecordManager.DataRecordCallBack {
 
             override fun onAudioDataRecord(data: ByteArray?, byteSize: Int) {
                 data?.let {
@@ -121,7 +140,7 @@ class StreamPushInstance {
                 recordStateCallBack?.onLog(log)
             }
 
-        })
+        })*/
 
         encodeVideoTool?.setDataCallBackListener(object : VideoEncoder.DataCallBackListener {
 
@@ -164,7 +183,9 @@ class StreamPushInstance {
 
         encodeAudioTool?.startEncode()
 
-        recordTool?.reqRecordPerAndStart()
+        recordCameraTool?.startCapture(0)
+
+        //recordScreenTool?.reqRecordPerAndStart()
 
         rtmpPushTool?.startPushing(pushUrl)
 
@@ -174,16 +195,16 @@ class StreamPushInstance {
         if (projection == null) {
             recordStateCallBack?.onState(StateCode.SCREEN_REFUSED)
         } else {
-            recordTool?.startRecording(projection)
+            // recordScreenTool?.startRecording(projection)
         }
     }
 
     fun resumeRecording() {
-        recordTool?.resumeRecording()
+        //recordScreenTool?.resumeRecording()
     }
 
     fun pauseRecording() {
-        recordTool?.pauseRecording()
+        // recordScreenTool?.pauseRecording()
     }
 
     fun stopRecordAndDestory() {
@@ -191,8 +212,8 @@ class StreamPushInstance {
         rtmpPushTool?.stopPushing()
         rtmpPushTool = null
 
-        recordTool?.stopCapture()
-        recordTool = null
+        //recordScreenTool?.stopCapture()
+        //recordScreenTool = null
 
         encodeVideoTool?.stopEncode()
         encodeVideoTool = null

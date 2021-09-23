@@ -1,4 +1,4 @@
-package com.record.tool.record
+package com.record.tool.record.video.screen
 
 import android.app.Activity
 import android.app.Service
@@ -16,6 +16,7 @@ import android.view.Window
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
 import com.living.streamlivingpush.StreamPushInstance
+import com.record.tool.record.video.screen.service.ScreenRecordService
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class ScreenRecordManager {
