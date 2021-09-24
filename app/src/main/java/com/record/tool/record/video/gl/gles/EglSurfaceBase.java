@@ -8,6 +8,8 @@ import android.opengl.GLES20;
 import android.os.Build;
 import android.util.Log;
 
+import com.record.tool.record.video.gl.render.opengl.OpenGlUtils;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -161,7 +163,7 @@ public class EglSurfaceBase {
         buf.order(ByteOrder.LITTLE_ENDIAN);
         GLES20.glReadPixels(0, 0, width, height,
                 GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
-        GlUtil.checkGlError("glReadPixels");
+        OpenGlUtils.checkGlError("glReadPixels");
         buf.rewind();
 
         BufferedOutputStream bos = null;

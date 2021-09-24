@@ -1,6 +1,9 @@
 package com.record.tool.record.video.gl;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -12,6 +15,7 @@ import android.widget.ImageView.ScaleType;
 
 import androidx.annotation.RequiresApi;
 
+import com.living.streamlivingpush.R;
 import com.record.tool.record.video.gl.basic.Size;
 import com.record.tool.record.video.gl.render.EglCore;
 import com.record.tool.record.video.gl.render.opengl.GPUImageFilter;
@@ -53,16 +57,32 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
     protected Size mSurfaceSize = new Size();
     private Size mLastInputSize = new Size();
     private Size mLastOutputSize = new Size();
+
+    private boolean needFlipHorizontal = true;
+    private boolean flipHorizontalLast = false;
+    private boolean needFlipVertical = true;
+
+    private Rotation useRotation = Rotation.ROTATION_180;
+
     private final HandlerThread mGLThread;
     protected final GLHandler mGLHandler;
     private final FloatBuffer mGLCubeBuffer;
     private final FloatBuffer mGLTextureBuffer;
+
     private EglCore mEglCore;
     private GPUImageFilter mNormalFilter;
 
     protected ScaleType useScaleType = ScaleType.CENTER;
 
     abstract Surface getRenderSurface();
+
+    public void setIsFlipHorizontal(boolean flipHorizontal) {
+        needFlipHorizontal = flipHorizontal;
+    }
+
+    public boolean isFlipHorizontal() {
+        return needFlipHorizontal;
+    }
 
     @Override
     public void onRenderVideoFrame(TextureVideoFrame frame) {
@@ -86,17 +106,14 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
     }
 
     public void stop() {
+        needFlipHorizontal = false;
         mGLHandler.obtainMessage(MSG_DESTROY).sendToTarget();
     }
 
     private void initGlComponent(Object eglContext) {
 
         try {
-            if (eglContext instanceof javax.microedition.khronos.egl.EGLContext) {
-                mEglCore = new EglCore((javax.microedition.khronos.egl.EGLContext) eglContext, getRenderSurface());
-            } else {
-                mEglCore = new EglCore((android.opengl.EGLContext) eglContext, getRenderSurface());
-            }
+            mEglCore = new EglCore((android.opengl.EGLContext) eglContext, getRenderSurface());
         } catch (Exception e) {
             return;
         }
@@ -121,9 +138,10 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         }
 
         if (mLastInputSize.width != frame.getWidth() || mLastInputSize.height != frame.getHeight()
-            || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height) {
+            || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height
+            || flipHorizontalLast != needFlipHorizontal) {
             Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(useScaleType,
-                Rotation.ROTATION_180, true, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
+                useRotation, needFlipHorizontal, needFlipVertical, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
             mGLCubeBuffer.clear();
             mGLCubeBuffer.put(cubeAndTextureBuffer.first);
             mGLTextureBuffer.clear();
@@ -131,6 +149,8 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
 
             mLastInputSize = new Size(frame.getWidth(), frame.getHeight());
             mLastOutputSize = new Size(mSurfaceSize.width, mSurfaceSize.height);
+
+            flipHorizontalLast = needFlipHorizontal;
         }
 
         mEglCore.makeCurrent();
@@ -141,7 +161,7 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         GLES20.glClear(GLES20.GL_DEPTH_BUFFER_BIT | GLES20.GL_COLOR_BUFFER_BIT);
         mNormalFilter.onDraw(frame.getTextureId(), mGLCubeBuffer, mGLTextureBuffer);
 
-        mEglCore.setPresentationTime(frame.getPts());
+        mEglCore.setPresentationTime(frame.getCaptureTimeStamp());
         mEglCore.swapBuffer();
         PushLogUtils.Companion.render();
     }

@@ -10,14 +10,12 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.Surface
-import com.record.tool.record.video.gl.CustomFrameRender
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.gl.ToSurfaceFrameRender
 import com.record.tool.record.video.gl.basic.FrameBuffer
 import com.record.tool.record.video.gl.basic.ImgTexFormat
 import com.record.tool.record.video.gl.basic.ImgTexFrame
 import com.record.tool.record.video.gl.gles.GLRender
-import com.record.tool.record.video.gl.gles.GlUtil
 import com.record.tool.record.video.gl.gles.SinkConnector
 import com.record.tool.record.video.gl.gles.SrcConnector
 import com.record.tool.record.video.gl.render.opengl.*
@@ -148,7 +146,7 @@ class ScreenRenderCapture {
                 frame.textureId = frameImg?.mTextureId ?: -1
                 frame.width = frameImg?.mFormat?.mWidth ?: 0
                 frame.height = frameImg?.mFormat?.mHeight ?: 0
-                frame.pts = frameImg?.pts ?: 0
+                frame.captureTimeStamp = frameImg?.pts ?: 0
                 frame.eglContext14 = mGLRender?.eglContext
                 mCustomFrameRender?.onRenderVideoFrame(frame)
             }
@@ -183,7 +181,7 @@ class ScreenRenderCapture {
         mHeight = height
         mVirtualDisplay?.release()
         mVirtualDisplay = null
-        mTextureId = GlUtil.createOESTextureObject()
+        mTextureId = OpenGlUtils.generateTextureOES()
         mSurfaceTexture?.release()
         mSurface?.release()
         mSurfaceTexture = SurfaceTexture(mTextureId)

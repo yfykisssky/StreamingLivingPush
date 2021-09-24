@@ -69,6 +69,18 @@ class StreamPushInstance {
         return recordCameraTool?.getPreviewView()
     }
 
+    fun s(){
+        recordCameraTool?.startPushImage()
+    }
+
+    fun r(){
+        recordCameraTool?.stopPushImage()
+    }
+
+    fun toogle(){
+        recordCameraTool?.toogleMirror()
+    }
+
     fun switchCamera(){
         recordCameraTool?.switchCamera()
     }

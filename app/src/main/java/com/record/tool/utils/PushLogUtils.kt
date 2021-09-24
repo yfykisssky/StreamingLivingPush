@@ -165,26 +165,33 @@ class PushLogUtils {
         private var pushAudioDataTimeStamp = 0L
         private var pushVideoDataTimeStamp = 0L
 
-        fun logAudioPushTimeStamp(success: Boolean,frameSize:Int) {
+        fun logAudioPushTimeStamp(success: Boolean, frameSize: Int) {
             if (!isDebug) {
                 return
             }
             Log.e(
                 TAG,
-                "pushAudioData:" + (System.currentTimeMillis() - pushAudioDataTimeStamp) + ":" + success+":"+frameSize
+                "pushAudioData:" + (System.currentTimeMillis() - pushAudioDataTimeStamp) + ":" + success + ":" + frameSize
             )
             pushAudioDataTimeStamp = System.currentTimeMillis()
         }
 
-        fun logVideoPushTimeStamp(success: Boolean,frameSize:Int) {
+        fun logVideoPushTimeStamp(success: Boolean, frameSize: Int) {
             if (!isDebug) {
                 return
             }
             Log.e(
                 TAG,
-                "pushVideoData:" + (System.currentTimeMillis() - pushVideoDataTimeStamp) + ":" + success+":"+frameSize
+                "pushVideoData:" + (System.currentTimeMillis() - pushVideoDataTimeStamp) + ":" + success + ":" + frameSize
             )
             pushVideoDataTimeStamp = System.currentTimeMillis()
+        }
+
+        fun outLog(tag: String?, log: String?) {
+            if (!isDebug) {
+                return
+            }
+            Log.e(tag, log ?: "null")
         }
 
     }

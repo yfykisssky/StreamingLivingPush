@@ -1,7 +1,6 @@
 package com.record.tool.record.video.gl;
 
 import android.graphics.SurfaceTexture;
-import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
 import android.widget.ImageView;

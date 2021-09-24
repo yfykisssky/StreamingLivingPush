@@ -40,17 +40,6 @@ public class EglCore {
     }
 
     /**
-     * 创建一个EglCore，关联一个离屏surface
-     *
-     * @param sharedContext 用于共享的OpenGL Context，可为null
-     * @param width         离屏surface的宽
-     * @param height        离屏surface的高
-     */
-    public EglCore(javax.microedition.khronos.egl.EGLContext sharedContext, int width, int height) {
-        mEglHelper = EGL10Helper.createEGLSurface(null, sharedContext, null, width, height);
-    }
-
-    /**
      * 创建一个EglCore，并关联到传入的surface
      *
      * @param sharedContext 用于共享的OpenGL Context，可为null
@@ -58,16 +47,6 @@ public class EglCore {
      */
     public EglCore(android.opengl.EGLContext sharedContext, Surface surface) {
         mEglHelper = EGL14Helper.createEGLSurface(null, sharedContext, surface, 0, 0);
-    }
-
-    /**
-     * 创建一个EglCore，并关联到传入的surface
-     *
-     * @param sharedContext 用于共享的OpenGL Context，可为null
-     * @param surface       渲染的目标
-     */
-    public EglCore(javax.microedition.khronos.egl.EGLContext sharedContext, Surface surface) {
-        mEglHelper = EGL10Helper.createEGLSurface(null, sharedContext, surface, 0, 0);
     }
 
     public void makeCurrent() {

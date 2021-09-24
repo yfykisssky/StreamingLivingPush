@@ -7,6 +7,10 @@ import android.os.Build
 import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.record.tool.utils.PushLogUtils
+import android.os.Bundle
+
+
+
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class VideoEncoder {
@@ -101,6 +105,11 @@ class VideoEncoder {
                       timeoutUs == 0立马返回
                       timeoutUs < 0无限期等待可用buffer
                       timeoutUs > 0等待timeoutUs时间*/
+                          //todo:
+                    val params = Bundle()
+                    params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
+                    codec?.setParameters(params)
+
                     val outputBufferId = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
                     if (outputBufferId >= 0) {
 

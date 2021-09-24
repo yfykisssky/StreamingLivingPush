@@ -1,7 +1,7 @@
 package com.record.tool.record.video.gl.render.opengl;
 
 public enum Rotation {
-    NORMAL, ROTATION_90, ROTATION_180, ROTATION_270;
+    NORMAL, ROTATION_0,ROTATION_90, ROTATION_180, ROTATION_270;
 
     /**
      * Create a Rotation from an integer. Needs to be either 0, 90, 180 or 270.
@@ -18,6 +18,7 @@ public enum Rotation {
             case 270:
                 return ROTATION_270;
             case 0:
+                return ROTATION_0;
             case 360:
             default:
                 return NORMAL;
@@ -38,6 +39,7 @@ public enum Rotation {
             case ROTATION_270:
                 return 270;
             case NORMAL:
+            case ROTATION_0:
             default:
                 return 0;
         }

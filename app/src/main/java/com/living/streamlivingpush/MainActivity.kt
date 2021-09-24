@@ -8,6 +8,7 @@ import androidx.annotation.RequiresApi
 import com.record.tool.record.video.screen.service.PerReqForegroundService
 import kotlinx.android.synthetic.main.activity_main.*
 
+
 @RequiresApi(Build.VERSION_CODES.M)
 class MainActivity : Activity() {
 
@@ -33,22 +34,20 @@ class MainActivity : Activity() {
         }
 
         pause?.setOnClickListener {
-
-            StreamPushInstance.instance.initRecoderAndEncoder()
-            StreamPushInstance.instance.prepareRecord(8000, 30, 1280, 720, 64000)
-
-            val cameraView = StreamPushInstance.instance.getView()
-            cameraPreviewView.addView(cameraView)
-
-            StreamPushInstance.instance.startRecordAndSendData("")
-
+            StreamPushInstance.instance.s()
         }
 
         resume?.setOnClickListener {
-           // cameraCapture?.switchCamera()
+            StreamPushInstance.instance.r()
+        }
+
+        switchCamera?.setOnClickListener {
             StreamPushInstance.instance.switchCamera()
         }
 
+        flip?.setOnClickListener {
+            StreamPushInstance.instance.toogle()
+        }
 
     }
 
@@ -57,8 +56,12 @@ class MainActivity : Activity() {
         val pushUrl = pushUrlEdit.text.toString()
 
         StreamPushInstance.instance.initRecoderAndEncoder()
-        StreamPushInstance.instance.prepareRecord(8000, 15, 1280, 720, 64000)
-        StreamPushInstance.instance.startRecordAndSendData(pushUrl)
+        StreamPushInstance.instance.prepareRecord(8000000, 30, 1280, 720, 64000)
+
+        val cameraView = StreamPushInstance.instance.getView()
+        cameraPreviewView.addView(cameraView)
+
+        StreamPushInstance.instance.startRecordAndSendData("rtmp://tx-test-publish.xxqapp.cn/xxq-live/SLT30T1804027493040682240T192531130384600009T3563750367567716864?txSecret=5816f85737a7fb4206cf1fd5068188cd&txTime=614F15CA")
 
     }
 

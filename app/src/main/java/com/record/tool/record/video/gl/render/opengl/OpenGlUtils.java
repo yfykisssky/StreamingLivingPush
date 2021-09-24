@@ -21,12 +21,14 @@ import static com.record.tool.record.video.gl.render.opengl.GLConstants.TEXTURE_
 import static com.record.tool.record.video.gl.render.opengl.GLConstants.TEXTURE_COORDS_ROTATE_LEFT;
 import static com.record.tool.record.video.gl.render.opengl.GLConstants.TEXTURE_COORDS_ROTATE_RIGHT;
 
+import android.graphics.Bitmap;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
-import android.util.Log;
 import android.util.Pair;
 import android.widget.ImageView.ScaleType;
+
+import com.record.tool.utils.PushLogUtils;
 
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
@@ -36,10 +38,10 @@ import java.nio.FloatBuffer;
 import javax.microedition.khronos.opengles.GL10;
 
 public class OpenGlUtils {
-    public static final int     NO_TEXTURE = -1;
-    public static final float[] CUBE       = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
-    public static final float[] TEXTURE    = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
-    static final        String  TAG        = "OpenGlUtils";
+    public static final int NO_TEXTURE = -1;
+    public static final float[] CUBE = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
+    public static final float[] TEXTURE = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+    static final String TAG = "OpenGlUtils";
 
     public static int generateFrameBufferId() {
         int[] frameBufferIds = new int[1];
@@ -109,7 +111,6 @@ public class OpenGlUtils {
         int[] textures = new int[1];
         if (usedTexId == NO_TEXTURE) {
             GLES20.glGenTextures(1, textures, 0);
-            Log.d(TAG, "glGenTextures textureId: " + textures[0]);
 
             OpenGlUtils.bindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
@@ -120,6 +121,32 @@ public class OpenGlUtils {
         } else {
             OpenGlUtils.bindTexture(GLES20.GL_TEXTURE_2D, usedTexId);
             GLES20.glTexSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, width, height, format, GLES20.GL_UNSIGNED_BYTE, data);
+            textures[0] = usedTexId;
+        }
+        return textures[0];
+    }
+
+    public static int loadBitmapTexture(final Bitmap img, final int usedTexId) {
+        if (img == null) {
+            return NO_TEXTURE;
+        }
+        int textures[] = new int[1];
+        if (usedTexId == NO_TEXTURE) {
+            GLES20.glGenTextures(1, textures, 0);
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+            GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
+                GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
+        } else {
+            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, usedTexId);
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
             textures[0] = usedTexId;
         }
         return textures[0];
@@ -142,7 +169,6 @@ public class OpenGlUtils {
         }
 
         GLES20.glDeleteTextures(1, new int[]{textureId}, 0);
-        Log.d(TAG, "delete textureId " + textureId);
     }
 
     public static void deleteFrameBuffer(int frameBufferId) {
@@ -151,7 +177,6 @@ public class OpenGlUtils {
         }
 
         GLES20.glDeleteFramebuffers(1, new int[]{frameBufferId}, 0);
-        Log.d(TAG, "delete frame buffer id: " + frameBufferId);
     }
 
     public static void bindTexture(int target, int texture) {
@@ -162,7 +187,7 @@ public class OpenGlUtils {
     public static void checkGlError(String op) {
         int error;
         while ((error = GLES20.glGetError()) != GLES20.GL_NO_ERROR) {
-            Log.e(TAG, String.format("%s: glError %s", op, GLUtils.getEGLErrorString(error)));
+            PushLogUtils.Companion.outLog(TAG, String.format("%s: glError %s", op, GLUtils.getEGLErrorString(error)));
         }
     }
 
@@ -181,42 +206,44 @@ public class OpenGlUtils {
     public static Pair<float[], float[]> calcCubeAndTextureBuffer(ScaleType scaleType,
                                                                   Rotation inputRotation,
                                                                   boolean needFlipHorizontal,
+                                                                  boolean needFlipVertical,
                                                                   int inputWith,
                                                                   int inputHeight,
                                                                   int outputWidth,
                                                                   int outputHeight) {
 
-        boolean needRotate    = (inputRotation == Rotation.ROTATION_90 || inputRotation == Rotation.ROTATION_270);
-        int     rotatedWidth  = needRotate ? inputHeight : inputWith;
-        int     rotatedHeight = needRotate ? inputWith : inputHeight;
-        float   maxRratio     = Math.max(1.0f * outputWidth / rotatedWidth, 1.0f * outputHeight / rotatedHeight);
-        float   ratioWidth    = 1.0f * Math.round(rotatedWidth * maxRratio) / outputWidth;
-        float   ratioHeight   = 1.0f * Math.round(rotatedHeight * maxRratio) / outputHeight;
+        boolean needRotate = (inputRotation == Rotation.ROTATION_90 || inputRotation == Rotation.ROTATION_270);
+        int rotatedWidth = needRotate ? inputHeight : inputWith;
+        int rotatedHeight = needRotate ? inputWith : inputHeight;
+        float maxRratio = Math.max(1.0f * outputWidth / rotatedWidth, 1.0f * outputHeight / rotatedHeight);
+        float ratioWidth = 1.0f * Math.round(rotatedWidth * maxRratio) / outputWidth;
+        float ratioHeight = 1.0f * Math.round(rotatedHeight * maxRratio) / outputHeight;
 
-        float[] cube         = OpenGlUtils.CUBE;
-        float[] textureCords = TextureRotationUtils.getRotation(inputRotation, needFlipHorizontal, true);
+        float[] cube = OpenGlUtils.CUBE;
+        float[] textureCords = TextureRotationUtils.getRotation(inputRotation, needFlipHorizontal, needFlipVertical);
         if (scaleType == ScaleType.CENTER_CROP) {
             float distHorizontal = needRotate ? ((1 - 1 / ratioHeight) / 2) : ((1 - 1 / ratioWidth) / 2);
-            float distVertical   = needRotate ? ((1 - 1 / ratioWidth) / 2) : ((1 - 1 / ratioHeight) / 2);
+            float distVertical = needRotate ? ((1 - 1 / ratioWidth) / 2) : ((1 - 1 / ratioHeight) / 2);
             textureCords = new float[]{
-                    addDistance(textureCords[0], distHorizontal),
-                    addDistance(textureCords[1], distVertical),
-                    addDistance(textureCords[2], distHorizontal),
-                    addDistance(textureCords[3], distVertical),
-                    addDistance(textureCords[4], distHorizontal),
-                    addDistance(textureCords[5], distVertical),
-                    addDistance(textureCords[6], distHorizontal),
-                    addDistance(textureCords[7], distVertical),};
+                addDistance(textureCords[0], distHorizontal),
+                addDistance(textureCords[1], distVertical),
+                addDistance(textureCords[2], distHorizontal),
+                addDistance(textureCords[3], distVertical),
+                addDistance(textureCords[4], distHorizontal),
+                addDistance(textureCords[5], distVertical),
+                addDistance(textureCords[6], distHorizontal),
+                addDistance(textureCords[7], distVertical),};
         } else {
             cube = new float[]{cube[0] / ratioHeight, cube[1] / ratioWidth,
-                    cube[2] / ratioHeight, cube[3] / ratioWidth,
-                    cube[4] / ratioHeight, cube[5] / ratioWidth,
-                    cube[6] / ratioHeight, cube[7] / ratioWidth,};
+                cube[2] / ratioHeight, cube[3] / ratioWidth,
+                cube[4] / ratioHeight, cube[5] / ratioWidth,
+                cube[6] / ratioHeight, cube[7] / ratioWidth,};
         }
-        return new Pair<float[],float[]>(cube, textureCords);
+        return new Pair<>(cube, textureCords);
     }
 
     private static float addDistance(float coordinate, float distance) {
         return coordinate == 0.0f ? distance : 1 - distance;
     }
+
 }

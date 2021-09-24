@@ -74,6 +74,14 @@ class CameraRecordManager {
 
     }
 
+    fun toogleMirror() {
+        recordService?.toogleMirror()
+    }
+
+    fun isMirror(): Boolean? {
+        return recordService?.isMirror()
+    }
+
     fun startCapture(useCameraId: Int) {
         val recordServiceIntent =
             Intent(appContext?.applicationContext, CameraRecordService::class.java)
@@ -94,16 +102,16 @@ class CameraRecordManager {
         return cameraPreviewView
     }
 
-    fun switchCamera(){
+    fun switchCamera() {
         recordService?.switchCamera()
     }
 
-    fun resumeRecording() {
-        recordService?.resumeCapture()
+    fun startPushImage() {
+        recordService?.startPushImage()
     }
 
-    fun pauseRecording() {
-        recordService?.pauseCapture()
+    fun stopPushImage() {
+        recordService?.stopPushImage()
     }
 
     fun setEcodeInputSurface(

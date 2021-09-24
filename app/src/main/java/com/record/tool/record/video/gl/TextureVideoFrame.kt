@@ -4,6 +4,6 @@ data class TextureVideoFrame(
     var textureId: Int = 0,
     var width: Int = 0,
     var height: Int = 0,
-    var pts: Long = 0L,
+    var captureTimeStamp: Long = 0L,
     var eglContext14: android.opengl.EGLContext? = null
 )

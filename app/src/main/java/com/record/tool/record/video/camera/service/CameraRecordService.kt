@@ -65,17 +65,25 @@ class CameraRecordService : Service() {
 
     }
 
+    fun toogleMirror() {
+        mCameraCapture?.toogleMirror()
+    }
+
+    fun isMirror(): Boolean? {
+        return mCameraCapture?.isMirror()
+    }
+
     fun stopCapture() {
         mCameraCapture?.stopCapture()
         mCameraCapture = null
     }
 
-    fun resumeCapture() {
-
+    fun startPushImage() {
+        mCameraCapture?.startPushImage()
     }
 
-    fun pauseCapture() {
-
+    fun stopPushImage() {
+        mCameraCapture?.stopPushImage()
     }
 
     override fun onCreate() {}
