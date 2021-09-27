@@ -106,9 +106,9 @@ class VideoEncoder {
                       timeoutUs < 0无限期等待可用buffer
                       timeoutUs > 0等待timeoutUs时间*/
                           //todo:
-                    val params = Bundle()
+                    /*val params = Bundle()
                     params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
-                    codec?.setParameters(params)
+                    codec?.setParameters(params)*/
 
                     val outputBufferId = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
                     if (outputBufferId >= 0) {

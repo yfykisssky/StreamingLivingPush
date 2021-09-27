@@ -121,7 +121,7 @@ class CustomCameraCapture : OnFrameAvailableListener {
 
         if (mCustomSurfaceRender == null) {
             mCustomSurfaceRender = ToSurfaceFrameRender()
-            mCustomSurfaceRender?.setOutPutSurface(outSurface, recordWith, recordHeight)
+            mCustomSurfaceRender?.setOutPutSurface(outSurface,recordHeight,recordWith)
         }
 
     }

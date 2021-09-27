@@ -65,23 +65,23 @@ class StreamPushInstance {
         rtmpPushTool = RtmpPushTool()
     }
 
-    fun getView():TextureView? {
+    fun getView(): TextureView? {
         return recordCameraTool?.getPreviewView()
     }
 
-    fun s(){
+    fun s() {
         recordCameraTool?.startPushImage()
     }
 
-    fun r(){
+    fun r() {
         recordCameraTool?.stopPushImage()
     }
 
-    fun toogle(){
+    fun toogle() {
         recordCameraTool?.toogleMirror()
     }
 
-    fun switchCamera(){
+    fun switchCamera() {
         recordCameraTool?.switchCamera()
     }
 
@@ -94,7 +94,7 @@ class StreamPushInstance {
     ) {
         //kbps to bits/sec
         val useBit = (bitRateVideo * 1024 / 8)
-        val surface = encodeVideoTool?.initEncoder(useBit, fps, screenWith, screenHeight)
+        val surface = encodeVideoTool?.initEncoder(useBit, fps, screenHeight, screenWith)
 
         if (surface == null) {
             recordStateCallBack?.onState(StateCode.ENCODE_INIT_ERROR)
@@ -121,9 +121,9 @@ class StreamPushInstance {
 
     fun startRecordAndSendData(pushUrl: String) {
 
-       /* if (TextUtils.isEmpty(pushUrl)) {
-            return
-        }*/
+        /* if (TextUtils.isEmpty(pushUrl)) {
+             return
+         }*/
 
         isRecordAndEncoding = true
 

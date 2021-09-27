@@ -76,6 +76,8 @@ RTMPPacket *packetVideoData(char *buf, int len, const long tms, Pusher *pusher) 
     if (buf[0] == 0x65) { //关键帧
         packet->m_body[0] = 0x17;
         LOGI("发送关键帧 data");
+    }else{
+        LOGI("发送 data");
     }
     packet->m_body[1] = 0x01;
     packet->m_body[2] = 0x00;
