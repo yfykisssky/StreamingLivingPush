@@ -106,14 +106,14 @@ class CustomCameraCapture : OnFrameAvailableListener {
         }
     }
 
-    fun initCapture(
-        cameraId: Int,
+    //更新编码surface
+    fun updateInputRender(
         outSurface: Surface?,
         outWidth: Int,
         outHeight: Int,
         fps: Int
     ) {
-        this.cameraId = cameraId
+
         this.recordWith = outWidth
         this.recordHeight = outHeight
         this.recordFps = fps
@@ -121,12 +121,15 @@ class CustomCameraCapture : OnFrameAvailableListener {
 
         if (mCustomSurfaceRender == null) {
             mCustomSurfaceRender = ToSurfaceFrameRender()
-            mCustomSurfaceRender?.setOutPutSurface(outSurface,recordHeight,recordWith)
+            mCustomSurfaceRender?.setOutPutSurface(outSurface, recordHeight, recordWith)
+        } else {
+            mCustomSurfaceRender?.resetOutPutSurface(outSurface, recordHeight, recordWith)
         }
 
     }
 
-    fun startCapture() {
+    fun startCapture(cameraId: Int) {
+        this.cameraId = cameraId
         mRenderHandlerThread = HandlerThread("RenderHandlerThread")
         mRenderHandlerThread?.start()
         mRenderHandler = mRenderHandlerThread?.looper?.let { RenderHandler(it, this) }
@@ -253,8 +256,6 @@ class CustomCameraCapture : OnFrameAvailableListener {
         try {
             releaseCamera()
             mCamera = Camera.open(cameraId)
-            //todo:
-            // mCamera?.setDisplayOrientation(90)
             this.cameraId = cameraId
             Camera.getCameraInfo(cameraId, mCameraInfo)
             setDefaultParameters()

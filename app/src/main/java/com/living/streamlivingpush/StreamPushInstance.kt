@@ -4,12 +4,14 @@ import android.media.projection.MediaProjection
 import android.os.Build
 import android.view.TextureView
 import androidx.annotation.RequiresApi
+import com.common.base.EventBusMsg
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
 import com.rtmppush.tool.AudioFrame
 import com.rtmppush.tool.RtmpPushTool
 import com.rtmppush.tool.VideoFrame
+import org.greenrobot.eventbus.EventBus
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class StreamPushInstance {
@@ -83,6 +85,11 @@ class StreamPushInstance {
 
     fun switchCamera() {
         recordCameraTool?.switchCamera()
+    }
+
+    fun reset() {
+        val sur = encodeVideoTool?.resetEncoder(8000000, 30, 1280, 720, 64000)
+        EventBus.getDefault().post(EventBusMsg(0, sur))
     }
 
     fun prepareRecord(

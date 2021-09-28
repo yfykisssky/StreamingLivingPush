@@ -6,9 +6,15 @@ import android.os.Binder
 import android.os.IBinder
 import android.view.Surface
 import android.view.TextureView
+import com.common.base.EventBusMsg
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.record.video.camera.CustomCameraCapture
 import com.record.tool.record.video.gl.TextureVideoFrame
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.ThreadMode
+
+import org.greenrobot.eventbus.Subscribe
+
 
 class CameraRecordService : Service() {
 
@@ -59,9 +65,9 @@ class CameraRecordService : Service() {
                 }
             })
         }
-        mCameraCapture?.initCapture(cameraId, inputSurface, screenWith, screenHeight, inputFps)
+        mCameraCapture?.updateInputRender(inputSurface, screenWith, screenHeight, inputFps)
         mCameraCapture?.updatePreviewRenderView(textureView)
-        mCameraCapture?.startCapture()
+        mCameraCapture?.startCapture(cameraId)
 
     }
 
@@ -86,14 +92,33 @@ class CameraRecordService : Service() {
         mCameraCapture?.stopPushImage()
     }
 
-    override fun onCreate() {}
+    override fun onCreate() {
+        super.onCreate()
+        if (!EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().register(this)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (EventBus.getDefault().isRegistered(this)) {
+            EventBus.getDefault().unregister(this)
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onEvent(message: EventBusMsg) {
+        when (message.type) {
+            0 -> {
+                val sur = message.obj as? Surface?
+                mCameraCapture?.updateInputRender(sur, screenWith, screenHeight, inputFps)
+            }
+        }
+    }
 
     override fun onBind(intent: Intent): IBinder {
         return mBinder
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-    }
 
 }

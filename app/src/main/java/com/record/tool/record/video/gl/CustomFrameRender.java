@@ -28,6 +28,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CountDownLatch;
 
+import kotlin.jvm.Synchronized;
+
 /**
  * ## 视频帧渲染流程
  * 视频帧渲染采用了 texture，也就是 openGL 纹理的方案，这是 android 系统下性能最好的一种视频处理方案，具体流程如下：
@@ -53,6 +55,7 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
 
     private static final int MSG_RENDER = 2;
     private static final int MSG_DESTROY = 3;
+    private static final int MSG_DESTROY_CONTEXT = 4;
 
     protected Size mSurfaceSize = new Size();
     private Size mLastInputSize = new Size();
@@ -93,11 +96,11 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
 
     public CustomFrameRender() {
         mGLCubeBuffer = ByteBuffer.allocateDirect(OpenGlUtils.CUBE.length * 4)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer();
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
         mGLCubeBuffer.put(OpenGlUtils.CUBE).position(0);
 
         mGLTextureBuffer = ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.length * 4)
-            .order(ByteOrder.nativeOrder()).asFloatBuffer();
+                .order(ByteOrder.nativeOrder()).asFloatBuffer();
         mGLTextureBuffer.put(OpenGlUtils.TEXTURE).position(0);
 
         mGLThread = new HandlerThread(TAG);
@@ -110,6 +113,7 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         mGLHandler.obtainMessage(MSG_DESTROY).sendToTarget();
     }
 
+    @Synchronized
     private void initGlComponent(Object eglContext) {
 
         try {
@@ -138,10 +142,10 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         }
 
         if (mLastInputSize.width != frame.getWidth() || mLastInputSize.height != frame.getHeight()
-            || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height
-            || flipHorizontalLast != needFlipHorizontal) {
+                || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height
+                || flipHorizontalLast != needFlipHorizontal) {
             Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(useScaleType,
-                useRotation, needFlipHorizontal, needFlipVertical, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
+                    useRotation, needFlipHorizontal, needFlipVertical, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
             mGLCubeBuffer.clear();
             mGLCubeBuffer.put(cubeAndTextureBuffer.first);
             mGLTextureBuffer.clear();
@@ -166,6 +170,7 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         PushLogUtils.Companion.render();
     }
 
+    @Synchronized
     protected void uninitGlComponent() {
         if (mNormalFilter != null) {
             mNormalFilter.destroy();
@@ -191,6 +196,8 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
                 break;
             case MSG_DESTROY:
                 destroyInternal();
+            case MSG_DESTROY_CONTEXT:
+                uninitGlComponent();
                 break;
         }
         return false;

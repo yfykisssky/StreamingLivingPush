@@ -36,11 +36,16 @@ class PushLogUtils {
             renderCommitStamp = System.currentTimeMillis()
         }
 
-        fun encode() {
+        fun encode(dataSize: Int) {
             if (!isDebug) {
                 return
             }
-            Log.e(TAG, "encode:" + (System.currentTimeMillis() - encodeTimeStamp))
+            //b/s to kb/s
+            val size = dataSize / 1024
+            Log.e(
+                TAG,
+                "encode:" + (System.currentTimeMillis() - encodeTimeStamp) + ":[" + size + "kb/s]"
+            )
             encodeTimeStamp = System.currentTimeMillis()
         }
 

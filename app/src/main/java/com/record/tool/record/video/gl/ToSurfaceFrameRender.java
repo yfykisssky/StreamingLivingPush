@@ -18,4 +18,10 @@ public class ToSurfaceFrameRender extends CustomFrameRender {
         mSurfaceSize = new Size(renderWidth, renderHeight);
     }
 
+    //更新surface,需要销毁context
+    public void resetOutPutSurface(Surface surface, int renderWidth, int renderHeight) {
+        setOutPutSurface(surface, renderWidth, renderHeight);
+        uninitGlComponent();
+    }
+
 }

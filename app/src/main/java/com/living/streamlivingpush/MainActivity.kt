@@ -38,7 +38,8 @@ class MainActivity : Activity() {
         }
 
         resume?.setOnClickListener {
-            StreamPushInstance.instance.r()
+            //StreamPushInstance.instance.r()
+            StreamPushInstance.instance.reset()
         }
 
         switchCamera?.setOnClickListener {
@@ -49,6 +50,11 @@ class MainActivity : Activity() {
             StreamPushInstance.instance.toogle()
         }
 
+        resetBnt?.setOnClickListener {
+            val fps = editFps?.text.toString()
+            val bit = editBit?.text.toString()
+        }
+
     }
 
     private fun startPush() {
@@ -56,15 +62,16 @@ class MainActivity : Activity() {
         val pushUrl = pushUrlEdit.text.toString()
 
         StreamPushInstance.instance.initRecoderAndEncoder()
-        StreamPushInstance.instance.prepareRecord(2000, 15, 1280, 720, 64000)
+        StreamPushInstance.instance.prepareRecord(8000, 15, 1280, 720, 64000)
 
         val cameraView = StreamPushInstance.instance.getView()
         cameraPreviewView.addView(cameraView)
 
-        StreamPushInstance.instance.startRecordAndSendData("rtmp://192.168.26.242:1935/test/room")
+        //StreamPushInstance.instance.startRecordAndSendData("rtmp://192.168.26.242:1935/test/room")
 
-        //val p="rtmp://wangsu-test-publish.xxqapp.cn/xxq-live-backup/SLW30W1804027493040682240W192531130384600009W3566562346863207168?txSecret=3a16f7d30f4ec57adb602679f0279e8b&txTime=6151A481&wsSecret=a916739a92797034d5428e70c0339ae6&keeptime=86400&wsTime=1632654081"
-        //StreamPushInstance.instance.startRecordAndSendData(p)
+        val p =
+            "rtmp://wangsu-test-publish.xxqapp.cn/xxq-live-backup/SLW30W1804027493040682240W192531130384600009W3566562346863207168?txSecret=3a16f7d30f4ec57adb602679f0279e8b&txTime=6151A481&wsSecret=a916739a92797034d5428e70c0339ae6&keeptime=86400&wsTime=1632654081"
+        StreamPushInstance.instance.startRecordAndSendData(p)
 
     }
 
