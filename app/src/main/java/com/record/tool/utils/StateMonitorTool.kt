@@ -11,11 +11,19 @@ class StateMonitorTool {
         const val KIND_PUSH = 1
     }
 
+    private var tagBitRate = 0
+    private var tagFps = 0
+
     private var bitsSize = 0
     private val lockBitObj = Any()
 
     private var fpsCount = 0
     private val lockFpsObj = Any()
+
+    fun updateTargetData(tagBitRate: Int, tagFps: Int) {
+        this.tagBitRate = tagBitRate
+        this.tagFps = tagFps
+    }
 
     fun updateBitrate(bit: Int) {
         synchronized(lockBitObj) {
@@ -58,7 +66,7 @@ class StateMonitorTool {
                 }
 
                 override fun onNext(time: Long) {
-                    PushLogUtils.encodeCount(bitsSize, fpsCount)
+                    PushLogUtils.encodeCount(bitsSize, fpsCount,tagBitRate,tagFps)
                     resetBit()
                     resetFps()
                 }

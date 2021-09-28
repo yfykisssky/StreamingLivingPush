@@ -122,10 +122,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="fps" />
+                android:text="bit(kbps)" />
 
             <EditText
-                android:id="@+id/editFps"
+                android:id="@+id/editBit"
                 android:layout_width="100dp"
                 android:layout_height="match_parent" />
 
@@ -133,10 +133,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:text="bit(kbps)" />
+                android:text="fps" />
 
             <EditText
-                android:id="@+id/editBit"
+                android:id="@+id/editFps"
                 android:layout_width="100dp"
                 android:layout_height="match_parent" />
 

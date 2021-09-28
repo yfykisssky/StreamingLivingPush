@@ -4,15 +4,14 @@ import android.media.projection.MediaProjection
 import android.os.Build
 import android.view.TextureView
 import androidx.annotation.RequiresApi
-import com.common.base.EventBusMsg
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
 import com.record.tool.utils.StateMonitorTool
+import com.record.tool.utils.TransUtils
 import com.rtmppush.tool.AudioFrame
 import com.rtmppush.tool.RtmpPushTool
 import com.rtmppush.tool.VideoFrame
-import org.greenrobot.eventbus.EventBus
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class StreamPushInstance {
@@ -91,9 +90,23 @@ class StreamPushInstance {
         recordCameraTool?.switchCamera()
     }
 
-    fun reset() {
-        val sur = encodeVideoTool?.resetEncoder(8000000, 30, 1280, 720, 2)
-        recordCameraTool?.resetEncodeSettings(sur, 1280, 720, 30)
+    fun reset(
+        bitRateVideo: Int,
+        fps: Int,
+        screenWith: Int,
+        screenHeight: Int,
+        audioBitRate: Int
+    ) {
+        val sur = encodeVideoTool?.resetEncoder(
+            TransUtils.kbps2bs(bitRateVideo),
+            fps,
+            screenWith,
+            screenHeight,
+            2
+        )
+        recordCameraTool?.resetEncodeSettings(sur, screenWith, screenHeight, fps)
+
+        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo),fps)
     }
 
     fun prepareRecord(
@@ -103,9 +116,13 @@ class StreamPushInstance {
         screenHeight: Int,
         audioBitRate: Int
     ) {
-        //kbps to bits/sec
-        val useBit = (bitRateVideo * 1024 / 8)
-        val surface = encodeVideoTool?.initEncoder(useBit, fps, screenHeight, screenWith)
+
+        val surface = encodeVideoTool?.initEncoder(
+            TransUtils.kbps2bs(bitRateVideo),
+            fps,
+            screenHeight,
+            screenWith
+        )
 
         if (surface == null) {
             recordStateCallBack?.onState(StateCode.ENCODE_INIT_ERROR)
@@ -128,6 +145,7 @@ class StreamPushInstance {
 
         encodeAudioTool?.initEncoder(audioBitRate)
 
+        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo),fps)
     }
 
     fun startRecordAndSendData(pushUrl: String) {

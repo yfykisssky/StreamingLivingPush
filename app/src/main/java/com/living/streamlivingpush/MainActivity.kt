@@ -1,6 +1,7 @@
 package com.living.streamlivingpush
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Build
 import android.os.Bundle
@@ -11,6 +12,17 @@ import kotlinx.android.synthetic.main.activity_main.*
 
 @RequiresApi(Build.VERSION_CODES.M)
 class MainActivity : Activity() {
+
+    companion object {
+    }
+
+    private var videoBitRate = 8000
+    private var videoFps = 15
+    private var videoWith = 1280
+    private var videoHeight = 720
+
+    private var audioBitRate = 6400
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,7 +51,7 @@ class MainActivity : Activity() {
 
         resume?.setOnClickListener {
             //StreamPushInstance.instance.r()
-            StreamPushInstance.instance.reset()
+
         }
 
         switchCamera?.setOnClickListener {
@@ -51,10 +63,31 @@ class MainActivity : Activity() {
         }
 
         resetBnt?.setOnClickListener {
-            val fps = editFps?.text.toString()
-            val bit = editBit?.text.toString()
+            val fps = editFps?.text.toString().toInt()
+            val bit = editBit?.text.toString().toInt()
+
+            videoBitRate = bit
+            videoFps = fps
+
+            StreamPushInstance.instance.reset(
+                videoBitRate,
+                videoFps,
+                videoWith,
+                videoHeight,
+                audioBitRate
+            )
+
+            updateFpsBitShow()
         }
 
+        updateFpsBitShow()
+
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun updateFpsBitShow() {
+        bitrate?.text = videoBitRate.toString() + "kbps"
+        fps?.text = videoFps.toString() + "f/s"
     }
 
     private fun startPush() {
@@ -62,7 +95,13 @@ class MainActivity : Activity() {
         val pushUrl = pushUrlEdit.text.toString()
 
         StreamPushInstance.instance.initRecoderAndEncoder()
-        StreamPushInstance.instance.prepareRecord(8000, 15, 1280, 720, 64000)
+        StreamPushInstance.instance.prepareRecord(
+            videoBitRate,
+            videoFps,
+            videoWith,
+            videoHeight,
+            audioBitRate
+        )
 
         val cameraView = StreamPushInstance.instance.getView()
         cameraPreviewView.addView(cameraView)

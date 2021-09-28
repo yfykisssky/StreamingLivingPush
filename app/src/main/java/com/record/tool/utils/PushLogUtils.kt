@@ -12,12 +12,11 @@ class PushLogUtils {
 
         private const val TAG = "PushLogUtils"
 
-        const val isDebug = true
+        private const val isDebug = true
 
         private var receiveTimeStamp = 0L
         private var renderCommitStamp = 0L
         private var encodeTimeStamp = 0L
-        private var addDataTimeStamp = 0L
         private var sendDataTimeStamp = 0L
 
         fun receive() {
@@ -49,25 +48,16 @@ class PushLogUtils {
             encodeTimeStamp = System.currentTimeMillis()
         }
 
-        fun encodeCount(bit: Int, fps: Int) {
+        fun encodeCount(bit: Int, fps: Int, tagBit: Int, tagFps: Int) {
             if (!isDebug) {
                 return
             }
-            //b to kb
-            val size = bit / 1024
             Log.e(
                 TAG,
-                "encodeCount:" + "[" + fps + "f/s]" + ":[" + size + "kb/s]"
+                "encodeCount:" + "[" + fps + "f/s]" + ":[" + bit / 1024 + "kb/s]"
+                        + " target:" + "[" + tagFps + "f/s]" + ":[" + tagBit / 1024 + "kb/s]"
             )
             encodeTimeStamp = System.currentTimeMillis()
-        }
-
-        fun addData() {
-            if (!isDebug) {
-                return
-            }
-            Log.e(TAG, "addData:" + (System.currentTimeMillis() - addDataTimeStamp))
-            addDataTimeStamp = System.currentTimeMillis()
         }
 
         fun sendData(type: Int) {

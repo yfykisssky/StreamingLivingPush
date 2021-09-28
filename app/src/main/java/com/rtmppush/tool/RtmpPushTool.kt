@@ -1,6 +1,5 @@
 package com.rtmppush.tool
 
-import android.util.Log
 import com.record.tool.utils.PushLogUtils
 import java.util.concurrent.LinkedBlockingQueue
 
