@@ -7,6 +7,7 @@ import androidx.annotation.RequiresApi
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
+import com.record.tool.utils.EncodeControlUtils
 import com.record.tool.utils.StateMonitorTool
 import com.record.tool.utils.TransUtils
 import com.rtmppush.tool.AudioFrame
@@ -104,7 +105,20 @@ class StreamPushInstance {
         val sur = encodeVideoTool?.resetEncoder()
         recordCameraTool?.resetEncodeSettings(sur, fps)
         encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
+    }
 
+    fun resetI(
+        bitRateVideo: Int,
+        fps: Int
+    ) {
+        encodeVideoTool?.updateResetEncodeSettings(
+            bitRateVideo,
+            fps,
+            2
+        )
+        val sur = encodeVideoTool?.resetEncoder()
+        recordCameraTool?.resetEncodeSettings(sur, fps)
+        //encoderMonitorTool.updateTargetData(bitRateVideo, fps)
     }
 
     fun prepareRecord(
@@ -221,6 +235,20 @@ class StreamPushInstance {
 
             override fun onLogTest(log: String) {
                 recordStateCallBack?.onLog(log)
+            }
+        })
+
+        encoderMonitorTool.setCountCallBack(object : StateMonitorTool.CountCallBack {
+            override fun onCount(bitRate: Int, fps: Int) {
+                EncodeControlUtils.checkNeedReset(
+                    bitRate,
+                    1000 * 1024,
+                    encodeVideoTool?.getSetBitRate() ?: 0
+                ).let {
+                    if (it.first) {
+                        resetI(it.second, encoderMonitorTool.tagFps)
+                    }
+                }
             }
         })
 

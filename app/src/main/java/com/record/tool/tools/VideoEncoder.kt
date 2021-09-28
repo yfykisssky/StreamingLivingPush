@@ -57,6 +57,10 @@ class VideoEncoder {
         return inputSurface
     }
 
+    fun getSetBitRate(): Int {
+        return bitRate
+    }
+
     //修改编码宽高会导致花屏
     fun updateResetEncodeSettings(
         bitRate: Int,

@@ -6,8 +6,10 @@ import java.util.concurrent.TimeUnit
 
 class StateMonitorTool {
 
-    private var tagBitRate = 0
-    private var tagFps = 0
+    var tagBitRate = 0
+        private set
+    var tagFps = 0
+        private set
 
     private var bitsSize = 0
     private val lockBitObj = Any()
@@ -72,6 +74,7 @@ class StateMonitorTool {
 
                 override fun onNext(time: Long) {
                     PushLogUtils.encodeCount(bitsSize, fpsCount, tagBitRate, tagFps)
+                    countCallBack?.onCount(bitsSize, fpsCount)
                     resetBit()
                     resetFps()
                 }

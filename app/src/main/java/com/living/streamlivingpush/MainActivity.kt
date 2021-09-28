@@ -16,12 +16,12 @@ class MainActivity : Activity() {
     companion object {
     }
 
-    private var videoBitRate = 8000
-    private var videoFps = 15
+    private var videoBitRate = 5600
+    private var videoFps = 20
     private var videoWith = 1280
     private var videoHeight = 720
 
-    private var audioBitRate = 6400
+    private var audioBitRate = 64
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
