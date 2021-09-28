@@ -93,20 +93,18 @@ class StreamPushInstance {
     fun reset(
         bitRateVideo: Int,
         fps: Int,
-        screenWith: Int,
-        screenHeight: Int,
         audioBitRate: Int
     ) {
-        val sur = encodeVideoTool?.resetEncoder(
+
+        encodeVideoTool?.updateResetEncodeSettings(
             TransUtils.kbps2bs(bitRateVideo),
             fps,
-            screenWith,
-            screenHeight,
             2
         )
-        recordCameraTool?.resetEncodeSettings(sur, screenWith, screenHeight, fps)
+        val sur = encodeVideoTool?.resetEncoder()
+        recordCameraTool?.resetEncodeSettings(sur, fps)
+        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
 
-        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo),fps)
     }
 
     fun prepareRecord(
@@ -117,12 +115,13 @@ class StreamPushInstance {
         audioBitRate: Int
     ) {
 
-        val surface = encodeVideoTool?.initEncoder(
+        encodeVideoTool?.updateEncodeSettings(
             TransUtils.kbps2bs(bitRateVideo),
             fps,
             screenHeight,
             screenWith
         )
+        val surface = encodeVideoTool?.initEncoder()
 
         if (surface == null) {
             recordStateCallBack?.onState(StateCode.ENCODE_INIT_ERROR)
@@ -145,7 +144,7 @@ class StreamPushInstance {
 
         encodeAudioTool?.initEncoder(audioBitRate)
 
-        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo),fps)
+        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
     }
 
     fun startRecordAndSendData(pushUrl: String) {

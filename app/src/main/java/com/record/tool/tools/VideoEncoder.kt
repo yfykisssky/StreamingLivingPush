@@ -25,6 +25,10 @@ class VideoEncoder {
     private val vBufferInfo = MediaCodec.BufferInfo()
 
     private var iFrameInterval = 2
+    private var bitRate = 0
+    private var maxFps = 0
+    private var frameWith = 0
+    private var frameHeight = 0
 
     fun setDataCallBackListener(dataCallBackListener: DataCallBackListener) {
         this.dataCallBackListener = dataCallBackListener
@@ -38,56 +42,65 @@ class VideoEncoder {
     }
 
     //重置编码器参数
-    fun resetEncoder(
-        bitRate: Int,
-        maxFps: Int,
-        frameWith: Int,
-        frameHeight: Int,
-        gopTime: Int = 2
-    ): Surface? {
+    fun resetEncoder(): Surface? {
 
         isEncoding = false
         encoderThread?.join()
-        codec?.reset()
 
-        val inputSurface = initEncoder(bitRate, maxFps, frameWith, frameHeight, gopTime)
+        codec?.stop()
+        codec?.reset()
+        configEncoder()
+
+        val inputSurface = getEncoderSurface()
         startEncode()
 
         return inputSurface
     }
 
-    fun initEncoder(
+    //修改编码宽高会导致花屏
+    fun updateResetEncodeSettings(
+        bitRate: Int,
+        maxFps: Int,
+        gopTime: Int = 2
+    ) {
+        this.bitRate = bitRate
+        this.maxFps = maxFps
+        iFrameInterval = gopTime
+    }
+
+    fun updateEncodeSettings(
         bitRate: Int,
         maxFps: Int,
         frameWith: Int,
         frameHeight: Int,
         gopTime: Int = 2
-    ): Surface? {
-
+    ) {
+        this.bitRate = bitRate
+        this.maxFps = maxFps
+        this.frameWith = frameWith
+        this.frameHeight = frameHeight
         iFrameInterval = gopTime
+    }
+
+    private fun configEncoder() {
+        try {
+            codec?.configure(getEncodeFormat(), null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            dataCallBackListener?.onLogTest(e.message ?: "")
+        }
+    }
+
+    private fun getEncoderSurface(): Surface? {
+        return codec?.createInputSurface()
+    }
+
+    fun initEncoder(): Surface? {
 
         try {
-            val format = MediaFormat()
-            format.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_VIDEO_AVC)
-            format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
-            format.setInteger(MediaFormat.KEY_FRAME_RATE, maxFps)
-            format.setInteger(
-                MediaFormat.KEY_COLOR_FORMAT,
-                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
-            )
-            format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
-            format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
-            format.setInteger(MediaFormat.KEY_HEIGHT, frameHeight)
-
-            //部分机型最大帧率无效
-            //MediaFormat.KEY_MAX_FPS_TO_ENCODER
-            //crash
-            //MediaFormat.KEY_PROFILE
-
             codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-            codec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-
-            return codec?.createInputSurface()
+            configEncoder()
+            return getEncoderSurface()
         } catch (e: Exception) {
             e.printStackTrace()
             dataCallBackListener?.onLogTest(e.message ?: "")
@@ -95,6 +108,26 @@ class VideoEncoder {
 
         return null
 
+    }
+
+    private fun getEncodeFormat(): MediaFormat {
+        val format = MediaFormat()
+        format.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_VIDEO_AVC)
+        format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, maxFps)
+        format.setInteger(
+            MediaFormat.KEY_COLOR_FORMAT,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+        )
+        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
+        format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
+        format.setInteger(MediaFormat.KEY_HEIGHT, frameHeight)
+
+        //部分机型最大帧率无效
+        //MediaFormat.KEY_MAX_FPS_TO_ENCODER
+        //crash
+        //MediaFormat.KEY_PROFILE
+        return format
     }
 
     fun startEncode() {
@@ -106,6 +139,11 @@ class VideoEncoder {
     fun stopEncode() {
         isEncoding = false
         encoderThread?.join()
+        releaseEncoder()
+    }
+
+    private fun releaseEncoder() {
+        codec?.stop()
         codec?.release()
     }
 
@@ -160,11 +198,9 @@ class VideoEncoder {
                         }
                     }
                 }
-                codec?.stop()
             } catch (e: Exception) {
                 e.printStackTrace()
-                codec?.stop()
-                codec?.release()
+                releaseEncoder()
                 dataCallBackListener?.onEncodeError()
                 dataCallBackListener?.onLogTest(e.message ?: "")
             } finally {

@@ -21,7 +21,7 @@ public class ToSurfaceFrameRender extends CustomFrameRender {
     //更新surface,需要销毁context
     public void resetOutPutSurface(Surface surface, int renderWidth, int renderHeight) {
         setOutPutSurface(surface, renderWidth, renderHeight);
-        uninitGlComponent();
+        mGLHandler.obtainMessage(MSG_DESTROY_CONTEXT).sendToTarget();
     }
 
 }

@@ -111,8 +111,6 @@ class CameraRecordManager {
 
     fun resetEncodeSettings(
         inputSurface: Surface?,
-        screenWith: Int?,
-        screenHeight: Int?,
         inputFps: Int?
     ) {
         updateEncodeSettings(

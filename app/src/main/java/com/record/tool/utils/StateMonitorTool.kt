@@ -6,11 +6,6 @@ import java.util.concurrent.TimeUnit
 
 class StateMonitorTool {
 
-    companion object {
-        const val KIND_ENCODE = 0
-        const val KIND_PUSH = 1
-    }
-
     private var tagBitRate = 0
     private var tagFps = 0
 
@@ -19,6 +14,16 @@ class StateMonitorTool {
 
     private var fpsCount = 0
     private val lockFpsObj = Any()
+
+    interface CountCallBack {
+        fun onCount(bitRate: Int, fps: Int)
+    }
+
+    private var countCallBack: CountCallBack? = null
+
+    fun setCountCallBack(countCallBack: CountCallBack?) {
+        this.countCallBack = countCallBack
+    }
 
     fun updateTargetData(tagBitRate: Int, tagFps: Int) {
         this.tagBitRate = tagBitRate
@@ -66,7 +71,7 @@ class StateMonitorTool {
                 }
 
                 override fun onNext(time: Long) {
-                    PushLogUtils.encodeCount(bitsSize, fpsCount,tagBitRate,tagFps)
+                    PushLogUtils.encodeCount(bitsSize, fpsCount, tagBitRate, tagFps)
                     resetBit()
                     resetFps()
                 }
@@ -81,6 +86,7 @@ class StateMonitorTool {
     }
 
     fun stopMonitor() {
+        countCallBack = null
         timerDis?.dispose()
     }
 

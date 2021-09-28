@@ -53,9 +53,9 @@ import kotlin.jvm.Synchronized;
 public abstract class CustomFrameRender implements Handler.Callback, RenderFrameListener {
     public static final String TAG = "CustomFrameRender";
 
-    private static final int MSG_RENDER = 2;
-    private static final int MSG_DESTROY = 3;
-    private static final int MSG_DESTROY_CONTEXT = 4;
+    protected static final int MSG_RENDER = 2;
+    protected static final int MSG_DESTROY = 3;
+    protected static final int MSG_DESTROY_CONTEXT = 4;
 
     protected Size mSurfaceSize = new Size();
     private Size mLastInputSize = new Size();
