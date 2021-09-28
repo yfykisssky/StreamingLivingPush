@@ -40,11 +40,24 @@ class PushLogUtils {
             if (!isDebug) {
                 return
             }
-            //b/s to kb/s
+            //b to kb
             val size = dataSize / 1024
             Log.e(
                 TAG,
-                "encode:" + (System.currentTimeMillis() - encodeTimeStamp) + ":[" + size + "kb/s]"
+                "encode:" + (System.currentTimeMillis() - encodeTimeStamp) + ":[" + size + "kb]"
+            )
+            encodeTimeStamp = System.currentTimeMillis()
+        }
+
+        fun encodeCount(bit: Int, fps: Int) {
+            if (!isDebug) {
+                return
+            }
+            //b to kb
+            val size = bit / 1024
+            Log.e(
+                TAG,
+                "encodeCount:" + "[" + fps + "f/s]" + ":[" + size + "kb/s]"
             )
             encodeTimeStamp = System.currentTimeMillis()
         }
@@ -68,36 +81,6 @@ class PushLogUtils {
             sendDataTimeStamp = System.currentTimeMillis()
         }
 
-        private var fps = 0
-        private var frameCount = 0
-        private var bitsSize = 0
-        private val lockLogData = Any()
-
-        fun updateFpsBit(type: Int, bit: Int) {
-            if (!isDebug) {
-                return
-            }
-            if (type == RecordType.VIDEO) {
-                synchronized(lockLogData) {
-                    ++frameCount
-                    bitsSize += bit
-                }
-            }
-        }
-
-        fun logFpsBit() {
-            if (!isDebug) {
-                return
-            }
-            synchronized(lockLogData) {
-                fps = frameCount
-                Log.e(TAG, "logFps:$fps,logBit:$bitsSize")
-                showInFloatWindow(fps.toString() + "FPS" + "," + bitsSize + "b/s")
-                frameCount = 0
-                bitsSize = 0
-            }
-        }
-
         private var lastTimeStamp = 0L
         fun logVideoTimeStamp(time: Long) {
             if (!isDebug) {
@@ -109,62 +92,15 @@ class PushLogUtils {
             Log.e(TAG, "videoTimeStamp:$result")
         }
 
+        private var lastTimeAStamp = 0L
         fun logAudioTimeStamp(time: Long) {
             if (!isDebug) {
                 return
             }
-            Log.e(TAG, "audioTimeStamp:$time")
-            addDataTimeStamp = System.currentTimeMillis()
-        }
 
-        var logShowInterface: LogShowInterface? = null
-
-        private fun showInFloatWindow(log: String) {
-            logShowInterface?.onLog(log)
-        }
-
-        interface LogShowInterface {
-            fun onLog(log: String)
-        }
-
-        private var timerDis: Disposable? = null
-
-        private fun startLogTimer() {
-            if (!isDebug) {
-                return
-            }
-            timerDis?.dispose()
-            io.reactivex.Observable.interval(1, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object : io.reactivex.Observer<Long?> {
-                    override fun onComplete() {
-                    }
-
-                    override fun onSubscribe(d: Disposable) {
-                        timerDis = d
-                    }
-
-                    override fun onNext(time: Long) {
-                        logFpsBit()
-                    }
-
-                    override fun onError(e: Throwable) {
-                    }
-                })
-        }
-
-        fun isStartTest() {
-            if (!isDebug) {
-                return
-            }
-            startLogTimer()
-        }
-
-        fun isEndTest() {
-            if (!isDebug) {
-                return
-            }
-            timerDis?.dispose()
+            val result = time - lastTimeAStamp
+            lastTimeAStamp = time
+            Log.e(TAG, "audioTimeStamp:$result")
         }
 
         private var pushAudioDataTimeStamp = 0L

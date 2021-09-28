@@ -8,6 +8,7 @@ import com.common.base.EventBusMsg
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
+import com.record.tool.utils.StateMonitorTool
 import com.rtmppush.tool.AudioFrame
 import com.rtmppush.tool.RtmpPushTool
 import com.rtmppush.tool.VideoFrame
@@ -29,12 +30,15 @@ class StreamPushInstance {
     private var encodeVideoTool: VideoEncoder? = null
     private var encodeAudioTool: AudioEncoder? = null
 
+    private var encoderMonitorTool = StateMonitorTool()
+
     private var rtmpPushTool: RtmpPushTool? = null
 
     private var recordStateCallBack: RecordStateCallBack? = null
     // private var recordScreenTool: ScreenRecordManager? = null
 
     private var recordCameraTool: CameraRecordManager? = null
+
 
     enum class StateCode {
 
@@ -88,8 +92,8 @@ class StreamPushInstance {
     }
 
     fun reset() {
-        val sur = encodeVideoTool?.resetEncoder(8000000, 30, 1280, 720, 64000)
-        EventBus.getDefault().post(EventBusMsg(0, sur))
+        val sur = encodeVideoTool?.resetEncoder(8000000, 30, 1280, 720, 2)
+        recordCameraTool?.resetEncodeSettings(sur, 1280, 720, 30)
     }
 
     fun prepareRecord(
@@ -168,6 +172,9 @@ class StreamPushInstance {
                 vFrame.byteArray = byteArray
                 vFrame.timestamp = timeStamp
                 rtmpPushTool?.addVideoFrame(vFrame)
+
+                encoderMonitorTool.updateBitrate(byteArray?.size ?: 0)
+                encoderMonitorTool.updateFpsCount()
             }
 
             override fun onEncodeError() {
@@ -200,6 +207,8 @@ class StreamPushInstance {
             }
         })
 
+        encoderMonitorTool.startMonitor()
+
         encodeAudioTool?.startEncode()
 
         recordCameraTool?.startCapture(0)
@@ -227,6 +236,8 @@ class StreamPushInstance {
     }
 
     fun stopRecordAndDestory() {
+
+        encoderMonitorTool.stopMonitor()
 
         rtmpPushTool?.stopPushing()
         rtmpPushTool = null

@@ -1,17 +1,13 @@
 package com.record.tool.record.video.camera
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
 import android.os.Build
-import android.os.IBinder
 import android.view.Surface
 import android.view.TextureView
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
 import com.living.streamlivingpush.StreamPushInstance
-import com.record.tool.record.video.camera.service.CameraRecordService
+import com.record.tool.record.video.gl.TextureVideoFrame
+import com.record.tool.utils.StateMonitorTool
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class CameraRecordManager {
@@ -29,68 +25,41 @@ class CameraRecordManager {
         fun onLogTest(log: String)
     }
 
-    private var recordService: CameraRecordService? = null
-    private var serviceIsBind = false
-
     private var dataRecordCallBack: DataRecordCallBack? = null
 
     private var inputSurface: Surface? = null
-    private var screenWith: Int? = null
-    private var screenHeight: Int? = null
-    private var inputFps: Int? = null
+    private var screenWith: Int = 0
+    private var screenHeight: Int = 0
+    private var inputFps: Int = 0
 
+    private var mCameraCapture: CustomCameraCapture? = null
     private var cameraPreviewView: TextureView? = null
 
-    private val recordServiceConn = object : ServiceConnection {
-
-        private var useCameraId: Int = 0
-
-        fun setCameraId(useCameraId: Int) {
-            this.useCameraId = useCameraId
-        }
-
-        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
-            recordService = (service as? CameraRecordService.LocalBinder)?.getService()
-
-            inputSurface?.let { sur ->
-                recordService?.setEcodeInputSurface(
-                    sur,
-                    screenWith ?: 0,
-                    screenHeight ?: 0,
-                    inputFps ?: 0
-                )
-                recordService?.setDataRecordCallBack(dataRecordCallBack)
-                recordService?.startCapture(useCameraId, getPreviewView())
-            }
-
-        }
-
-        override fun onServiceDisconnected(componentName: ComponentName) {
-            recordService?.stopCapture()
-            recordService = null
-            dataRecordCallBack?.onErrorCode(StreamPushInstance.StateCode.SERVICE_DISCON_ERROR)
-            dataRecordCallBack?.onLogTest("service disconnect")
-        }
-
-    }
-
     fun toogleMirror() {
-        recordService?.toogleMirror()
+        mCameraCapture?.toogleMirror()
     }
 
     fun isMirror(): Boolean? {
-        return recordService?.isMirror()
+        return mCameraCapture?.isMirror()
     }
 
     fun startCapture(useCameraId: Int) {
-        val recordServiceIntent =
-            Intent(appContext?.applicationContext, CameraRecordService::class.java)
-        recordServiceConn.setCameraId(useCameraId)
-        serviceIsBind = appContext?.bindService(
-            recordServiceIntent,
-            recordServiceConn,
-            Context.BIND_AUTO_CREATE
-        ) ?: false
+        if (mCameraCapture == null) {
+            mCameraCapture = CustomCameraCapture()
+            mCameraCapture?.setTextureHandleCallBack(object :
+                CustomCameraCapture.TextureHandleCallBack {
+                override fun onTextureUpdate(frame: TextureVideoFrame): TextureVideoFrame {
+                    return frame
+                }
+            })
+        }
+        mCameraCapture?.updateInputRender(inputSurface, screenWith, screenHeight, inputFps)
+        mCameraCapture?.updatePreviewRenderView(cameraPreviewView)
+        mCameraCapture?.startCapture(useCameraId)
+    }
+
+    fun stopCapture() {
+        mCameraCapture?.stopCapture()
     }
 
     fun getPreviewView(): TextureView? {
@@ -103,15 +72,15 @@ class CameraRecordManager {
     }
 
     fun switchCamera() {
-        recordService?.switchCamera()
+        mCameraCapture?.switchCamera()
     }
 
     fun startPushImage() {
-        recordService?.startPushImage()
+        mCameraCapture?.startPushImage()
     }
 
     fun stopPushImage() {
-        recordService?.stopPushImage()
+        mCameraCapture?.stopPushImage()
     }
 
     fun setEcodeInputSurface(
@@ -120,18 +89,44 @@ class CameraRecordManager {
         screenHeight: Int?,
         inputFps: Int?
     ) {
-        this.inputSurface = inputSurface
-        this.screenWith = screenWith
-        this.screenHeight = screenHeight
-        this.inputFps = inputFps
+        updateEncodeSettings(
+            inputSurface,
+            screenWith,
+            screenHeight,
+            inputFps
+        )
     }
 
-    fun stopCapture() {
-        recordService?.stopCapture()
-        if (serviceIsBind) {
-            appContext?.unbindService(recordServiceConn)
-            serviceIsBind = false
-        }
+    private fun updateEncodeSettings(
+        inputSurface: Surface?,
+        screenWith: Int?,
+        screenHeight: Int?,
+        inputFps: Int?
+    ) {
+        this.inputSurface = inputSurface
+        this.screenWith = screenWith ?: 0
+        this.screenHeight = screenHeight ?: 0
+        this.inputFps = inputFps ?: 0
+    }
+
+    fun resetEncodeSettings(
+        inputSurface: Surface?,
+        screenWith: Int?,
+        screenHeight: Int?,
+        inputFps: Int?
+    ) {
+        updateEncodeSettings(
+            inputSurface,
+            screenWith,
+            screenHeight,
+            inputFps
+        )
+        mCameraCapture?.updateInputRender(
+            this.inputSurface,
+            this.screenWith,
+            this.screenHeight,
+            this.inputFps
+        )
     }
 
 }
