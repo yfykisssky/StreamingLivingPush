@@ -20,17 +20,16 @@ class CameraRecordManager {
         this.dataRecordCallBack = dataRecordCallBack
     }
 
-    interface DataRecordCallBack {
+    interface DataRecordCallBack : CustomCameraCapture.RecordDataCallBack {
         fun onErrorCode(code: StreamPushInstance.StateCode)
         fun onLogTest(log: String)
     }
 
     private var dataRecordCallBack: DataRecordCallBack? = null
 
-    private var inputSurface: Surface? = null
-    private var screenWith: Int = 0
-    private var screenHeight: Int = 0
-    private var inputFps: Int = 0
+    private var useWith: Int = 0
+    private var useHeight: Int = 0
+    private var useFps: Int = 0
 
     private var mCameraCapture: CustomCameraCapture? = null
     private var cameraPreviewView: TextureView? = null
@@ -47,13 +46,19 @@ class CameraRecordManager {
         if (mCameraCapture == null) {
             mCameraCapture = CustomCameraCapture()
             mCameraCapture?.setTextureHandleCallBack(object :
-                CustomCameraCapture.TextureHandleCallBack {
+                    CustomCameraCapture.TextureHandleCallBack {
                 override fun onTextureUpdate(frame: TextureVideoFrame): TextureVideoFrame {
                     return frame
                 }
             })
+
+            mCameraCapture?.setRecordDataCallBack(object : CustomCameraCapture.RecordDataCallBack {
+                override fun onDataCallBack(frame: TextureVideoFrame) {
+                    dataRecordCallBack?.onDataCallBack(frame)
+                }
+            })
         }
-        mCameraCapture?.updateInputRender(inputSurface, screenWith, screenHeight, inputFps)
+        mCameraCapture?.updateSettings(useWith, useHeight, useFps)
         mCameraCapture?.updatePreviewRenderView(cameraPreviewView)
         mCameraCapture?.startCapture(useCameraId)
     }
@@ -83,48 +88,21 @@ class CameraRecordManager {
         mCameraCapture?.stopPushImage()
     }
 
-    fun setEcodeInputSurface(
-        inputSurface: Surface?,
-        screenWith: Int?,
-        screenHeight: Int?,
-        inputFps: Int?
+    fun setSettings(
+            screenWith: Int?,
+            screenHeight: Int?,
+            inputFps: Int?
     ) {
-        updateEncodeSettings(
-            inputSurface,
-            screenWith,
-            screenHeight,
-            inputFps
-        )
+        this.useWith = screenWith ?: 0
+        this.useHeight = screenHeight ?: 0
+        this.useFps = inputFps ?: 0
     }
 
-    private fun updateEncodeSettings(
-        inputSurface: Surface?,
-        screenWith: Int?,
-        screenHeight: Int?,
-        inputFps: Int?
+    fun resetSettings(
+            inputFps: Int?
     ) {
-        this.inputSurface = inputSurface
-        this.screenWith = screenWith ?: 0
-        this.screenHeight = screenHeight ?: 0
-        this.inputFps = inputFps ?: 0
-    }
-
-    fun resetEncodeSettings(
-        inputSurface: Surface?,
-        inputFps: Int?
-    ) {
-        updateEncodeSettings(
-            inputSurface,
-            screenWith,
-            screenHeight,
-            inputFps
-        )
-        mCameraCapture?.updateInputRender(
-            this.inputSurface,
-            this.screenWith,
-            this.screenHeight,
-            this.inputFps
-        )
+        this.useFps = inputFps ?: 0
+        mCameraCapture?.updateSettings(useWith, useHeight, useFps)
     }
 
 }

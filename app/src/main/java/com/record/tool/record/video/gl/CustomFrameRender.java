@@ -89,7 +89,6 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
 
     @Override
     public void onRenderVideoFrame(TextureVideoFrame frame) {
-        PushLogUtils.Companion.receive();
         GLES20.glFinish();
         mGLHandler.obtainMessage(MSG_RENDER, frame).sendToTarget();
     }

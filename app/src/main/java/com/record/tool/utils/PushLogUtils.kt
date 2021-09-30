@@ -23,7 +23,7 @@ class PushLogUtils {
             if (!isDebug) {
                 return
             }
-            Log.e(TAG, "render:" + (System.currentTimeMillis() - receiveTimeStamp))
+            Log.e(TAG, "receive:" + (System.currentTimeMillis() - receiveTimeStamp))
             receiveTimeStamp = System.currentTimeMillis()
         }
 

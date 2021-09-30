@@ -2,21 +2,17 @@ package com.record.tool.record.video.screen
 
 import android.app.Activity
 import android.app.Service
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.view.Surface
 import android.view.Window
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
 import com.living.streamlivingpush.StreamPushInstance
-import com.record.tool.record.video.screen.service.ScreenRecordService
+import com.record.tool.record.video.gl.TextureVideoFrame
+import com.record.tool.utils.SysUtils
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class ScreenRecordManager {
@@ -25,91 +21,66 @@ class ScreenRecordManager {
 
     private var appContext = AppApplication.appContext
 
-    fun setDataRecordCallBack(dataRecordCallBack: DataRecordCallBack?) {
-        this.dataRecordCallBack = dataRecordCallBack
+    interface DataCallBack {
+        fun onTextureVideoFrame(frame: TextureVideoFrame)
+        fun onStoped()
     }
 
-    interface DataRecordCallBack {
-        fun onAudioDataRecord(data: ByteArray?, byteSize:Int)
-        fun onErrorCode(code: StreamPushInstance.StateCode)
-
-        fun onLogTest(log: String)
+    private var dataCallBack: DataCallBack? = null
+    fun setDataCallBack(dataCallBack: DataCallBack?) {
+        this.dataCallBack = dataCallBack
     }
 
-    private var recordService: ScreenRecordService? = null
-    private var serviceIsBind = false
+    private var mScreenCapture: CustomScreenCapture? = null
 
-    private var dataRecordCallBack: DataRecordCallBack? = null
+    private var useWith: Int = 0
+    private var useHeight: Int = 0
+    private var useFps: Int = 0
 
-    private var inputSurface: Surface? = null
-    private var screenWith: Int? = null
-    private var screenHeight: Int? = null
-    private var inputFps: Int? = null
+    fun startCapture(projection: MediaProjection?) {
+        if (mScreenCapture == null) {
+            mScreenCapture = CustomScreenCapture()
+            mScreenCapture?.setRecordDataCallBack(object :
+                    CustomScreenCapture.RecordDataCallBack {
+                override fun onRecordStoped() {
 
-    private val recordServiceConn = object : ServiceConnection {
-
-        private var mediaProjection: MediaProjection? = null
-
-        fun setProjection(mediaProjection: MediaProjection?) {
-            this.mediaProjection = mediaProjection
-        }
-
-        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
-            recordService = (service as? ScreenRecordService.LocalBinder)?.getService()
-
-            mediaProjection?.let { projection ->
-                inputSurface?.let { sur ->
-                    recordService?.setEcodeInputSurface(
-                        sur,
-                        screenWith ?: 0,
-                        screenHeight ?: 0,
-                        inputFps ?: 0
-                    )
-                    recordService?.setDataRecordCallBack(dataRecordCallBack)
-                    recordService?.startCapture(projection)
                 }
-            }
 
+                override fun onLogTest(log: String) {
+
+                }
+
+                override fun onDataCallBack(frame: TextureVideoFrame) {
+                    dataCallBack?.onTextureVideoFrame(frame)
+                }
+            })
         }
 
-        override fun onServiceDisconnected(componentName: ComponentName) {
-            recordService?.stopCapture()
-            recordService = null
-            dataRecordCallBack?.onErrorCode(StreamPushInstance.StateCode.SERVICE_DISCON_ERROR)
-            dataRecordCallBack?.onLogTest("service disconnect")
-        }
+        mScreenCapture?.updateSettings(
+                useWith,
+                useHeight,
+                SysUtils.getDpi(),
+                useFps
+        )
 
+        mScreenCapture?.startCapture(projection)
     }
 
-    fun startRecording(mediaProjection: MediaProjection?) {
-        val recordServiceIntent =
-            Intent(appContext?.applicationContext, ScreenRecordService::class.java)
-        recordServiceConn.setProjection(mediaProjection)
-        serviceIsBind = appContext?.bindService(
-            recordServiceIntent,
-            recordServiceConn,
-            Context.BIND_AUTO_CREATE
-        ) ?: false
-    }
-
-    fun resumeRecording() {
-        recordService?.resumeCapture()
-    }
-
-    fun pauseRecording() {
-        recordService?.pauseCapture()
-    }
-
-    fun setEcodeInputSurface(
-        inputSurface: Surface?,
-        screenWith: Int?,
-        screenHeight: Int?,
-        inputFps: Int?
+    fun setSettings(
+            screenWith: Int?,
+            screenHeight: Int?,
+            inputFps: Int?
     ) {
-        this.inputSurface = inputSurface
-        this.screenWith = screenWith
-        this.screenHeight = screenHeight
-        this.inputFps = inputFps
+        this.useWith = screenWith ?: 0
+        this.useHeight = screenHeight ?: 0
+        this.useFps = inputFps ?: 0
+    }
+
+    fun resetSettings(
+            inputFps: Int?
+    ) {
+        this.useFps = inputFps ?: 0
+        mScreenCapture?.updateSettings(useWith, useHeight, SysUtils.getDpi(), useFps)
     }
 
     fun reqRecordPerAndStart() {
@@ -119,11 +90,7 @@ class ScreenRecordManager {
     }
 
     fun stopCapture() {
-        recordService?.stopCapture()
-        if (serviceIsBind) {
-            appContext?.unbindService(recordServiceConn)
-            serviceIsBind = false
-        }
+        mScreenCapture?.stopCapture()
     }
 
 }

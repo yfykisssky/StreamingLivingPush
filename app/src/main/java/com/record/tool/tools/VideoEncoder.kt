@@ -8,6 +8,8 @@ import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.record.tool.utils.PushLogUtils
 import android.os.Bundle
+import com.record.tool.record.video.gl.TextureVideoFrame
+import com.record.tool.record.video.gl.ToSurfaceFrameRender
 
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -30,6 +32,32 @@ class VideoEncoder {
     private var frameWith = 0
     private var frameHeight = 0
 
+    private var mCustomSurfaceRender: ToSurfaceFrameRender? = null
+
+    private fun createInputRender(outSurface: Surface) {
+        if (mCustomSurfaceRender == null) {
+            mCustomSurfaceRender = ToSurfaceFrameRender()
+            mCustomSurfaceRender?.setOutPutSurface(outSurface, frameWith, frameHeight)
+        }
+    }
+
+    private fun releaseInputRender() {
+        mCustomSurfaceRender?.stop()
+        mCustomSurfaceRender = null
+    }
+
+    private fun resetInputRender(outSurface: Surface) {
+        mCustomSurfaceRender?.resetOutPutSurface(outSurface, frameWith, frameHeight)
+    }
+
+    fun addRenderFrame(textureFrame: TextureVideoFrame) {
+
+        mCustomSurfaceRender?.setIsFlipHorizontal(textureFrame.extraHandle?.fillHorizontal ?: false)
+        mCustomSurfaceRender?.onRenderVideoFrame(textureFrame)
+
+    }
+
+
     fun setDataCallBackListener(dataCallBackListener: DataCallBackListener) {
         this.dataCallBackListener = dataCallBackListener
     }
@@ -42,7 +70,7 @@ class VideoEncoder {
     }
 
     //重置编码器参数
-    fun resetEncoder(): Surface? {
+    fun resetEncoder(): Boolean {
 
         isEncoding = false
         encoderThread?.join()
@@ -50,11 +78,13 @@ class VideoEncoder {
         codec?.stop()
         codec?.reset()
         configEncoder()
+        getEncoderSurface()?.let {
+            resetInputRender(it)
+            startEncode()
+            return true
+        }
 
-        val inputSurface = getEncoderSurface()
-        startEncode()
-
-        return inputSurface
+        return false
     }
 
     fun getSetBitRate(): Int {
@@ -63,9 +93,9 @@ class VideoEncoder {
 
     //修改编码宽高会导致花屏
     fun updateResetEncodeSettings(
-        bitRate: Int,
-        maxFps: Int,
-        gopTime: Int = 2
+            bitRate: Int,
+            maxFps: Int,
+            gopTime: Int = 2
     ) {
         this.bitRate = bitRate
         this.maxFps = maxFps
@@ -73,11 +103,11 @@ class VideoEncoder {
     }
 
     fun updateEncodeSettings(
-        bitRate: Int,
-        maxFps: Int,
-        frameWith: Int,
-        frameHeight: Int,
-        gopTime: Int = 2
+            bitRate: Int,
+            maxFps: Int,
+            frameWith: Int,
+            frameHeight: Int,
+            gopTime: Int = 2
     ) {
         this.bitRate = bitRate
         this.maxFps = maxFps
@@ -99,18 +129,21 @@ class VideoEncoder {
         return codec?.createInputSurface()
     }
 
-    fun initEncoder(): Surface? {
+    fun initEncoder(): Boolean {
 
         try {
             codec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
             configEncoder()
-            return getEncoderSurface()
+            getEncoderSurface()?.let {
+                createInputRender(it)
+                return true
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             dataCallBackListener?.onLogTest(e.message ?: "")
         }
 
-        return null
+        return false
 
     }
 
@@ -120,8 +153,8 @@ class VideoEncoder {
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
         format.setInteger(MediaFormat.KEY_FRAME_RATE, maxFps)
         format.setInteger(
-            MediaFormat.KEY_COLOR_FORMAT,
-            MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+                MediaFormat.KEY_COLOR_FORMAT,
+                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
         )
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
         format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
@@ -141,6 +174,7 @@ class VideoEncoder {
     }
 
     fun stopEncode() {
+        releaseInputRender()
         isEncoding = false
         encoderThread?.join()
         releaseEncoder()

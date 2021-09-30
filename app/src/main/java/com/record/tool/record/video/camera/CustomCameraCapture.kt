@@ -11,10 +11,7 @@ import android.view.TextureView
 import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
-import com.record.tool.record.video.gl.PauseImageTool
-import com.record.tool.record.video.gl.TextureVideoFrame
-import com.record.tool.record.video.gl.ToSurfaceFrameRender
-import com.record.tool.record.video.gl.ToSurfaceViewFrameRender
+import com.record.tool.record.video.gl.*
 import com.record.tool.record.video.gl.basic.FrameBuffer
 import com.record.tool.record.video.gl.render.EglCore
 import com.record.tool.record.video.gl.render.opengl.*
@@ -63,20 +60,21 @@ class CustomCameraCapture : OnFrameAvailableListener {
     private var mGpuImageFilterGroup: GPUImageFilterGroup? = null
     private var mGLCubeBuffer: FloatBuffer? = null
     private var mGLTextureBuffer: FloatBuffer? = null
-    private val mTextureTransform = FloatArray(16) // OES纹理转换为2D纹理
+    private val mTextureTransform = FloatArray(16)
     private var mSurfaceTextureId = OpenGlUtils.NO_TEXTURE
     private var mFrameUpdated = false
     private var mRenderHandlerThread: HandlerThread? = null
 
-    private var mCustomSurfaceRender: ToSurfaceFrameRender? = null
     private var mCustomSurfaceViewRender: ToSurfaceViewFrameRender? = null
     private var mCustomPreviewView: TextureView? = null
 
     private data class CameraSize(var width: Int = -1, var height: Int = -1)
 
+    private var pauseImageTool: PauseImageTool? = null
+
     private var callBack: TextureHandleCallBack? = null
 
-    private var pauseImageTool: PauseImageTool? = null
+    private var isMirrorPush: Boolean = false
 
     interface TextureHandleCallBack {
         fun onTextureUpdate(frame: TextureVideoFrame): TextureVideoFrame
@@ -84,6 +82,16 @@ class CustomCameraCapture : OnFrameAvailableListener {
 
     fun setTextureHandleCallBack(callBack: TextureHandleCallBack?) {
         this.callBack = callBack
+    }
+
+    private var dataCallBack: RecordDataCallBack? = null
+
+    interface RecordDataCallBack {
+        fun onDataCallBack(frame: TextureVideoFrame)
+    }
+
+    fun setRecordDataCallBack(dataCallBack: RecordDataCallBack?) {
+        this.dataCallBack = dataCallBack
     }
 
     @Volatile
@@ -106,25 +114,16 @@ class CustomCameraCapture : OnFrameAvailableListener {
         }
     }
 
-    //更新编码surface
-    fun updateInputRender(
-        outSurface: Surface?,
-        outWidth: Int,
-        outHeight: Int,
-        fps: Int
+    fun updateSettings(
+            outWidth: Int,
+            outHeight: Int,
+            fps: Int
     ) {
 
         this.recordWith = outWidth
         this.recordHeight = outHeight
         this.recordFps = fps
         renderInterval = ((1000L / recordFps) * TIME_COEFFICIENT).toLong()
-
-        if (mCustomSurfaceRender == null) {
-            mCustomSurfaceRender = ToSurfaceFrameRender()
-            mCustomSurfaceRender?.setOutPutSurface(outSurface, recordHeight, recordWith)
-        } else {
-            mCustomSurfaceRender?.resetOutPutSurface(outSurface, recordHeight, recordWith)
-        }
 
     }
 
@@ -139,15 +138,19 @@ class CustomCameraCapture : OnFrameAvailableListener {
     fun stopCapture() {
         releaseRender()
         releaseCamera()
+        resetData()
+    }
+
+    private fun resetData() {
+        isMirrorPush = false
     }
 
     fun toogleMirror() {
-        val isMirrorPush = !(mCustomSurfaceRender?.isFlipHorizontal ?: false)
-        mCustomSurfaceRender?.setIsFlipHorizontal(isMirrorPush)
+        isMirrorPush = !isMirrorPush
     }
 
     fun isMirror(): Boolean {
-        return mCustomSurfaceRender?.isFlipHorizontal ?: false
+        return isMirrorPush
     }
 
 
@@ -183,8 +186,8 @@ class CustomCameraCapture : OnFrameAvailableListener {
 
         mCamera?.parameters?.let { parameters ->
             if (parameters.supportedFocusModes.contains(
-                    Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
-                )
+                            Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
+                    )
             ) {
                 parameters.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
             }
@@ -291,10 +294,10 @@ class CustomCameraCapture : OnFrameAvailableListener {
                     sur.getTransformMatrix(mTextureTransform)
                     mOesInputFilter?.setTexutreTransform(mTextureTransform)
                     mGpuImageFilterGroup?.draw(
-                        mSurfaceTextureId,
-                        mFrameBuffer?.frameBufferId ?: 0,
-                        mGLCubeBuffer,
-                        mGLTextureBuffer
+                            mSurfaceTextureId,
+                            mFrameBuffer?.frameBufferId ?: 0,
+                            mGLCubeBuffer,
+                            mGLTextureBuffer
                     )
                     GLES20.glFinish()
 
@@ -310,10 +313,12 @@ class CustomCameraCapture : OnFrameAvailableListener {
 
                     mCustomSurfaceViewRender?.onRenderVideoFrame(textureFrame)
 
+                    textureFrame.extraHandle = ExtraHandle(fillHorizontal = isMirrorPush)
+
                     //编码前处理
                     textureFrame = pauseImageTool?.transTexture(textureFrame) ?: textureFrame
 
-                    mCustomSurfaceRender?.onRenderVideoFrame(textureFrame)
+                    dataCallBack?.onDataCallBack(textureFrame)
 
                 }
             } catch (e: Exception) {
@@ -356,30 +361,33 @@ class CustomCameraCapture : OnFrameAvailableListener {
 
     private fun initRender() {
         val cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(
-            ImageView.ScaleType.CENTER_CROP,
-            cameraUseOrientation(),
-            needCameraFlipHorizontal(),
-            needCameraFlipVertical(),
-            recordWith,
-            recordHeight,
-            recordHeight,
-            recordWith
+                ImageView.ScaleType.CENTER_CROP,
+                cameraUseOrientation(),
+                needCameraFlipHorizontal(),
+                needCameraFlipVertical(),
+                recordWith,
+                recordHeight,
+                recordHeight,
+                recordWith
         )
+
         mGLCubeBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.CUBE.size * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
+                ByteBuffer.allocateDirect(OpenGlUtils.CUBE.size * 4).order(ByteOrder.nativeOrder())
+                        .asFloatBuffer()
         mGLCubeBuffer?.put(cubeAndTextureBuffer.first)
         mGLTextureBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.size * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
+                ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.size * 4).order(ByteOrder.nativeOrder())
+                        .asFloatBuffer()
         mGLTextureBuffer?.put(cubeAndTextureBuffer.second)
 
         mEglCore = EglCore(recordWith, recordHeight)
         mEglCore?.makeCurrent()
+
         mSurfaceTextureId = OpenGlUtils.generateTextureOES()
         mSurfaceTexture = SurfaceTexture(mSurfaceTextureId)
         mFrameBuffer = FrameBuffer(recordWith, recordHeight)
         mFrameBuffer?.initialize()
+
         mGpuImageFilterGroup = GPUImageFilterGroup()
         mOesInputFilter = OesInputFilter()
         mGpuImageFilterGroup?.addFilter(mOesInputFilter)
@@ -411,9 +419,6 @@ class CustomCameraCapture : OnFrameAvailableListener {
         mEglCore?.unmakeCurrent()
         mEglCore?.destroy()
         mEglCore = null
-
-        mCustomSurfaceRender?.stop()
-        mCustomSurfaceRender = null
 
         mCustomSurfaceViewRender?.stop()
         mCustomSurfaceViewRender = null
