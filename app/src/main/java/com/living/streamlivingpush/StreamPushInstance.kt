@@ -94,15 +94,15 @@ class StreamPushInstance {
     }
 
     fun reset(
-            bitRateVideo: Int,
-            fps: Int,
-            audioBitRate: Int
+        bitRateVideo: Int,
+        fps: Int,
+        audioBitRate: Int
     ) {
 
         encodeVideoTool?.updateResetEncodeSettings(
-                TransUtils.kbps2bs(bitRateVideo),
-                fps,
-                2
+            TransUtils.kbps2bs(bitRateVideo),
+            fps,
+            2
         )
         encodeVideoTool?.resetEncoder()
         recordCameraTool?.resetSettings(fps)
@@ -110,45 +110,48 @@ class StreamPushInstance {
     }
 
     fun resetI(
-            bitRateVideo: Int,
-            fps: Int
+        bitRateVideo: Int,
+        fps: Int
     ) {
-        encodeVideoTool?.updateResetEncodeSettings(
-                bitRateVideo,
-                fps,
-                2
-        )
-        encodeVideoTool?.resetEncoder()
-        recordCameraTool?.resetSettings(fps)
-        //encoderMonitorTool.updateTargetData(bitRateVideo, fps)
+        encodeVideoTool?.checkCanSetBitRate(bitRateVideo)?.let { setBit ->
+            if (setBit != 0) {
+                encodeVideoTool?.updateResetEncodeSettings(
+                    setBit,
+                    fps,
+                    2
+                )
+                encodeVideoTool?.resetEncoder()
+                recordCameraTool?.resetSettings(fps)
+            }
+        }
     }
 
     fun prepareRecord(
-            bitRateVideo: Int,
-            fps: Int,
-            screenWith: Int,
-            screenHeight: Int,
-            audioBitRate: Int
+        bitRateVideo: Int,
+        fps: Int,
+        screenWith: Int,
+        screenHeight: Int,
+        audioBitRate: Int
     ) {
 
         encodeVideoTool?.updateEncodeSettings(
-                TransUtils.kbps2bs(bitRateVideo),
-                fps,
-                screenWith,
-                screenHeight
+            TransUtils.kbps2bs(bitRateVideo),
+            fps,
+            screenWith,
+            screenHeight
         )
         encodeVideoTool?.initEncoder()
 
-      /*  recordCameraTool?.setSettings(
-                screenWith,
-                screenHeight,
-                fps
-        )*/
+        /*  recordCameraTool?.setSettings(
+                  screenWith,
+                  screenHeight,
+                  fps
+          )*/
 
         recordScreenTool?.setSettings(
-                screenWith,
-                screenHeight,
-                fps
+            screenWith,
+            screenHeight,
+            fps
         )
 
         //encodeAudioTool?.initEncoder(audioBitRate)
@@ -164,21 +167,21 @@ class StreamPushInstance {
 
         isRecordAndEncoding = true
 
-    /*    recordCameraTool?.setDataRecordCallBack(object : CameraRecordManager.DataRecordCallBack {
-            override fun onErrorCode(code: StateCode) {
+        /*    recordCameraTool?.setDataRecordCallBack(object : CameraRecordManager.DataRecordCallBack {
+                override fun onErrorCode(code: StateCode) {
 
-            }
+                }
 
-            override fun onLogTest(log: String) {
+                override fun onLogTest(log: String) {
 
-            }
+                }
 
-            override fun onDataCallBack(frame: TextureVideoFrame) {
-                encodeVideoTool?.addRenderFrame(frame)
-            }
-        })*/
+                override fun onDataCallBack(frame: TextureVideoFrame) {
+                    encodeVideoTool?.addRenderFrame(frame)
+                }
+            })*/
 
-        recordScreenTool?.setDataCallBack(object: ScreenRecordManager.DataCallBack{
+        recordScreenTool?.setDataCallBack(object : ScreenRecordManager.DataCallBack {
             override fun onTextureVideoFrame(frame: TextureVideoFrame) {
                 encodeVideoTool?.addRenderFrame(frame)
             }
@@ -209,6 +212,8 @@ class StreamPushInstance {
             }
         })
 
+        encodeVideoTool?.startEncode()
+
         /*encodeVideoTool?.startEncode()
 
         encodeAudioTool?.setDataCallBackListener(object : AudioEncoder.DataCallBackListener {
@@ -233,9 +238,9 @@ class StreamPushInstance {
         encoderMonitorTool.setCountCallBack(object : StateMonitorTool.CountCallBack {
             override fun onCount(bitRate: Int, fps: Int) {
                 EncodeControlUtils.checkNeedReset(
-                        bitRate,
-                        1000 * 1024,
-                        encodeVideoTool?.getSetBitRate() ?: 0
+                    bitRate,
+                    encoderMonitorTool.tagBitRate,
+                    encodeVideoTool?.getSetBitRate() ?: 0
                 ).let {
                     if (it.first) {
                         resetI(it.second, encoderMonitorTool.tagFps)
@@ -246,7 +251,7 @@ class StreamPushInstance {
 
         encoderMonitorTool.startMonitor()
 
-        encodeAudioTool?.startEncode()
+        //encodeAudioTool?.startEncode()
 
         //recordCameraTool?.startCapture(0)
 

@@ -8,6 +8,7 @@ import android.view.Surface
 import androidx.annotation.RequiresApi
 import com.record.tool.utils.PushLogUtils
 import android.os.Bundle
+import android.util.Range
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.gl.ToSurfaceFrameRender
 
@@ -80,7 +81,7 @@ class VideoEncoder {
         configEncoder()
         getEncoderSurface()?.let {
             resetInputRender(it)
-            startEncode()
+            beginEncode()
             return true
         }
 
@@ -93,9 +94,9 @@ class VideoEncoder {
 
     //修改编码宽高会导致花屏
     fun updateResetEncodeSettings(
-            bitRate: Int,
-            maxFps: Int,
-            gopTime: Int = 2
+        bitRate: Int,
+        maxFps: Int,
+        gopTime: Int = 2
     ) {
         this.bitRate = bitRate
         this.maxFps = maxFps
@@ -103,11 +104,11 @@ class VideoEncoder {
     }
 
     fun updateEncodeSettings(
-            bitRate: Int,
-            maxFps: Int,
-            frameWith: Int,
-            frameHeight: Int,
-            gopTime: Int = 2
+        bitRate: Int,
+        maxFps: Int,
+        frameWith: Int,
+        frameHeight: Int,
+        gopTime: Int = 2
     ) {
         this.bitRate = bitRate
         this.maxFps = maxFps
@@ -147,14 +148,32 @@ class VideoEncoder {
 
     }
 
+    private fun getSetBitRateRange(): Range<Int>? {
+        return codec?.codecInfo?.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC)?.videoCapabilities?.bitrateRange
+    }
+
+    fun checkCanSetBitRate(setBit: Int): Int {
+        var newBitRate = 0
+        getSetBitRateRange()?.let {
+            newBitRate = setBit
+            if (newBitRate > it.upper) {
+                newBitRate = it.upper
+            }
+            if (newBitRate < it.lower) {
+                newBitRate = it.lower
+            }
+        }
+        return newBitRate
+    }
+
     private fun getEncodeFormat(): MediaFormat {
         val format = MediaFormat()
         format.setString(MediaFormat.KEY_MIME, MediaFormat.MIMETYPE_VIDEO_AVC)
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
         format.setInteger(MediaFormat.KEY_FRAME_RATE, maxFps)
         format.setInteger(
-                MediaFormat.KEY_COLOR_FORMAT,
-                MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
+            MediaFormat.KEY_COLOR_FORMAT,
+            MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface
         )
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, iFrameInterval)
         format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
@@ -168,12 +187,18 @@ class VideoEncoder {
     }
 
     fun startEncode() {
+        encodeStartTimeStamp = System.currentTimeMillis()
+        beginEncode()
+    }
+
+    private fun beginEncode() {
         isEncoding = true
         encoderThread = Thread(EncodeRunnable())
         encoderThread?.start()
     }
 
     fun stopEncode() {
+        encodeStartTimeStamp = 0L
         releaseInputRender()
         isEncoding = false
         encoderThread?.join()
@@ -212,7 +237,6 @@ class VideoEncoder {
 
             try {
                 codec?.start()
-                encodeStartTimeStamp = System.currentTimeMillis()
                 while (isEncoding) {
                     //synchronized(encoderRuningLock) {
                     /*timeoutUs：用于等待返回可用buffer的时间

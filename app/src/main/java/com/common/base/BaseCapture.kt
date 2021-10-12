@@ -178,7 +178,7 @@ abstract class BaseCapture : OnFrameAvailableListener {
         mOesInputFilter = OesInputFilter()
 
         mGpuImageFilterGroup?.addFilter(mOesInputFilter)
-        mGpuImageFilterGroup?.addFilter(GPUImageFilter(true))
+        mGpuImageFilterGroup?.addFilter(GPUImageFilter(false))
         mGpuImageFilterGroup?.init()
         mGpuImageFilterGroup?.onOutputSizeChanged(getCaptureWith(), getCaptureHeight())
 
