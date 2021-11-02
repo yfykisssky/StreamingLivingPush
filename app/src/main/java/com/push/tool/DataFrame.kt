@@ -1,4 +1,4 @@
-package com.rtmppush.tool
+package com.push.tool
 
 class VideoFrame(
     var byteArray: ByteArray? = null,

@@ -1,5 +1,9 @@
-package com.rtmppush.tool
+package com.push.tool.rtmp
 
+import com.push.tool.AudioFrame
+import com.push.tool.VideoFrame
+import com.record.tool.utils.CheckUtils
+import com.record.tool.utils.FrameType
 import com.record.tool.utils.PushLogUtils
 import java.util.concurrent.LinkedBlockingQueue
 
@@ -106,4 +110,32 @@ open class RtmpPushTool {
     fun stopPushing() {
         isPushing = false
     }
+
+    fun disCardVideoGop(): Long {
+
+        while (true) {
+            val currentFrame = queueVideoFrame?.peek()
+            if (CheckUtils.judgeBytesFrameKind(currentFrame?.byteArray) == FrameType.I_FRAME) {
+                return currentFrame?.timestamp ?: 0L
+            } else {
+                queueVideoFrame?.remove()
+            }
+        }
+
+    }
+
+    fun disCardAudioFrames(timeStamp: Long) {
+
+        while (true) {
+            val currentFrame = queueVideoFrame?.peek()
+            if (currentFrame?.timestamp ?: Long.MAX_VALUE >= timeStamp) {
+                break
+            } else {
+                queueVideoFrame?.remove()
+            }
+        }
+
+    }
+
+
 }

@@ -12,9 +12,8 @@ import com.record.tool.tools.VideoEncoder
 import com.record.tool.utils.EncodeControlUtils
 import com.record.tool.utils.StateMonitorTool
 import com.record.tool.utils.TransUtils
-import com.rtmppush.tool.AudioFrame
-import com.rtmppush.tool.RtmpPushTool
-import com.rtmppush.tool.VideoFrame
+import com.push.tool.rtmp.RtmpPushTool
+import com.push.tool.VideoFrame
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class StreamPushInstance {
