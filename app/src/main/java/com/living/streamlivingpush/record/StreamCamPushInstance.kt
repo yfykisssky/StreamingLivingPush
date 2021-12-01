@@ -3,6 +3,8 @@ package com.living.streamlivingpush.record
 import android.view.TextureView
 import com.living.streamlivingpush.base.BaseStreamPushInstance
 import com.record.tool.record.video.camera.CameraRecordManager
+import com.record.tool.record.video.gl.TextureVideoFrame
+import com.record.tool.record.video.screen.ScreenRecordManager
 
 abstract class StreamCamPushInstance : BaseStreamPushInstance() {
 
@@ -56,6 +58,12 @@ abstract class StreamCamPushInstance : BaseStreamPushInstance() {
     protected fun startRecode(useCamId: Int) {
 
         super.startPush()
+
+        recordCameraTool?.setDataCallBack(object : CameraRecordManager.DataCallBack {
+            override fun onTextureVideoFrame(frame: TextureVideoFrame) {
+                addVideoRenderFrame(frame)
+            }
+        })
 
         recordCameraTool?.startCapture(useCamId)
     }

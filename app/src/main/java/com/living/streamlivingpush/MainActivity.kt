@@ -6,6 +6,7 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
+import com.living.streamlivingpush.push.StreamRtmpCamPushInstance
 import com.living.streamlivingpush.push.StreamRtmpScreenPushInstance
 import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
 import com.record.tool.record.video.screen.service.PerReqForegroundService
@@ -22,15 +23,15 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 64
 
-    private var pushInstance= StreamRtmpScreenPushInstance.instance
+    private var pushInstance = StreamRtmpScreenPushInstance.instance
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         requestPermissions(
-                arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA),
-                10
+            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA),
+            10
         )
 
         start?.setOnClickListener {
@@ -45,21 +46,21 @@ class MainActivity : Activity() {
             stopPush()
         }
 
-   /*     pause?.setOnClickListener {
-            StreamPushInstance.instance.s()
-        }
+        /*     pause?.setOnClickListener {
+                 StreamPushInstance.instance.s()
+             }
 
-        resume?.setOnClickListener {
-            StreamPushInstance.instance.r()
-        }
+             resume?.setOnClickListener {
+                 StreamPushInstance.instance.r()
+             }
 
-        switchCamera?.setOnClickListener {
-            StreamPushInstance.instance.switchCamera()
-        }
+             switchCamera?.setOnClickListener {
+                 StreamPushInstance.instance.switchCamera()
+             }
 
-        flip?.setOnClickListener {
-            StreamPushInstance.instance.toogle()
-        }*/
+             flip?.setOnClickListener {
+                 StreamPushInstance.instance.toogle()
+             }*/
 
         resetBnt?.setOnClickListener {
             val fps = editFps?.text.toString().toInt()
@@ -68,11 +69,11 @@ class MainActivity : Activity() {
             videoBitRate = bit
             videoFps = fps
 
-           /* StreamPushInstance.instance.reset(
-                    videoBitRate,
-                    videoFps,
-                    audioBitRate
-            )*/
+            /* StreamPushInstance.instance.reset(
+                     videoBitRate,
+                     videoFps,
+                     audioBitRate
+             )*/
 
             updateFpsBitShow()
         }
@@ -89,11 +90,16 @@ class MainActivity : Activity() {
 
     private fun startPush() {
         pushInstance.initTool()
-        pushInstance.initEncodeSettings(  videoBitRate,
+        pushInstance.initEncodeSettings(
+            videoBitRate,
             videoFps,
             videoWith,
             videoHeight,
-            audioBitRate)
+            audioBitRate
+        )
+
+        //cameraPreviewView?.addView(pushInstance.getPreviewView())
+
         pushInstance.startPushing("")
     }
 

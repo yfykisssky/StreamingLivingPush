@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Surface
 import com.common.base.BaseCapture
+import com.record.tool.record.video.gl.PauseImageTool
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.gl.render.opengl.*
 import com.record.tool.utils.PushLogUtils
@@ -42,6 +43,8 @@ class CustomScreenCapture : BaseCapture() {
     private var needCutFrame = true
 
     private var dataCallBack: RecordDataCallBack? = null
+
+    private var pauseImageTool: PauseImageTool? = null
 
     interface RecordDataCallBack : BaseRecordDataCallBack {
         fun onRecordStoped()
@@ -106,15 +109,16 @@ class CustomScreenCapture : BaseCapture() {
     }
 
     override fun onRender2DTextureFrame(textureFrame: TextureVideoFrame) {
+        //编码前处理
         textureFrame.captureTimeStamp = System.nanoTime()
-        dataCallBack?.onDataCallBack(textureFrame)
+        dataCallBack?.onDataCallBack(pauseImageTool?.transTexture(textureFrame) ?: textureFrame)
     }
 
     fun updateSettings(
-            outWidth: Int,
-            outHeight: Int,
-            screenDensity: Int,
-            fps: Int
+        outWidth: Int,
+        outHeight: Int,
+        screenDensity: Int,
+        fps: Int
     ) {
 
         mWidth = outWidth
@@ -146,13 +150,15 @@ class CustomScreenCapture : BaseCapture() {
     override fun initRenderEnd() {
         mSurface = Surface(mSurfaceTexture)
         toStartInput()
+
+        pauseImageTool = PauseImageTool()
     }
 
     private fun toStartInput() {
         mVirtualDisplay = mMediaProjection?.createVirtualDisplay(
-                "ScreenCapture",
-                mWidth, mHeight, mScreenDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, mSurface,
-                null, null
+            "ScreenCapture",
+            mWidth, mHeight, mScreenDensity, DisplayManager.VIRTUAL_DISPLAY_FLAG_PUBLIC, mSurface,
+            null, null
         )
         mMediaProjection?.registerCallback(mediaProjectionCallback, null)
     }
@@ -169,8 +175,10 @@ class CustomScreenCapture : BaseCapture() {
     fun stopCapture() {
         releaseMediaProjection()
         releaseRender()
-    }
 
+        pauseImageTool?.destory()
+        pauseImageTool = null
+    }
 
     private fun initMediaProjection(projection: MediaProjection?) {
         mMediaProjection = projection
@@ -187,6 +195,14 @@ class CustomScreenCapture : BaseCapture() {
         mVirtualDisplay = null
         mMediaProjection = null
 
+    }
+
+    fun startPushImage() {
+        pauseImageTool?.startReplace()
+    }
+
+    fun stopPushImage() {
+        pauseImageTool?.stopReplace()
     }
 
 }

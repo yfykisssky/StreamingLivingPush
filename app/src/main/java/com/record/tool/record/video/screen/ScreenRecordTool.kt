@@ -117,6 +117,14 @@ class ScreenRecordManager {
         mScreenCapture?.stopCapture()
     }
 
+    fun startPushImage() {
+        mScreenCapture?.startPushImage()
+    }
+
+    fun stopPushImage() {
+        mScreenCapture?.stopPushImage()
+    }
+
 }
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

@@ -16,16 +16,14 @@ class CameraRecordManager {
 
     private var appContext = AppApplication.appContext
 
-    fun setDataRecordCallBack(dataRecordCallBack: DataRecordCallBack?) {
-        this.dataRecordCallBack = dataRecordCallBack
+    interface DataCallBack {
+        fun onTextureVideoFrame(frame: TextureVideoFrame)
     }
 
-    interface DataRecordCallBack : CustomCameraCapture.RecordDataCallBack {
-        fun onErrorCode(code: StreamPushInstance.StateCode)
-        fun onLogTest(log: String)
+    private var dataCallBack: DataCallBack? = null
+    fun setDataCallBack(dataCallBack: DataCallBack?) {
+        this.dataCallBack = dataCallBack
     }
-
-    private var dataRecordCallBack: DataRecordCallBack? = null
 
     private var useWith: Int = 0
     private var useHeight: Int = 0
@@ -46,7 +44,7 @@ class CameraRecordManager {
         if (mCameraCapture == null) {
             mCameraCapture = CustomCameraCapture()
             mCameraCapture?.setTextureHandleCallBack(object :
-                    CustomCameraCapture.TextureHandleCallBack {
+                CustomCameraCapture.TextureHandleCallBack {
                 override fun onTextureUpdate(frame: TextureVideoFrame): TextureVideoFrame {
                     return frame
                 }
@@ -54,12 +52,12 @@ class CameraRecordManager {
 
             mCameraCapture?.setRecordDataCallBack(object : CustomCameraCapture.RecordDataCallBack {
                 override fun onDataCallBack(frame: TextureVideoFrame) {
-                    dataRecordCallBack?.onDataCallBack(frame)
+                    dataCallBack?.onTextureVideoFrame(frame)
                 }
             })
         }
         mCameraCapture?.updateSettings(useWith, useHeight, useFps)
-        mCameraCapture?.updatePreviewRenderView(cameraPreviewView)
+        mCameraCapture?.updatePreviewRenderView(getPreviewView())
         mCameraCapture?.startCapture(useCameraId)
     }
 
@@ -89,9 +87,9 @@ class CameraRecordManager {
     }
 
     fun setSettings(
-            screenWith: Int?,
-            screenHeight: Int?,
-            inputFps: Int?
+        screenWith: Int?,
+        screenHeight: Int?,
+        inputFps: Int?
     ) {
         this.useWith = screenWith ?: 0
         this.useHeight = screenHeight ?: 0
@@ -99,7 +97,7 @@ class CameraRecordManager {
     }
 
     fun resetSettings(
-            inputFps: Int?
+        inputFps: Int?
     ) {
         this.useFps = inputFps ?: 0
         mCameraCapture?.updateSettings(useWith, useHeight, useFps)

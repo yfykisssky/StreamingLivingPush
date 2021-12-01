@@ -33,6 +33,14 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
         )
     }
 
+    fun usePriImgPush(usePri: Boolean) {
+        if (usePri) {
+            recordScreenTool?.startPushImage()
+        } else {
+            recordScreenTool?.stopPushImage()
+        }
+    }
+
     protected fun startRecode() {
 
         super.startPush()
