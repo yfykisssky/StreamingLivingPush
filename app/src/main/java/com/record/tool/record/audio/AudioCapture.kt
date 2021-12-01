@@ -1,9 +1,11 @@
 package com.record.tool.record.audio
 
-import android.media.AudioFormat
-import android.media.AudioRecord
-import android.media.MediaRecorder
+import android.media.*
+import android.media.projection.MediaProjection
+import android.os.Build
+import androidx.annotation.RequiresApi
 import com.record.tool.record.audio.AudioConstants.Companion.getSampleDataSize
+import com.record.tool.utils.AudioJavaUtils
 
 class AudioCapture {
 
@@ -14,6 +16,7 @@ class AudioCapture {
     private var isPause = false
 
     private var isRecording = false
+    private var recordInside = false
 
     //录音监听
     private var recordListener: RecordListener? = null
@@ -23,6 +26,12 @@ class AudioCapture {
 
     fun setRecordListener(recordListener: RecordListener?) {
         this.recordListener = recordListener
+    }
+
+    private var mMediaProjection: MediaProjection? = null
+
+    fun setMediaProjection(mMediaProjection: MediaProjection?) {
+        this.mMediaProjection = mMediaProjection
     }
 
     //开始录音
@@ -50,14 +59,46 @@ class AudioCapture {
     private inner class AudioRecordThread : Thread() {
 
         private var audioRecord: AudioRecord? = null
+        private var audioRecordInside: AudioRecord? = null
         private val bufferSize = getSampleDataSize()
 
         //参数初始化
         init {
+            initMicCapture()
+
+            if (recordInside) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    initInsideCapture()
+                }
+            }
+        }
+
+        private fun initMicCapture() {
             audioRecord = AudioRecord(
                 MediaRecorder.AudioSource.MIC, AudioConstants.SAMPLE_RATE,
                 AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT, bufferSize
             )
+        }
+
+        @RequiresApi(Build.VERSION_CODES.Q)
+        private fun initInsideCapture() {
+            mMediaProjection?.let { projection ->
+                val config = AudioPlaybackCaptureConfiguration.Builder(projection)
+                    .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                    .addMatchingUsage(AudioAttributes.USAGE_GAME)
+                    .build()
+                val audioFormat = AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(AudioConstants.SAMPLE_RATE)
+                    .setChannelMask(AudioFormat.CHANNEL_IN_STEREO)
+                    .build()
+
+                audioRecordInside = AudioRecord.Builder()
+                    .setBufferSizeInBytes(bufferSize)
+                    .setAudioFormat(audioFormat)
+                    .setAudioPlaybackCaptureConfig(config)
+                    .build()
+            }
         }
 
         override fun run() {
@@ -69,20 +110,41 @@ class AudioCapture {
             isRecording = true
             try {
                 audioRecord?.startRecording()
-                val byteBuffer = ByteArray(bufferSize)
+                audioRecordInside?.startRecording()
+
+                val byteMic = ByteArray(bufferSize)
+                val byteInside = ByteArray(bufferSize)
+
                 while (isRecording) {
-                    audioRecord?.read(byteBuffer, 0, byteBuffer.size)
+                    audioRecord?.read(byteMic, 0, byteMic.size)
+
+                    val byteOut = if (recordInside) {
+                        audioRecordInside?.read(byteInside, 0, byteInside.size)
+                        AudioJavaUtils.mixRawAudioBytes(
+                            byteMic,
+                            byteInside
+                        )
+                    } else {
+                        byteMic
+                    }
+
                     if (!isPause) {
-                        recordListener?.onData(byteBuffer,byteBuffer.size)
+                        recordListener?.onData(byteOut, byteOut.size)
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 recordListener?.onError()
             } finally {
+
                 audioRecord?.stop()
                 audioRecord?.release()
                 audioRecord = null
+
+                audioRecordInside?.stop()
+                audioRecordInside?.release()
+                audioRecordInside = null
+
                 isPause = false
             }
         }
