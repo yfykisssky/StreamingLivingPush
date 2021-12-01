@@ -4,6 +4,7 @@ import android.media.projection.MediaProjection
 import android.os.Build
 import android.view.TextureView
 import androidx.annotation.RequiresApi
+import com.push.tool.AudioFrame
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.screen.ScreenRecordManager
@@ -12,8 +13,8 @@ import com.record.tool.tools.VideoEncoder
 import com.record.tool.utils.EncodeControlUtils
 import com.record.tool.utils.StateMonitorTool
 import com.record.tool.utils.TransUtils
-import com.push.tool.rtmp.RtmpPushTool
 import com.push.tool.VideoFrame
+import com.push.tool.socket.SocketClient
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class StreamPushInstance {
@@ -33,7 +34,9 @@ class StreamPushInstance {
 
     private var encoderMonitorTool = StateMonitorTool()
 
-    private var rtmpPushTool: RtmpPushTool? = null
+    //private var rtmpPushTool: RtmpPushTool? = null
+
+    private var socketPushTool: SocketClient? = null
 
     private var recordStateCallBack: RecordStateCallBack? = null
 
@@ -69,7 +72,9 @@ class StreamPushInstance {
 
         encodeVideoTool = VideoEncoder()
         encodeAudioTool = AudioEncoder()
-        rtmpPushTool = RtmpPushTool()
+
+        //rtmpPushTool = RtmpPushTool()
+        socketPushTool = SocketClient()
     }
 
     fun getView(): TextureView? {
@@ -92,37 +97,21 @@ class StreamPushInstance {
         recordCameraTool?.switchCamera()
     }
 
-    fun reset(
-        bitRateVideo: Int,
-        fps: Int,
-        audioBitRate: Int
-    ) {
-
-        encodeVideoTool?.updateResetEncodeSettings(
-            TransUtils.kbps2bs(bitRateVideo),
-            fps,
-            2
-        )
-        encodeVideoTool?.resetEncoder()
-        recordCameraTool?.resetSettings(fps)
-        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
-    }
 
     fun resetI(
         bitRateVideo: Int,
         fps: Int
     ) {
-        encodeVideoTool?.checkCanSetBitRate(bitRateVideo)?.let { setBit ->
+     /*   encodeVideoTool?.checkCanSetBitRate(bitRateVideo)?.let { setBit ->
             if (setBit != 0) {
                 encodeVideoTool?.updateResetEncodeSettings(
                     setBit,
-                    fps,
-                    2
+                    fps
                 )
                 encodeVideoTool?.resetEncoder()
                 recordCameraTool?.resetSettings(fps)
             }
-        }
+        }*/
     }
 
     fun prepareRecord(
@@ -158,7 +147,57 @@ class StreamPushInstance {
         encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
     }
 
-    fun startRecordAndSendData(pushUrl: String) {
+    private fun startEncode(){
+        encodeVideoTool?.setDataCallBackListener(object : VideoEncoder.DataCallBackListener {
+
+            override fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long) {
+                val vFrame = VideoFrame()
+                vFrame.byteArray = byteArray
+                vFrame.timestamp = timeStamp
+
+                //rtmpPushTool?.addVideoFrame(vFrame)
+                socketPushTool?.addVideoFrame(vFrame)
+
+                encoderMonitorTool.updateBitrate(byteArray?.size ?: 0)
+                encoderMonitorTool.updateFpsCount()
+            }
+
+            override fun onEncodeError() {
+                recordStateCallBack?.onState(StateCode.ENCODE_ERROR)
+            }
+
+            override fun onLogTest(log: String) {
+                recordStateCallBack?.onLog(log)
+            }
+        })
+
+        encodeVideoTool?.startEncode()
+
+
+        encodeAudioTool?.setDataCallBackListener(object : AudioEncoder.DataCallBackListener {
+
+            override fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long, isHeader: Boolean) {
+                val aFrame = AudioFrame()
+                aFrame.isHeader = isHeader
+                aFrame.byteArray = byteArray
+                aFrame.timestamp = timeStamp
+                //rtmpPushTool?.addAudioFrame(aFrame)
+            }
+
+            override fun onEncodeError() {
+                recordStateCallBack?.onState(StateCode.ENCODE_ERROR)
+            }
+
+            override fun onLogTest(log: String) {
+                recordStateCallBack?.onLog(log)
+            }
+        })
+
+        encodeAudioTool?.startEncode()
+
+    }
+
+    fun startRecordAndSendData() {
 
         /* if (TextUtils.isEmpty(pushUrl)) {
              return
@@ -188,6 +227,10 @@ class StreamPushInstance {
             override fun onStoped() {
             }
 
+            override fun onRefused() {
+
+            }
+
         })
 
         encodeVideoTool?.setDataCallBackListener(object : VideoEncoder.DataCallBackListener {
@@ -196,7 +239,9 @@ class StreamPushInstance {
                 val vFrame = VideoFrame()
                 vFrame.byteArray = byteArray
                 vFrame.timestamp = timeStamp
-                rtmpPushTool?.addVideoFrame(vFrame)
+
+                //rtmpPushTool?.addVideoFrame(vFrame)
+                socketPushTool?.addVideoFrame(vFrame)
 
                 encoderMonitorTool.updateBitrate(byteArray?.size ?: 0)
                 encoderMonitorTool.updateFpsCount()
@@ -256,8 +301,8 @@ class StreamPushInstance {
 
         recordScreenTool?.reqRecordPerAndStart()
 
-        rtmpPushTool?.startPushing(pushUrl)
-
+        //rtmpPushTool?.startPushing(pushUrl)
+        socketPushTool?.openSocket("192.168.26.192", 9999)
     }
 
     fun hasPerAndStartRecord(projection: MediaProjection?) {
@@ -272,8 +317,11 @@ class StreamPushInstance {
 
         encoderMonitorTool.stopMonitor()
 
-        rtmpPushTool?.stopPushing()
-        rtmpPushTool = null
+        //rtmpPushTool?.stopPushing()
+        //rtmpPushTool = null
+
+        socketPushTool?.closeSocket()
+        socketPushTool = null
 
         recordScreenTool?.stopCapture()
         recordScreenTool = null

@@ -1,12 +1,10 @@
 #include <jni.h>
 #include "packt.h"
 
-//com.rtmptool.tool
-
 Pusher *pusher = 0;
 
 JNIEXPORT jboolean JNICALL
-Java_com_rtmppush_tool_RtmpPushTool_connect(JNIEnv *env, jobject obj, jstring url_) {
+Java_com_push_tool_rtmp_RtmpPushTool_connect(JNIEnv *env, jobject obj, jstring url_) {
     const char *url = (*env)->GetStringUTFChars(env, url_, 0);
     int ret;
     do {
@@ -29,12 +27,12 @@ Java_com_rtmppush_tool_RtmpPushTool_connect(JNIEnv *env, jobject obj, jstring ur
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_rtmppush_tool_RtmpPushTool_isConnect(JNIEnv *env, jobject obj) {
+Java_com_push_tool_rtmp_RtmpPushTool_isConnect(JNIEnv *env, jobject obj) {
     return pusher && pusher->rtmp && RTMP_IsConnected(pusher->rtmp);
 }
 
 JNIEXPORT void JNICALL
-Java_com_rtmppush_tool_RtmpPushTool_disConnect(JNIEnv *env, jobject obj) {
+Java_com_push_tool_rtmp_RtmpPushTool_disConnect(JNIEnv *env, jobject obj) {
     if (pusher) {
         if (pusher->sps) {
             free(pusher->sps);
@@ -59,7 +57,7 @@ int sendPacket(RTMPPacket *packet) {
 }
 
 JNIEXPORT  jboolean JNICALL
-Java_com_rtmppush_tool_RtmpPushTool_sendVideoData(JNIEnv *env, jobject obj, jbyteArray data_,
+Java_com_push_tool_rtmp_RtmpPushTool_sendVideoData(JNIEnv *env, jobject obj, jbyteArray data_,
                                                   jint len, jlong tms) {
     jbyte *data = (*env)->GetByteArrayElements(env, data_, NULL);
     int ret = 0;
@@ -84,7 +82,7 @@ Java_com_rtmppush_tool_RtmpPushTool_sendVideoData(JNIEnv *env, jobject obj, jbyt
 }
 
 JNIEXPORT  jboolean JNICALL
-Java_com_rtmppush_tool_RtmpPushTool_sendAudioData(JNIEnv *env, jobject obj, jbyteArray data_,
+Java_com_push_tool_rtmp_RtmpPushTool_sendAudioData(JNIEnv *env, jobject obj, jbyteArray data_,
                                                   jint len, jlong tms, jboolean isHeader) {
     jbyte *data = (*env)->GetByteArrayElements(env, data_, NULL);
     RTMPPacket *packet = packetAudioData(data, len, isHeader, tms, pusher);

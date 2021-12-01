@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.Window
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
-import com.living.streamlivingpush.StreamPushInstance
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.utils.SysUtils
 
@@ -24,6 +23,7 @@ class ScreenRecordManager {
     interface DataCallBack {
         fun onTextureVideoFrame(frame: TextureVideoFrame)
         fun onStoped()
+        fun onRefused()
     }
 
     private var dataCallBack: DataCallBack? = null
@@ -37,11 +37,19 @@ class ScreenRecordManager {
     private var useHeight: Int = 0
     private var useFps: Int = 0
 
+    companion object {
+        var perReqResultCallBack: PerReqResultCallBack? = null
+    }
+
+    interface PerReqResultCallBack {
+        fun onResult(projection: MediaProjection?)
+    }
+
     fun startCapture(projection: MediaProjection?) {
         if (mScreenCapture == null) {
             mScreenCapture = CustomScreenCapture()
             mScreenCapture?.setRecordDataCallBack(object :
-                    CustomScreenCapture.RecordDataCallBack {
+                CustomScreenCapture.RecordDataCallBack {
                 override fun onRecordStoped() {
 
                 }
@@ -57,19 +65,20 @@ class ScreenRecordManager {
         }
 
         mScreenCapture?.updateSettings(
-                useWith,
-                useHeight,
-                SysUtils.getDpi(),
-                useFps
+            useWith,
+            useHeight,
+            SysUtils.getDpi(),
+            useFps
         )
 
         mScreenCapture?.startCapture(projection)
+
     }
 
     fun setSettings(
-            screenWith: Int?,
-            screenHeight: Int?,
-            inputFps: Int?
+        screenWith: Int?,
+        screenHeight: Int?,
+        inputFps: Int?
     ) {
         this.useWith = screenWith ?: 0
         this.useHeight = screenHeight ?: 0
@@ -77,19 +86,34 @@ class ScreenRecordManager {
     }
 
     fun resetSettings(
-            inputFps: Int?
+        inputFps: Int?
     ) {
         this.useFps = inputFps ?: 0
         mScreenCapture?.updateSettings(useWith, useHeight, SysUtils.getDpi(), useFps)
     }
 
     fun reqRecordPerAndStart() {
+
+        perReqResultCallBack = object : PerReqResultCallBack {
+            override fun onResult(projection: MediaProjection?) {
+                //todo:回调需要置null
+                if (projection == null) {
+                    dataCallBack?.onRefused()
+                } else {
+                    startCapture(projection)
+                }
+            }
+        }
+
         val intent = Intent(appContext, ScreenCaptureRequestPerActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         appContext?.startActivity(intent)
     }
 
     fun stopCapture() {
+
+        perReqResultCallBack = null
+
         mScreenCapture?.stopCapture()
     }
 
@@ -115,7 +139,7 @@ class ScreenCaptureRequestPerActivity : Activity() {
             try {
                 this.startActivityForResult(intent, REQUEST_CODE)
             } catch (e: Exception) {
-                StreamPushInstance.instance.hasPerAndStartRecord(null)
+                ScreenRecordManager.perReqResultCallBack?.onResult(null)
                 finish()
             }
         }
@@ -127,9 +151,9 @@ class ScreenCaptureRequestPerActivity : Activity() {
 
         if (intent != null) {
             val projection = mMediaProjectionManager?.getMediaProjection(resultCode, intent)
-            StreamPushInstance.instance.hasPerAndStartRecord(projection)
+            ScreenRecordManager.perReqResultCallBack?.onResult(projection)
         } else {
-            StreamPushInstance.instance.hasPerAndStartRecord(null)
+            ScreenRecordManager.perReqResultCallBack?.onResult(null)
         }
 
         finish()

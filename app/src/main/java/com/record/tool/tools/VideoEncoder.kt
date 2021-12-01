@@ -95,12 +95,10 @@ class VideoEncoder {
     //修改编码宽高会导致花屏
     fun updateResetEncodeSettings(
         bitRate: Int,
-        maxFps: Int,
-        gopTime: Int = 2
+        maxFps: Int
     ) {
         this.bitRate = bitRate
         this.maxFps = maxFps
-        iFrameInterval = gopTime
     }
 
     fun updateEncodeSettings(
@@ -152,6 +150,7 @@ class VideoEncoder {
         return codec?.codecInfo?.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC)?.videoCapabilities?.bitrateRange
     }
 
+    //检查是否最大码率
     fun checkCanSetBitRate(setBit: Int): Int {
         var newBitRate = 0
         getSetBitRateRange()?.let {

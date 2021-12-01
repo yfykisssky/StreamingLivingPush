@@ -94,7 +94,7 @@ class CustomScreenCapture : BaseCapture() {
     }
 
     override fun getOutRotation(): Rotation {
-        return Rotation.ROTATION_180
+        return Rotation.ROTATION_0
     }
 
     override fun needFlipHorizontal(): Boolean {
