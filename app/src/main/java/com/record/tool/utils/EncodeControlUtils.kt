@@ -14,6 +14,10 @@ class EncodeControlUtils {
         ): Pair<Boolean, Int> {
 
             var newBitRate = nowSetBitRate
+            if (newBitRate == 0) {
+                newBitRate = 1
+            }
+
             val maxRangeBitRate = (targetBitRate * (1 + BITRATE_RANGE_MARGIN)).toInt()
             val minRangeBitRate = (targetBitRate * (1 - BITRATE_RANGE_MARGIN)).toInt()
             var needReset = false

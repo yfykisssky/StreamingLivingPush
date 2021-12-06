@@ -118,6 +118,19 @@ class PushLogUtils {
             Log.e(tag, log ?: "null")
         }
 
+        private var videoResetTimeStamp = 0L
+
+        fun logVideoResetTime(bitRateVideo: Int) {
+            if (!isDebug) {
+                return
+            }
+            Log.e(
+                TAG,
+                "encodeCount:videoReset:" + (System.currentTimeMillis() - videoResetTimeStamp) + " ms " + "setBit:" + bitRateVideo
+            )
+            videoResetTimeStamp = System.currentTimeMillis()
+        }
+
     }
 
 }

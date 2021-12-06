@@ -7,6 +7,7 @@ import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
 import com.record.tool.utils.EncodeControlUtils
+import com.record.tool.utils.PushLogUtils
 import com.record.tool.utils.StateMonitorTool
 import com.record.tool.utils.TransUtils
 
@@ -58,11 +59,13 @@ abstract class BaseStreamPushInstance {
             }
         }
         encodeVideoTool?.updateResetEncodeSettings(
-            TransUtils.kbps2bs(setBit),
+            setBit,
             setFps
         )
         encodeVideoTool?.resetEncoder()
-        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(setBit), setFps)
+        //encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(setBit), setFps)
+
+        PushLogUtils.logVideoResetTime(bitRateVideo)
     }
 
     protected fun addVideoRenderFrame(frame: TextureVideoFrame) {
@@ -155,10 +158,10 @@ abstract class BaseStreamPushInstance {
                 EncodeControlUtils.checkNeedReset(
                     bitRate,
                     encoderMonitorTool.tagBitRate,
-                    encodeVideoTool?.getSetBitRate() ?: 0
+                    encodeVideoTool?.getSetBitRate() ?: 1
                 ).let {
                     if (it.first) {
-                        //resetVideoEncodeSettings(it.second, 30)
+                        resetVideoEncodeSettings(it.second, 30)
                     }
                 }
             }

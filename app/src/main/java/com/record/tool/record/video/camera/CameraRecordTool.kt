@@ -1,13 +1,10 @@
 package com.record.tool.record.video.camera
 
 import android.os.Build
-import android.view.Surface
 import android.view.TextureView
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
-import com.living.streamlivingpush.StreamPushInstance
 import com.record.tool.record.video.gl.TextureVideoFrame
-import com.record.tool.utils.StateMonitorTool
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class CameraRecordManager {
