@@ -71,26 +71,19 @@ class PushLogUtils {
             sendDataTimeStamp = System.currentTimeMillis()
         }
 
-        private var lastTimeStamp = 0L
-        fun logVideoTimeStamp(time: Long) {
+        fun logVideoTimeStamp(timeStamp: Long) {
             if (!isDebug) {
                 return
             }
-
-            val result = time - lastTimeStamp
-            lastTimeStamp = time
-            Log.e(TAG, "videoTimeStamp:$result")
+            Log.e(TAG, "videoTimeStamp:$timeStamp")
         }
 
-        private var lastTimeAStamp = 0L
-        fun logAudioTimeStamp(time: Long) {
+        fun logAudioTimeStamp(timeStamp: Long) {
             if (!isDebug) {
                 return
             }
 
-            val result = time - lastTimeAStamp
-            lastTimeAStamp = time
-            Log.e(TAG, "audioTimeStamp:$result")
+            Log.e(TAG, "audioTimeStamp:$timeStamp")
         }
 
         private var pushAudioDataTimeStamp = 0L

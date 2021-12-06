@@ -23,8 +23,8 @@ class StreamRtmpScreenPushInstance : StreamScreenPushInstance() {
     private var rtmpPushTool: RtmpPushTool? = null
 
     fun initTool() {
-        super.initRecoder()
         rtmpPushTool = RtmpPushTool()
+        super.initRecoder()
     }
 
     override fun onVideoFrameAva(frame: VideoFrame) {
@@ -36,11 +36,8 @@ class StreamRtmpScreenPushInstance : StreamScreenPushInstance() {
     }
 
     fun startPushing(pushUrl: String) {
-
-        super.startRecode()
-
         rtmpPushTool?.startPushing(pushUrl)
-
+        super.startRecode()
         isRecordAndEncoding = true
     }
 

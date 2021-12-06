@@ -2,6 +2,7 @@ package com.living.streamlivingpush.base
 
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
+import com.record.tool.bean.RecordAudioFrame
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.tools.AudioEncoder
 import com.record.tool.tools.VideoEncoder
@@ -66,6 +67,10 @@ abstract class BaseStreamPushInstance {
 
     protected fun addVideoRenderFrame(frame: TextureVideoFrame) {
         encodeVideoTool?.addRenderFrame(frame)
+    }
+
+    protected fun addAudioRenderFrame(frame: RecordAudioFrame) {
+        encodeAudioTool?.addFrameData(frame)
     }
 
     open fun initEncodeSettings(
@@ -153,7 +158,7 @@ abstract class BaseStreamPushInstance {
                     encodeVideoTool?.getSetBitRate() ?: 0
                 ).let {
                     if (it.first) {
-                       resetVideoEncodeSettings(it.second,30)
+                        //resetVideoEncodeSettings(it.second, 30)
                     }
                 }
             }

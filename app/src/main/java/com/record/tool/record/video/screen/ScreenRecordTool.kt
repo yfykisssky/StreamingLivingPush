@@ -92,7 +92,7 @@ class ScreenRecordManager {
         mScreenCapture?.updateSettings(useWith, useHeight, SysUtils.getDpi(), useFps)
     }
 
-    fun reqRecordPerAndStart() {
+    fun reqRecordPerAndStart(callBack: ((projection: MediaProjection?) -> Unit?)?) {
 
         perReqResultCallBack = object : PerReqResultCallBack {
             override fun onResult(projection: MediaProjection?) {
@@ -102,6 +102,7 @@ class ScreenRecordManager {
                 } else {
                     startCapture(projection)
                 }
+                callBack?.invoke(projection)
             }
         }
 

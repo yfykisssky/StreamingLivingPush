@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.record.tool.bean.RecordAudioFrame
 import com.record.tool.record.audio.AudioConstants
+import com.record.tool.utils.PushLogUtils
 import java.util.concurrent.LinkedBlockingQueue
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -42,7 +43,7 @@ class AudioEncoder {
     fun initEncoder(bitRate: Int) {
 
         try {
-           val format = MediaFormat.createAudioFormat(
+            val format = MediaFormat.createAudioFormat(
                 MIME_TYPE,
                 AudioConstants.SAMPLE_RATE,
                 AudioConstants.CHANNEL
@@ -85,6 +86,7 @@ class AudioEncoder {
 
     fun stopEncode() {
         isEncoding = false
+        encodeStartTimeStamp = 0L
     }
 
     private inner class EncodeThread : Thread() {
@@ -93,8 +95,8 @@ class AudioEncoder {
             if (encodeStartTimeStamp == 0L) {
                 encodeStartTimeStamp = vBufferInfo.presentationTimeUs
             }
-            val ptsNew = (vBufferInfo.presentationTimeUs - encodeStartTimeStamp)
-            encodeStartTimeStamp = vBufferInfo.presentationTimeUs
+            val ptsNew = (vBufferInfo.presentationTimeUs - encodeStartTimeStamp) / 1000
+            PushLogUtils.logAudioTimeStamp(ptsNew)
             return ptsNew
         }
 
@@ -114,26 +116,30 @@ class AudioEncoder {
                             continue
                         }
                         //立即得到有效输入缓冲区
-                        var index = codec?.dequeueInputBuffer(0) ?: -1
-                        if (index >= 0) {
-                            val inputBuffer = codec?.getInputBuffer(index)
+                        val indexIn = codec?.dequeueInputBuffer(0) ?: -1
+                        if (indexIn >= 0) {
+                            val inputBuffer = codec?.getInputBuffer(indexIn)
                             inputBuffer?.clear()
                             inputBuffer?.put(buffer, 0, len)
                             //填充数据后再加入队列
+
+                            //ms单位，其他单位会错乱
+                            val encodePts = System.nanoTime() / 1000
+
                             codec?.queueInputBuffer(
-                                index, 0, len,
-                                System.currentTimeMillis(), 0
+                                indexIn, 0, len,
+                                encodePts, 0
                             )
                         }
-                        index = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
-                        while (index >= 0 && isEncoding) {
-                            val outputBuffer = codec?.getOutputBuffer(index)
-                            val outData = ByteArray(vBufferInfo.size)
-                            outputBuffer?.get(outData)
-                            dataCallBackListener?.onDataCallBack(outData, handlePts(), true)
-                            codec?.releaseOutputBuffer(index, false)
-                            index = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
-                        }
+                    }
+                    var indexOut = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
+                    while (indexOut >= 0 && isEncoding) {
+                        val outputBuffer = codec?.getOutputBuffer(indexOut)
+                        val outData = ByteArray(vBufferInfo.size)
+                        outputBuffer?.get(outData)
+                        dataCallBackListener?.onDataCallBack(outData, handlePts(), false)
+                        codec?.releaseOutputBuffer(indexOut, false)
+                        indexOut = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
                     }
                 }
             } catch (e: Exception) {

@@ -86,12 +86,10 @@ open class RtmpPushTool {
     }
 
     fun addVideoFrame(frame: VideoFrame) {
-        if (!isConnect() || !isPushing) return
         queueVideoFrame?.add(frame)
     }
 
     fun addAudioFrame(frame: AudioFrame) {
-        if (!isConnect() || !isPushing) return
         queueAudioFrame?.add(frame)
     }
 

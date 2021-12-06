@@ -22,6 +22,8 @@ class VideoEncoder {
     private var isEncoding = false
     private var encodeStartTimeStamp = 0L
 
+    private var encodeControlStartTimeStamp = 0L
+
     private var encoderThread: Thread? = null
 
     private var dataCallBackListener: DataCallBackListener? = null
@@ -186,7 +188,7 @@ class VideoEncoder {
     }
 
     fun startEncode() {
-        encodeStartTimeStamp = System.currentTimeMillis()
+        encodeControlStartTimeStamp = System.currentTimeMillis()
         beginEncode()
     }
 
@@ -197,6 +199,7 @@ class VideoEncoder {
     }
 
     fun stopEncode() {
+        encodeControlStartTimeStamp = 0L
         encodeStartTimeStamp = 0L
         releaseInputRender()
         isEncoding = false
@@ -212,11 +215,10 @@ class VideoEncoder {
     private inner class EncodeRunnable : Runnable {
 
         fun handlePts(): Long {
-            if (vBufferInfo.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
-                return Long.MIN_VALUE
+            if (encodeStartTimeStamp == 0L) {
+                encodeStartTimeStamp = vBufferInfo.presentationTimeUs
             }
-            //微秒to毫秒
-            val ptsNew = (vBufferInfo.presentationTimeUs / 1000)
+            val ptsNew = (vBufferInfo.presentationTimeUs - encodeStartTimeStamp) / 1000
             PushLogUtils.logVideoTimeStamp(ptsNew)
             return ptsNew
         }
@@ -224,11 +226,11 @@ class VideoEncoder {
         //设置I帧,主动设置
         private fun needSetIFrame() {
             val currentTimeStamp = System.currentTimeMillis()
-            if ((encodeStartTimeStamp - currentTimeStamp) >= (iFrameInterval * 1000)) {
+            if ((encodeControlStartTimeStamp - currentTimeStamp) >= (iFrameInterval * 1000)) {
                 val params = Bundle()
                 params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
                 codec?.setParameters(params)
-                encodeStartTimeStamp = currentTimeStamp
+                encodeControlStartTimeStamp = currentTimeStamp
             }
         }
 

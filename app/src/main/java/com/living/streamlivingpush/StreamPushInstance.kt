@@ -299,7 +299,7 @@ class StreamPushInstance {
 
         //recordCameraTool?.startCapture(0)
 
-        recordScreenTool?.reqRecordPerAndStart()
+        //recordScreenTool?.reqRecordPerAndStart()
 
         //rtmpPushTool?.startPushing(pushUrl)
         socketPushTool?.openSocket("192.168.26.192", 9999)

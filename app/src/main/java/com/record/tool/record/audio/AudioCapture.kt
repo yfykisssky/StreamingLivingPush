@@ -16,7 +16,7 @@ class AudioCapture {
     private var isPause = false
 
     private var isRecording = false
-    private var recordInside = false
+    private var recordInside = true
 
     //录音监听
     private var recordListener: RecordListener? = null
@@ -129,7 +129,7 @@ class AudioCapture {
                     }
 
                     if (!isPause) {
-                        recordListener?.onData(byteOut, byteOut.size)
+                        recordListener?.onData(byteOut)
                     }
                 }
             } catch (e: Exception) {
@@ -152,10 +152,8 @@ class AudioCapture {
     }
 
     interface RecordListener {
-        fun onData(data: ByteArray?, byteSize: Int)
+        fun onData(data: ByteArray?)
         fun onError()
-
-        fun onLogTest(log: String)
     }
 
 }

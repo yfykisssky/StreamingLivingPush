@@ -1,6 +1,8 @@
 package com.living.streamlivingpush.record
 
 import com.living.streamlivingpush.base.BaseStreamPushInstance
+import com.record.tool.bean.RecordAudioFrame
+import com.record.tool.record.audio.AudioCapture
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.screen.ScreenRecordManager
 
@@ -8,8 +10,11 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
 
     private var recordScreenTool: ScreenRecordManager? = null
 
+    private var audioRecordTool: AudioCapture? = null
+
     protected fun initRecoder() {
         recordScreenTool = ScreenRecordManager()
+        audioRecordTool = AudioCapture()
     }
 
     override fun initEncodeSettings(
@@ -58,7 +63,29 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
             }
 
         })
-        recordScreenTool?.reqRecordPerAndStart()
+
+        recordScreenTool?.reqRecordPerAndStart { projection ->
+            audioRecordTool?.setMediaProjection(projection)
+            audioRecordTool?.start()
+        }
+
+        audioRecordTool?.setRecordListener(object : AudioCapture.RecordListener {
+            override fun onData(data: ByteArray?) {
+                data?.let {
+                    val frame = RecordAudioFrame()
+                    frame.byteArray = it
+                    frame.byteSize = it.size
+                    addAudioRenderFrame(frame)
+                }
+            }
+
+            override fun onError() {
+
+            }
+
+        })
+
+
     }
 
     protected fun stopRecode() {
@@ -67,6 +94,10 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
 
         recordScreenTool?.stopCapture()
         recordScreenTool = null
+
+        audioRecordTool?.stop()
+        audioRecordTool = null
+
     }
 
 }
