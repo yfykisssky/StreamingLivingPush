@@ -179,17 +179,6 @@ class VideoEncoder {
         format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
         format.setInteger(MediaFormat.KEY_HEIGHT, frameHeight)
 
-        //todo:
-        format.setInteger(
-            MediaFormat.KEY_BITRATE_MODE,
-            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-        )
-
-        format.setInteger(
-            MediaFormat.KEY_COMPLEXITY,
-            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
-        )
-
         //部分机型最大帧率无效
         //MediaFormat.KEY_MAX_FPS_TO_ENCODER
         //crash

@@ -178,9 +178,11 @@ abstract class BaseStreamPushInstance {
 
             override fun onIFrameReqSet(gopTime: Int): Boolean {
                 val oldBit = encodeVideoTool?.getSetBitRate() ?: 1
+                encodeControlTool.countGopTime()
 
+                val gopCountTimes = encodeControlTool.getGopCountTimes()
                 val newBit = EncodeControlUtils.checkNeedReset(
-                    encodeControlTool.getCountBitRate() / gopTime,
+                    encodeControlTool.getCountBitRate() / (gopTime * gopCountTimes),
                     encoderMonitorTool.tagBitRate,
                     oldBit
                 )

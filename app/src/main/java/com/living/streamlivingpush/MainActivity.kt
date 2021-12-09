@@ -16,12 +16,12 @@ import kotlinx.android.synthetic.main.activity_main.*
 @RequiresApi(Build.VERSION_CODES.M)
 class MainActivity : Activity() {
 
-    private var videoBitRate = 8000
-    private var videoFps = 30
-    private var videoWith = 1920
-    private var videoHeight = 1080
+    private var videoBitRate = 6000
+    private var videoFps = 35
+    private var videoWith = 1280
+    private var videoHeight = 720
 
-    private var audioBitRate = 64
+    private var audioBitRate = 1280
 
     private var pushInstance = StreamRtmpScreenPushInstance.instance
 
@@ -100,7 +100,7 @@ class MainActivity : Activity() {
 
         //cameraPreviewView?.addView(pushInstance.getPreviewView())
 
-        pushInstance.startPushing("")
+        pushInstance.startPushing("rtmp://tx-test-publish.xxqapp.cn/xxq-live/SLT30S1804027493040682240S192531130384600009S0S1639044498568?txSecret=f3b53625c5c0fec36b0771396a919584&txTime=61B32712")
     }
 
     private fun stopPush() {

@@ -4,7 +4,7 @@ class EncodeControlUtils {
 
     companion object {
 
-        private const val BITRATE_RANGE_MARGIN = 0.2
+        private const val BITRATE_RANGE_MARGIN = 0.1
         private const val BITRATE_DEFALUT_RANGE_SCALE = 1.1
 
         private const val MAX_TARGET_BITRATE_SCALE = 100
@@ -60,7 +60,7 @@ class EncodeControlUtils {
         }
 
         //码率-新修改比对老数值在一定范围不做修改
-        private const val DEFALUT_CAN_CHANGE_MARGIN = 0.2
+        private const val DEFALUT_CAN_CHANGE_MARGIN = 0.1
 
         fun checkCanChangeWithRange(oldBitRate: Int, newBitRate: Int): Boolean {
             return newBitRate > oldBitRate * (1 + DEFALUT_CAN_CHANGE_MARGIN) ||

@@ -2,12 +2,21 @@ package com.record.tool.utils
 
 class EncodeControlTool {
 
+    private var onGopCountTimes = 0
     private var bitRateCount = 0
     private var fpsCount = 0
 
     fun updateData(bitRate: Int, fps: Int) {
         bitRateCount += bitRate
         fpsCount += fps
+    }
+
+    fun countGopTime(){
+        onGopCountTimes++
+    }
+
+    fun getGopCountTimes(): Int {
+        return onGopCountTimes
     }
 
     fun getCountBitRate(): Int {
@@ -18,27 +27,12 @@ class EncodeControlTool {
         return fpsCount
     }
 
-    data class CountVideoResetData(
-        var useTime: Long = 0L,
-        var setVideoBit: Int = 0
-    )
-
-    private var videoResetTimeStamp = 0L
-    private var countVideoResetList = ArrayList<CountVideoResetData>()
-
-    fun countVideoReset(setVideoBit: Int) {
-        val usbTime = (System.currentTimeMillis() - videoResetTimeStamp)
-        countVideoResetList.add(CountVideoResetData(usbTime, setVideoBit))
-        videoResetTimeStamp = System.currentTimeMillis()
-    }
-
     fun resetData() {
 
         bitRateCount = 0
         fpsCount = 0
+        onGopCountTimes = 0
 
-        countVideoResetList.clear()
-        videoResetTimeStamp = 0L
     }
 
 
