@@ -60,7 +60,6 @@ class VideoEncoder {
 
     }
 
-
     fun setDataCallBackListener(dataCallBackListener: DataCallBackListener) {
         this.dataCallBackListener = dataCallBackListener
     }
@@ -180,6 +179,17 @@ class VideoEncoder {
         format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
         format.setInteger(MediaFormat.KEY_HEIGHT, frameHeight)
 
+        //todo:
+        format.setInteger(
+            MediaFormat.KEY_BITRATE_MODE,
+            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+        )
+
+        format.setInteger(
+            MediaFormat.KEY_COMPLEXITY,
+            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR
+        )
+
         //部分机型最大帧率无效
         //MediaFormat.KEY_MAX_FPS_TO_ENCODER
         //crash
@@ -212,6 +222,16 @@ class VideoEncoder {
         codec?.release()
     }
 
+    private var iFrameReqSetListener: IFrameReqSetListener? = null
+
+    interface IFrameReqSetListener {
+        fun onIFrameReqSet(gopTime: Int): Boolean
+    }
+
+    fun setIFrameReqSetListener(iFrameReqSetListener: IFrameReqSetListener) {
+        this.iFrameReqSetListener = iFrameReqSetListener
+    }
+
     private inner class EncodeRunnable : Runnable {
 
         fun handlePts(): Long {
@@ -224,13 +244,16 @@ class VideoEncoder {
         }
 
         //设置I帧,主动设置
-        private fun needSetIFrame() {
+        private fun needSetIFrame(): Boolean {
             val currentTimeStamp = System.currentTimeMillis()
-            if ((encodeControlStartTimeStamp - currentTimeStamp) >= (iFrameInterval * 1000)) {
+            return if ((currentTimeStamp - encodeControlStartTimeStamp) >= (iFrameInterval * 1000)) {
                 val params = Bundle()
                 params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0)
                 codec?.setParameters(params)
                 encodeControlStartTimeStamp = currentTimeStamp
+                true
+            } else {
+                false
             }
         }
 
@@ -244,22 +267,32 @@ class VideoEncoder {
                   timeoutUs == 0立马返回
                   timeoutUs < 0无限期等待可用buffer
                   timeoutUs > 0等待timeoutUs时间*/
-                    needSetIFrame()
+                    val isIFrame = needSetIFrame()
 
-                    val outputBufferId = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
-                    if (outputBufferId >= 0) {
-
-                        codec?.getOutputBuffer(outputBufferId)?.let { encodedData ->
-
-                            val dataToWrite = ByteArray(vBufferInfo.size)
-                            encodedData[dataToWrite, 0, vBufferInfo.size]
-                            val pts = handlePts()
-                            PushLogUtils.encode(dataToWrite.size)
-                            dataCallBackListener?.onDataCallBack(dataToWrite, pts)
-                            codec?.releaseOutputBuffer(outputBufferId, false)
-
+                    if (isIFrame) {
+                        //需要重置
+                        if (iFrameReqSetListener?.onIFrameReqSet(iFrameInterval) == true) {
+                            isEncoding = false
                         }
                     }
+
+                    if (isEncoding) {
+                        val outputBufferId = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
+                        if (outputBufferId >= 0) {
+
+                            codec?.getOutputBuffer(outputBufferId)?.let { encodedData ->
+
+                                val dataToWrite = ByteArray(vBufferInfo.size)
+                                encodedData[dataToWrite, 0, vBufferInfo.size]
+                                val pts = handlePts()
+                                PushLogUtils.encode(dataToWrite.size)
+                                dataCallBackListener?.onDataCallBack(dataToWrite, pts)
+                                codec?.releaseOutputBuffer(outputBufferId, false)
+
+                            }
+                        }
+                    }
+
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

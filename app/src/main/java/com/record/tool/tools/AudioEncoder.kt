@@ -14,7 +14,7 @@ import java.util.concurrent.LinkedBlockingQueue
 class AudioEncoder {
 
     companion object {
-        private const val MIME_TYPE = "audio/mp4a-latm"
+        private const val MIME_TYPE = MediaFormat.MIMETYPE_AUDIO_AAC
     }
 
     private var codec: MediaCodec? = null
@@ -123,7 +123,7 @@ class AudioEncoder {
                             inputBuffer?.put(buffer, 0, len)
                             //填充数据后再加入队列
 
-                            //ms单位，其他单位会错乱
+                            //毫秒单位，其他单位时间戳会错乱
                             val encodePts = System.nanoTime() / 1000
 
                             codec?.queueInputBuffer(

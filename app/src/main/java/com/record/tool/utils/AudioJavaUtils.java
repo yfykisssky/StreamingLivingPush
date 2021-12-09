@@ -34,4 +34,24 @@ public class AudioJavaUtils {
         return bytes;
     }
 
+    private static short SHRT_MAX = (short) 0x7F00;
+    private static short SHRT_MIN = (short) -0x7F00;
+
+    //调节PCM数据音量,16BIT
+    //multiple: 放大倍数
+    public static byte[] amplifyPCMData(byte[] src, float multiple) {
+        short[] volumShorts = bytesToShort(src);
+        for (int i = 0; i < volumShorts.length; i++) {
+            short volum = (short) (volumShorts[i] * multiple);
+            if (volum < SHRT_MIN) {
+                volum = SHRT_MIN;
+            } else if (volum > SHRT_MAX)//爆音的处理
+            {
+                volum = SHRT_MAX;
+            }
+            volumShorts[i] = volum;
+        }
+        return shortToBytes(volumShorts);
+    }
+
 }

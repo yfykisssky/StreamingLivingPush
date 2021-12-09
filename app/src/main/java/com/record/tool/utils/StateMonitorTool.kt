@@ -74,7 +74,6 @@ class StateMonitorTool {
 
                 override fun onNext(time: Long) {
                     PushLogUtils.encodeCount(bitsSize, fpsCount, tagBitRate, tagFps)
-                    countCallBack?.onCount(bitsSize, fpsCount)
                     resetBit()
                     resetFps()
                 }
@@ -82,6 +81,10 @@ class StateMonitorTool {
                 override fun onError(e: Throwable) {
                 }
             })
+    }
+
+    fun toCount(){
+        countCallBack?.onCount(bitsSize, fpsCount)
     }
 
     fun startMonitor() {

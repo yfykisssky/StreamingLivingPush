@@ -110,7 +110,6 @@ class CustomScreenCapture : BaseCapture() {
 
     override fun onRender2DTextureFrame(textureFrame: TextureVideoFrame) {
         //编码前处理
-        textureFrame.captureTimeStamp = System.nanoTime()
         dataCallBack?.onDataCallBack(pauseImageTool?.transTexture(textureFrame) ?: textureFrame)
     }
 

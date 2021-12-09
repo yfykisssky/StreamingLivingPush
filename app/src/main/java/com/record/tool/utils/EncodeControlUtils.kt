@@ -7,11 +7,13 @@ class EncodeControlUtils {
         private const val BITRATE_RANGE_MARGIN = 0.2
         private const val BITRATE_DEFALUT_RANGE_SCALE = 1.1
 
+        private const val MAX_TARGET_BITRATE_SCALE = 100
+
         fun checkNeedReset(
             bitRateNow: Int,
             targetBitRate: Int,
             nowSetBitRate: Int
-        ): Pair<Boolean, Int> {
+        ): Int {
 
             var newBitRate = nowSetBitRate
             if (newBitRate == 0) {
@@ -23,7 +25,7 @@ class EncodeControlUtils {
             var needReset = false
 
             if (bitRateNow in minRangeBitRate..maxRangeBitRate) {
-                return Pair(needReset, newBitRate)
+                return -1
             }
 
             if (bitRateNow < minRangeBitRate) {
@@ -44,8 +46,27 @@ class EncodeControlUtils {
                 newBitRate = (newBitRate / useScale).toInt()
             }
 
-            return Pair(needReset, newBitRate)
+            val maxBitRate = targetBitRate * MAX_TARGET_BITRATE_SCALE
+            if (newBitRate > maxBitRate) {
+                newBitRate = maxBitRate
+            }
+
+            return if (needReset) {
+                newBitRate
+            } else {
+                -1
+            }
+
         }
+
+        //码率-新修改比对老数值在一定范围不做修改
+        private const val DEFALUT_CAN_CHANGE_MARGIN = 0.2
+
+        fun checkCanChangeWithRange(oldBitRate: Int, newBitRate: Int): Boolean {
+            return newBitRate > oldBitRate * (1 + DEFALUT_CAN_CHANGE_MARGIN) ||
+                    newBitRate < oldBitRate * (1 - DEFALUT_CAN_CHANGE_MARGIN)
+        }
+
     }
 
 }

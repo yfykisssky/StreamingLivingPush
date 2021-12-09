@@ -18,6 +18,12 @@ class AudioCapture {
     private var isRecording = false
     private var recordInside = true
 
+    private var volumeInside = 1F
+
+    fun updateInsideVolume(volumeInside: Float) {
+        this.volumeInside = volumeInside
+    }
+
     //录音监听
     private var recordListener: RecordListener? = null
 
@@ -113,13 +119,19 @@ class AudioCapture {
                 audioRecordInside?.startRecording()
 
                 val byteMic = ByteArray(bufferSize)
-                val byteInside = ByteArray(bufferSize)
+                var byteInside = ByteArray(bufferSize)
 
                 while (isRecording) {
                     audioRecord?.read(byteMic, 0, byteMic.size)
 
                     val byteOut = if (recordInside) {
                         audioRecordInside?.read(byteInside, 0, byteInside.size)
+                        if (volumeInside != 1F) {
+                            byteInside = AudioJavaUtils.amplifyPCMData(
+                                byteInside,
+                                volumeInside
+                            )
+                        }
                         AudioJavaUtils.mixRawAudioBytes(
                             byteMic,
                             byteInside

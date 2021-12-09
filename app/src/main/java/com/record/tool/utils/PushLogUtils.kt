@@ -58,6 +58,8 @@ class PushLogUtils {
                         + " target:" + "[" + tagFps + "f/s]" + ":[" + tagBit / 1024 + "kb/s]"
             )
             encodeTimeStamp = System.currentTimeMillis()
+
+            Log.e(TAG, "ptsCount: videoPts:$lastPtsVideo audioPts:$lastPtsAudio")
         }
 
         fun sendData(type: Int) {
@@ -71,19 +73,29 @@ class PushLogUtils {
             sendDataTimeStamp = System.currentTimeMillis()
         }
 
+        private var lastPtsAudio = 0L
+        private var lastPtsVideo = 0L
+
         fun logVideoTimeStamp(timeStamp: Long) {
             if (!isDebug) {
                 return
             }
-            Log.e(TAG, "videoTimeStamp:$timeStamp")
+            if (lastPtsVideo == 0L) {
+                lastPtsVideo = timeStamp
+            }
+            Log.e(TAG, "videoTimeStamp:$timeStamp" + " last:" + (timeStamp - lastPtsVideo))
+            lastPtsVideo = timeStamp
         }
 
         fun logAudioTimeStamp(timeStamp: Long) {
             if (!isDebug) {
                 return
             }
-
-            Log.e(TAG, "audioTimeStamp:$timeStamp")
+            if (lastPtsAudio == 0L) {
+                lastPtsAudio = timeStamp
+            }
+            Log.e(TAG, "audioTimeStamp:$timeStamp" + " last:" + (timeStamp - lastPtsAudio))
+            lastPtsAudio = timeStamp
         }
 
         private var pushAudioDataTimeStamp = 0L

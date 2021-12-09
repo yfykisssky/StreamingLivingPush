@@ -15,6 +15,8 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
     protected fun initRecoder() {
         recordScreenTool = ScreenRecordManager()
         audioRecordTool = AudioCapture()
+
+        audioRecordTool?.updateInsideVolume(0.5F)
     }
 
     override fun initEncodeSettings(

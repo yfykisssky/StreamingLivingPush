@@ -83,10 +83,10 @@ abstract class BaseCapture : OnFrameAvailableListener {
                 sur.getTransformMatrix(mTextureTransform)
                 mOesInputFilter?.setTexutreTransform(mTextureTransform)
                 mGpuImageFilterGroup?.draw(
-                        mSurfaceTextureId,
-                        mFrameBuffer?.frameBufferId ?: 0,
-                        mGLCubeBuffer,
-                        mGLTextureBuffer
+                    mSurfaceTextureId,
+                    mFrameBuffer?.frameBufferId ?: 0,
+                    mGLCubeBuffer,
+                    mGLTextureBuffer
                 )
                 mEglCore?.swapBuffer()
 
@@ -95,7 +95,7 @@ abstract class BaseCapture : OnFrameAvailableListener {
                 textureFrame.textureId = mFrameBuffer?.textureId ?: -1
                 textureFrame.width = getTransOutWith()
                 textureFrame.height = getTransOutHeight()
-                textureFrame.captureTimeStamp = sur.timestamp
+                textureFrame.captureTimeStamp = System.nanoTime()
 
                 onRender2DTextureFrame(textureFrame)
 
@@ -144,23 +144,23 @@ abstract class BaseCapture : OnFrameAvailableListener {
     private fun initGLRender() {
 
         val cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(
-                ImageView.ScaleType.CENTER_CROP,
-                getOutRotation(),
-                needFlipHorizontal(),
-                needFlipVertical(),
-                getCaptureWith(),
-                getCaptureHeight(),
-                getTransOutWith(),
-                getTransOutHeight()
+            ImageView.ScaleType.CENTER_CROP,
+            getOutRotation(),
+            needFlipHorizontal(),
+            needFlipVertical(),
+            getCaptureWith(),
+            getCaptureHeight(),
+            getTransOutWith(),
+            getTransOutHeight()
         )
 
         mGLCubeBuffer =
-                ByteBuffer.allocateDirect(OpenGlUtils.CUBE.size * 4).order(ByteOrder.nativeOrder())
-                        .asFloatBuffer()
+            ByteBuffer.allocateDirect(OpenGlUtils.CUBE.size * 4).order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
         mGLCubeBuffer?.put(cubeAndTextureBuffer.first)
         mGLTextureBuffer =
-                ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.size * 4).order(ByteOrder.nativeOrder())
-                        .asFloatBuffer()
+            ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.size * 4).order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
         mGLTextureBuffer?.put(cubeAndTextureBuffer.second)
 
         mEglCore = EglCore(getCaptureWith(), getCaptureHeight())
@@ -168,7 +168,7 @@ abstract class BaseCapture : OnFrameAvailableListener {
 
         mSurfaceTextureId = OpenGlUtils.generateTextureOES()
         mSurfaceTexture = SurfaceTexture(mSurfaceTextureId)
-        mSurfaceTexture?.setDefaultBufferSize(getCaptureWith(),getCaptureHeight())
+        mSurfaceTexture?.setDefaultBufferSize(getCaptureWith(), getCaptureHeight())
         mSurfaceTexture?.setOnFrameAvailableListener(this@BaseCapture)
 
         mFrameBuffer = FrameBuffer(getCaptureWith(), getCaptureHeight())
