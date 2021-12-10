@@ -19,6 +19,10 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
         audioRecordTool?.updateInsideVolume(0.5F)
     }
 
+    override fun resetRecordFpsSettings(fps: Int) {
+        recordScreenTool?.resetSettings(fps)
+    }
+
     override fun initEncodeSettings(
         bitRateVideo: Int,
         fps: Int,

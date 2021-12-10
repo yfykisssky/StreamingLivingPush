@@ -93,6 +93,10 @@ class VideoEncoder {
         return bitRate
     }
 
+    fun getSetFps(): Int {
+        return maxFps
+    }
+
     //修改编码宽高会导致花屏
     fun updateResetEncodeSettings(
         bitRate: Int,

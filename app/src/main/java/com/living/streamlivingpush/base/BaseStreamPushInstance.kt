@@ -79,6 +79,7 @@ abstract class BaseStreamPushInstance {
                             val bit = bundle.getInt(KEY_RESET_ENCODER_BIT)
                             val fps = bundle.getInt(KEY_RESET_ENCODER_FPS)
                             reference.resetVideoEncodeSettings(bit, fps)
+                            reference.resetRecordFpsSettings(fps)
                         }
                     }
                     else -> {
@@ -90,25 +91,20 @@ abstract class BaseStreamPushInstance {
 
     }
 
+    abstract fun resetRecordFpsSettings(fps: Int)
+
     fun resetVideoEncodeSettings(
         bitRateVideo: Int,
         fps: Int
     ) {
-        var setBit = bitRateVideo
-        var setFps = fps
-        encodeVideoTool?.checkCanSetBitRate(bitRateVideo)?.let { bitRate ->
-            if (bitRate != 0) {
-                setBit = bitRate
-            }
-        }
+
         encodeVideoTool?.updateResetEncodeSettings(
-            setBit,
-            setFps
+            bitRateVideo,
+            fps
         )
 
         encodeVideoTool?.resetEncoder()
 
-        PushLogUtils.logVideoResetTime(setBit)
     }
 
     protected fun addVideoRenderFrame(frame: TextureVideoFrame) {
@@ -159,7 +155,7 @@ abstract class BaseStreamPushInstance {
 
                 onVideoFrameAva(vFrame)
 
-                encodeControlTool.updateData(byteArray?.size ?: 0, 0)
+                encodeControlTool.updateData(byteArray?.size ?: 0)
 
                 encoderMonitorTool.updateBitrate(byteArray?.size ?: 0)
                 encoderMonitorTool.updateFpsCount()
@@ -177,31 +173,60 @@ abstract class BaseStreamPushInstance {
         encodeVideoTool?.setIFrameReqSetListener(object : VideoEncoder.IFrameReqSetListener {
 
             override fun onIFrameReqSet(gopTime: Int): Boolean {
-                val oldBit = encodeVideoTool?.getSetBitRate() ?: 1
-                encodeControlTool.countGopTime()
 
+                encodeControlTool.countGopTime()
                 val gopCountTimes = encodeControlTool.getGopCountTimes()
-                val newBit = EncodeControlUtils.checkNeedReset(
+
+                val oldBit = encodeVideoTool?.getSetBitRate() ?: 1
+
+                var newBit = EncodeControlUtils.checkNeedReset(
                     encodeControlTool.getCountBitRate() / (gopTime * gopCountTimes),
                     encoderMonitorTool.tagBitRate,
                     oldBit
                 )
-                return if (newBit > 0) {
-                    encodeControlTool.resetData()
 
-                    return if (EncodeControlUtils.checkCanChangeWithRange(
-                            oldBit,
-                            newBit
-                        )
-                    ) {
-                        toResetVideoEncode(newBit, 30)
-                        true
-                    } else {
-                        false
-                    }
-                } else {
-                    false
+                val oldFps = encodeVideoTool?.getSetFps() ?: 1
+
+                val nowFps = encodeControlTool.getCountFps() / (gopTime * gopCountTimes)
+
+                var newFps = EncodeControlUtils.checkNeedResetFps(nowFps, encoderMonitorTool.tagFps)
+
+                var resetBit = false
+
+                var resetFps = false
+
+                if (newBit > 0) {
+                    resetBit = EncodeControlUtils.checkCanChangeWithRange(
+                        oldBit,
+                        newBit
+                    )
                 }
+
+                encodeVideoTool?.checkCanSetBitRate(newBit)?.let { bitRate ->
+                    if (bitRate != 0) {
+                        newBit = bitRate
+                    }
+                }
+
+                if (newFps > 0) {
+                    resetFps = EncodeControlUtils.checkCanChangeFpsWithRange(
+                        oldFps,
+                        newFps
+                    )
+                }
+
+                if (!resetFps) {
+                    newFps = oldFps
+                }
+
+                if (resetBit || resetFps) {
+                    encodeControlTool.resetData()
+                    toResetVideoEncode(newBit, newFps)
+
+                    PushLogUtils.logVideoResetTime(newBit, newFps, resetBit, resetFps)
+                }
+
+                return resetBit || resetFps
             }
 
         })

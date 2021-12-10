@@ -14,6 +14,10 @@ abstract class StreamCamPushInstance : BaseStreamPushInstance() {
         recordCameraTool = CameraRecordManager()
     }
 
+    override fun resetRecordFpsSettings(fps: Int) {
+        recordCameraTool?.resetSettings(fps)
+    }
+
     override fun initEncodeSettings(
         bitRateVideo: Int,
         fps: Int,

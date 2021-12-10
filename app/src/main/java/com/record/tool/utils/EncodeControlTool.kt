@@ -6,12 +6,12 @@ class EncodeControlTool {
     private var bitRateCount = 0
     private var fpsCount = 0
 
-    fun updateData(bitRate: Int, fps: Int) {
+    fun updateData(bitRate: Int) {
         bitRateCount += bitRate
-        fpsCount += fps
+        fpsCount++
     }
 
-    fun countGopTime(){
+    fun countGopTime() {
         onGopCountTimes++
     }
 
