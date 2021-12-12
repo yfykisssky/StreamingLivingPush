@@ -17,12 +17,8 @@ import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
 
 import com.huawei.hms.hmsscankit.ScanUtil
 import android.content.Intent
-
-
-
-
-
-
+import com.push.tool.socket.HostTransTool
+import com.push.tool.socket.ScanResult
 
 
 @RequiresApi(Build.VERSION_CODES.M)
@@ -42,7 +38,11 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         requestPermissions(
-            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA,Manifest.permission.READ_EXTERNAL_STORAGE),
+            arrayOf(
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ),
             10
         )
 
@@ -123,11 +123,11 @@ class MainActivity : Activity() {
         pushInstance.stopPushing()
     }
 
-    companion object{
-        const val REQUEST_CODE_SCAN_ONE=1011
+    companion object {
+        const val REQUEST_CODE_SCAN_ONE = 1011
     }
 
-    private fun toScan(){
+    private fun toScan() {
         ScanUtil.startScan(
             this,
             REQUEST_CODE_SCAN_ONE,
@@ -143,9 +143,18 @@ class MainActivity : Activity() {
         if (requestCode == REQUEST_CODE_SCAN_ONE) {
             val obj = data.getParcelableExtra(ScanUtil.RESULT) as? HmsScan
             if (obj != null) {
-                scanCodeResult?.text = obj.originalValue
+                HostTransTool.str2Obj(obj.originalValue)?.let { scanResult ->
+                    val ip = scanResult.ipAddress ?: ""
+                    val port = scanResult.port
+                    scanCodeResult?.text = "$ip:$port"
+                    handleSocket(ip, port)
+                }
             }
         }
+    }
+
+    private fun handleSocket(ipAddress: String, port: Int) {
+
     }
 
 }
