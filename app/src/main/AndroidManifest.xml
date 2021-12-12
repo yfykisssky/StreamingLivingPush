@@ -7,7 +7,14 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!--相机权限-->
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" />
+    <uses-feature android:name="android.hardware.camera.autofocus" />
+
+    <!--读文件权限-->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
 
     <application
         android:name=".AppApplication"
@@ -36,7 +43,8 @@
         <activity
             android:name="com.record.tool.record.video.screen.ScreenCaptureRequestPerActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
-
+        <!--华为扫码-->
+        <activity android:name="com.huawei.hms.hmsscankit.ScanKitActivity" />
     </application>
 
 </manifest>

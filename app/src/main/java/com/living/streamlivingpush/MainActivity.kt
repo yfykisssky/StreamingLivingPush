@@ -11,6 +11,18 @@ import com.living.streamlivingpush.push.StreamRtmpScreenPushInstance
 import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
 import com.record.tool.record.video.screen.service.PerReqForegroundService
 import kotlinx.android.synthetic.main.activity_main.*
+import com.huawei.hms.ml.scan.HmsScan
+
+import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
+
+import com.huawei.hms.hmsscankit.ScanUtil
+import android.content.Intent
+
+
+
+
+
+
 
 
 @RequiresApi(Build.VERSION_CODES.M)
@@ -30,7 +42,7 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         requestPermissions(
-            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA),
+            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA,Manifest.permission.READ_EXTERNAL_STORAGE),
             10
         )
 
@@ -44,6 +56,10 @@ class MainActivity : Activity() {
             PerReqForegroundService.stopService()
 
             stopPush()
+        }
+
+        sanCode?.setOnClickListener {
+            toScan()
         }
 
         /*     pause?.setOnClickListener {
@@ -105,6 +121,31 @@ class MainActivity : Activity() {
 
     private fun stopPush() {
         pushInstance.stopPushing()
+    }
+
+    companion object{
+        const val REQUEST_CODE_SCAN_ONE=1011
+    }
+
+    private fun toScan(){
+        ScanUtil.startScan(
+            this,
+            REQUEST_CODE_SCAN_ONE,
+            HmsScanAnalyzerOptions.Creator().setHmsScanTypes(HmsScan.QRCODE_SCAN_TYPE).create()
+        )
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != RESULT_OK || data == null) {
+            return
+        }
+        if (requestCode == REQUEST_CODE_SCAN_ONE) {
+            val obj = data.getParcelableExtra(ScanUtil.RESULT) as? HmsScan
+            if (obj != null) {
+                scanCodeResult?.text = obj.originalValue
+            }
+        }
     }
 
 }

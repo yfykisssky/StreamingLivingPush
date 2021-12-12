@@ -146,6 +146,26 @@
                 android:layout_height="match_parent"
                 android:text="reset" />
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/sanCode"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:text="ScanCode" />
+
+            <TextView
+                android:textColor="@color/white"
+                android:id="@+id/scanCodeResult"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp" />
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>
