@@ -11,11 +11,18 @@ class StateMonitorTool {
     var tagFps = 0
         private set
 
+    var tagBitRateAudio = 0
+        private set
+
     private var bitsSize = 0
     private val lockBitObj = Any()
 
     private var fpsCount = 0
     private val lockFpsObj = Any()
+
+
+    private var bitsSizeAudio = 0
+    private val lockBitObjAudio = Any()
 
     interface CountCallBack {
         fun onCount(bitRate: Int, fps: Int)
@@ -30,6 +37,10 @@ class StateMonitorTool {
     fun updateTargetData(tagBitRate: Int, tagFps: Int) {
         this.tagBitRate = tagBitRate
         this.tagFps = tagFps
+    }
+
+    fun updateTargetDataAudio(tagBitRate: Int) {
+        this.tagBitRateAudio = tagBitRate
     }
 
     fun updateBitrate(bit: Int) {
@@ -56,12 +67,28 @@ class StateMonitorTool {
         }
     }
 
+    fun updateBitrateAudio(bit: Int) {
+        synchronized(lockBitObjAudio) {
+            bitsSizeAudio += bit
+        }
+    }
+
+    fun resetBitAudio() {
+        synchronized(lockBitObjAudio) {
+            bitsSizeAudio = 0
+        }
+    }
+
     private var timerDis: Disposable? = null
 
     private fun startLogTimer() {
         timerDis?.dispose()
+
         resetBit()
         resetFps()
+
+        resetBitAudio()
+
         io.reactivex.Observable.interval(1, TimeUnit.SECONDS)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : io.reactivex.Observer<Long?> {
@@ -74,9 +101,12 @@ class StateMonitorTool {
 
                 override fun onNext(time: Long) {
                     countCallBack?.onCount(bitsSize, fpsCount)
-                    PushLogUtils.encodeCount(bitsSize, fpsCount, tagBitRate, tagFps)
+                    PushLogUtils.encodeVideoCount(bitsSize, fpsCount, tagBitRate, tagFps)
                     resetBit()
                     resetFps()
+
+                    PushLogUtils.encodeAudioCount(bitsSizeAudio, tagBitRateAudio)
+                    resetBitAudio()
                 }
 
                 override fun onError(e: Throwable) {

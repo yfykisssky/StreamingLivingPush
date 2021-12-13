@@ -48,17 +48,35 @@ class PushLogUtils {
             encodeTimeStamp = System.currentTimeMillis()
         }
 
-        fun encodeCount(bit: Int, fps: Int, tagBit: Int, tagFps: Int) {
+        fun encodeVideoCount(bit: Int, fps: Int, tagBit: Int, tagFps: Int) {
             if (!isDebug) {
                 return
             }
             Log.e(
                 TAG,
-                "encodeCount:" + "[" + fps + "f/s]" + ":[" + bit / 1024 + "kb/s]"
+                "encodeVideoCount:" + "[" + fps + "f/s]" + ":[" + bit / 1024 + "kb/s]"
                         + " target:" + "[" + tagFps + "f/s]" + ":[" + tagBit / 1024 + "kb/s]"
             )
-            encodeTimeStamp = System.currentTimeMillis()
 
+            Log.e(TAG, "ptsCount: videoPts:$lastPtsVideo audioPts:$lastPtsAudio")
+        }
+
+        fun encodeAudioCount(bit: Int, tagBit: Int) {
+            if (!isDebug) {
+                return
+            }
+            Log.e(
+                TAG,
+                "encodeAudioCount:" + ":[" + bit / 1024 + "kb/s]"
+                        + ":[" + tagBit / 1024 + "kb/s]"
+            )
+
+        }
+
+        fun logPts() {
+            if (!isDebug) {
+                return
+            }
             Log.e(TAG, "ptsCount: videoPts:$lastPtsVideo audioPts:$lastPtsAudio")
         }
 

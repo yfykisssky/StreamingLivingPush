@@ -31,11 +31,11 @@ import java.util.concurrent.TimeUnit
 class MainActivity : Activity() {
 
     private var videoBitRate = 6000
-    private var videoFps = 35
+    private var videoFps = 30
     private var videoWith = 1280
     private var videoHeight = 720
 
-    private var audioBitRate = 128
+    private var audioBitRate = 1280
 
     private var pushInstance = StreamSocketScreenPushInstance.instance
 

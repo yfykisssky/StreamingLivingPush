@@ -137,6 +137,7 @@ abstract class BaseStreamPushInstance {
         encodeAudioTool?.initEncoder(TransUtils.kbps2bs(audioBitRate))
 
         encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
+        encoderMonitorTool.updateTargetDataAudio(TransUtils.kbps2bs(audioBitRate))
 
         encodeControlTool.resetData()
 
@@ -243,6 +244,8 @@ abstract class BaseStreamPushInstance {
                 aFrame.timestamp = timeStamp
 
                 onAudioFrameAva(aFrame)
+
+                encoderMonitorTool.updateBitrateAudio(aFrame.byteArray?.size?:0)
             }
 
             override fun onEncodeError() {
