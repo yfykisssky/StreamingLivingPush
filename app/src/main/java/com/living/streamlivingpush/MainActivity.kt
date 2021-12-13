@@ -19,6 +19,12 @@ import com.huawei.hms.hmsscankit.ScanUtil
 import android.content.Intent
 import com.push.tool.socket.HostTransTool
 import com.push.tool.socket.ScanResult
+import com.record.tool.utils.PingUtils
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.TimeUnit
 
 
 @RequiresApi(Build.VERSION_CODES.M)
@@ -29,9 +35,11 @@ class MainActivity : Activity() {
     private var videoWith = 1280
     private var videoHeight = 720
 
-    private var audioBitRate = 1280
+    private var audioBitRate = 128
 
-    private var pushInstance = StreamRtmpScreenPushInstance.instance
+    private var pushInstance = StreamSocketScreenPushInstance.instance
+
+    private var checkDis: Disposable? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,7 +57,19 @@ class MainActivity : Activity() {
         start?.setOnClickListener {
             PerReqForegroundService.startService()
 
-            startPush()
+            checkDis?.dispose()
+            checkDis = Observable.create<Boolean> {
+                val result = PingUtils.ping(socketIp)
+                it.onNext(result)
+                it.onComplete()
+            }.subscribeOn(Schedulers.io()).timeout(5, TimeUnit.SECONDS)
+                .observeOn(AndroidSchedulers.mainThread()).subscribe({
+                    if (it) {
+                        startPush()
+                    }
+                }, {
+                }, {})
+
         }
 
         stop?.setOnClickListener {
@@ -116,7 +136,7 @@ class MainActivity : Activity() {
 
         //cameraPreviewView?.addView(pushInstance.getPreviewView())
 
-        pushInstance.startPushing("rtmp://tx-test-publish.xxqapp.cn/xxq-live/SLT30S1804027493040682240S192531130384600009S0S1639044498568?txSecret=f3b53625c5c0fec36b0771396a919584&txTime=61B32712")
+        pushInstance.startPushing(socketIp, socketPort)
     }
 
     private fun stopPush() {
@@ -135,6 +155,9 @@ class MainActivity : Activity() {
         )
     }
 
+    private var socketIp = ""
+    private var socketPort = -1
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode != RESULT_OK || data == null) {
@@ -144,17 +167,12 @@ class MainActivity : Activity() {
             val obj = data.getParcelableExtra(ScanUtil.RESULT) as? HmsScan
             if (obj != null) {
                 HostTransTool.str2Obj(obj.originalValue)?.let { scanResult ->
-                    val ip = scanResult.ipAddress ?: ""
-                    val port = scanResult.port
-                    scanCodeResult?.text = "$ip:$port"
-                    handleSocket(ip, port)
+                    socketIp = scanResult.ipAddress ?: ""
+                    socketPort = scanResult.port
+                    scanCodeResult?.text = "$socketIp:$socketPort"
                 }
             }
         }
-    }
-
-    private fun handleSocket(ipAddress: String, port: Int) {
-
     }
 
 }

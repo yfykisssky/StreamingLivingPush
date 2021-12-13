@@ -20,6 +20,7 @@ class SocketClient {
     private var clientSocket: Socket? = null
     private var outPutStream: DataOutputStream? = null
     private var queueVideoFrame: LinkedBlockingQueue<VideoFrame>? = null
+    private var queueAudioFrame: LinkedBlockingQueue<AudioFrame>? = null
     private var isConnecting = false
 
     fun addVideoFrame(frame: VideoFrame) {
@@ -29,7 +30,7 @@ class SocketClient {
 
     fun addAudioFrame(frame: AudioFrame) {
         if (!isConnecting) return
-
+        queueAudioFrame?.add(frame)
     }
 
     inner class ConnectThread(private val host: String, private val port: Int) : Thread() {
@@ -50,7 +51,17 @@ class SocketClient {
                     queueVideoFrame?.take()?.let { frame ->
                         val byteData = frame.byteArray
                         if (byteData?.isNotEmpty() == true) {
-                            val sendData = DataEncodeTool.addVideoExtraData(byteData, frame.timestamp)
+                            val sendData =
+                                DataEncodeTool.addVideoExtraData(byteData, frame.timestamp)
+                            outPutStream?.write(sendData)
+                            outPutStream?.flush()
+                        }
+                    }
+                    queueAudioFrame?.take()?.let { frame ->
+                        val byteData = frame.byteArray
+                        if (byteData?.isNotEmpty() == true) {
+                            val sendData =
+                                DataEncodeTool.addAudioExtraData(byteData, frame.timestamp)
                             outPutStream?.write(sendData)
                             outPutStream?.flush()
                         }
@@ -72,6 +83,7 @@ class SocketClient {
     fun openSocket(host: String, port: Int) {
         isConnecting = true
         queueVideoFrame = LinkedBlockingQueue<VideoFrame>(Integer.MAX_VALUE)
+        queueAudioFrame = LinkedBlockingQueue<AudioFrame>(Integer.MAX_VALUE)
         ConnectThread(host, port).start()
     }
 
