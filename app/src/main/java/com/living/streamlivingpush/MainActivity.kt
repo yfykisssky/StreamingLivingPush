@@ -6,10 +6,8 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.living.streamlivingpush.push.StreamRtmpCamPushInstance
-import com.living.streamlivingpush.push.StreamRtmpScreenPushInstance
 import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
-import com.record.tool.record.video.screen.service.PerReqForegroundService
+import com.record.tool.record.video.screen.service.ProjectionForegroundService
 import kotlinx.android.synthetic.main.activity_main.*
 import com.huawei.hms.ml.scan.HmsScan
 
@@ -18,7 +16,7 @@ import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
 import com.huawei.hms.hmsscankit.ScanUtil
 import android.content.Intent
 import com.push.tool.socket.HostTransTool
-import com.push.tool.socket.ScanResult
+import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
 import com.record.tool.utils.PingUtils
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -40,6 +38,7 @@ class MainActivity : Activity() {
     private var pushInstance = StreamSocketScreenPushInstance.instance
 
     private var checkDis: Disposable? = null
+    private var stmFloatWindowHelper = StmFloatWindowHelper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,8 +53,15 @@ class MainActivity : Activity() {
             10
         )
 
+        stmFloatWindowHelper.initHelper(this)
+
+        if (stmFloatWindowHelper.hasNoPer()) {
+            stmFloatWindowHelper.startOverlaySettingActivity(this)
+        }
+
         start?.setOnClickListener {
-            PerReqForegroundService.startService()
+            ProjectionForegroundService.startService()
+            stmFloatWindowHelper.showWindow()
 
             checkDis?.dispose()
             checkDis = Observable.create<Boolean> {
@@ -73,7 +79,9 @@ class MainActivity : Activity() {
         }
 
         stop?.setOnClickListener {
-            PerReqForegroundService.stopService()
+
+            ProjectionForegroundService.stopService()
+            stmFloatWindowHelper.closeWindow()
 
             stopPush()
         }

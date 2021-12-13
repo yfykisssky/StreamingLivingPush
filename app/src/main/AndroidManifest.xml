@@ -15,6 +15,7 @@
     <!--读文件权限-->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
         android:name=".AppApplication"
@@ -36,7 +37,7 @@
         </activity>
 
         <service
-            android:name="com.record.tool.record.video.screen.service.PerReqForegroundService"
+            android:name="com.record.tool.record.video.screen.service.ProjectionForegroundService"
             android:enabled="true"
             android:foregroundServiceType="mediaProjection" />
 

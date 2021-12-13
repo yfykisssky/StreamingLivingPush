@@ -12,7 +12,7 @@ class PushLogUtils {
 
         private const val TAG = "PushLogUtils"
 
-        private const val isDebug = true
+        const val isDebug = true
 
         private var receiveTimeStamp = 0L
         private var renderCommitStamp = 0L

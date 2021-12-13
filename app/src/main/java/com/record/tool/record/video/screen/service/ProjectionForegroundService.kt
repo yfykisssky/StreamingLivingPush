@@ -12,17 +12,20 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.living.streamlivingpush.AppApplication
 
-class PerReqForegroundService : Service() {
+class ProjectionForegroundService : Service() {
 
     companion object {
-        const val NOTIF_CHANNEL_SCREEN_RECORD = "NOTIF_CHANNEL_SCREEN_RECORD" + ".Id"
-        const val NOTIF_ID_SCREEN_RECORD = 1012
+        private const val NOTIF_CHANNEL_SCREEN_RECORD = "NOTIF_CHANNEL_STM_PUSH" + ".Id"
+        private const val NOTIF_ID_SCREEN_RECORD = 1012
+
+        const val NOTIF_TITLE = "push"
+        const val NOTIF_CONTENT = "push"
 
         private val appContext = AppApplication.appContext
         private var serviceIntent: Intent? = null
 
         fun startService() {
-            serviceIntent = Intent(appContext, PerReqForegroundService::class.java)
+            serviceIntent = Intent(appContext, ProjectionForegroundService::class.java)
             appContext?.startService(serviceIntent)
         }
 
@@ -34,36 +37,28 @@ class PerReqForegroundService : Service() {
 
     }
 
-    private var notificationCompat: NotificationManagerCompat? = null
-
     @Nullable
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
-    override fun onCreate() {
-        super.onCreate()
+    private fun createNofiChannel() {
         NotificationManagerCompat.from(this).let { notificationManager ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val channel = NotificationChannel(
                     NOTIF_CHANNEL_SCREEN_RECORD,
-                    "直播状态",
+                    NOTIF_TITLE,
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
-                    description = "ddd"
+                    description = NOTIF_CONTENT
                 }
-                // Register the channel with the system
                 notificationManager.createNotificationChannel(channel)
             }
         }
     }
 
-    private fun createNofi() {
-        notificationCompat?.notify(NOTIF_ID_SCREEN_RECORD, getNotification())
-    }
-
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        createNofi()
+        createNofiChannel()
         // 将当前服务 设置为 前台服务
         startForeground(NOTIF_ID_SCREEN_RECORD, getNotification())
         return super.onStartCommand(intent, flags, startId)
@@ -71,8 +66,8 @@ class PerReqForegroundService : Service() {
 
     private fun getNotification(): Notification {
         return NotificationCompat.Builder(this, NOTIF_CHANNEL_SCREEN_RECORD)
-            .setContentTitle("直播中")
-            .setContentText("后台运行中")
+            .setContentTitle(NOTIF_TITLE)
+            .setContentText(NOTIF_CONTENT)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setChannelId(NOTIF_CHANNEL_SCREEN_RECORD)
             .setAutoCancel(false)
@@ -81,7 +76,6 @@ class PerReqForegroundService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        notificationCompat?.cancel(NOTIF_ID_SCREEN_RECORD)
     }
 
 }
