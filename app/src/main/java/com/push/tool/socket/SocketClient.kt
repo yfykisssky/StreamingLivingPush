@@ -48,7 +48,7 @@ class SocketClient {
                 }
                 outPutStream = DataOutputStream(clientSocket?.getOutputStream())
                 while (isConnecting) {
-                    queueVideoFrame?.take()?.let { frame ->
+                    queueVideoFrame?.poll()?.let { frame ->
                         val byteData = frame.byteArray
                         if (byteData?.isNotEmpty() == true) {
                             val sendData =
@@ -57,7 +57,7 @@ class SocketClient {
                             outPutStream?.flush()
                         }
                     }
-                    queueAudioFrame?.take()?.let { frame ->
+                    queueAudioFrame?.poll()?.let { frame ->
                         val byteData = frame.byteArray
                         if (byteData?.isNotEmpty() == true) {
                             val sendData =
