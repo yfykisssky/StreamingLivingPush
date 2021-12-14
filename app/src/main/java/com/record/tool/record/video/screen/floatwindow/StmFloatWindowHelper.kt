@@ -1,6 +1,5 @@
 package com.record.tool.record.video.screen.floatwindow
 
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
 import android.content.Context
@@ -10,10 +9,7 @@ import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.view.ViewGroup
-import android.view.WindowManager
+import android.view.*
 import android.view.WindowManager.BadTokenException
 import android.widget.RelativeLayout
 import com.living.streamlivingpush.AppApplication
@@ -23,35 +19,10 @@ import com.record.tool.utils.ToastUtils
 
 class StmFloatWindowHelper {
 
-    private val windowParams = WindowManager.LayoutParams()
-    private var floatView: RelativeLayout? = null
+    private var dragFloatWindow: StmDragFloatWindow<View>? = null
 
     companion object {
         private const val DEFAULT_SIZE = 1
-    }
-
-    @SuppressLint("SetTextI18n")
-    fun initHelper(context: Context) {
-        floatView = RelativeLayout(context)
-        //测试面板
-        if (PushLogUtils.isDebug) {
-
-            val debugPanel =
-                LayoutInflater.from(context).inflate(R.layout.view_debug_floatwindow, null)
-
-            floatView?.addView(debugPanel)
-
-            floatView?.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-
-            floatView?.setBackgroundColor(Color.BLACK)
-
-        } else {
-            floatView?.layoutParams = ViewGroup.LayoutParams(DEFAULT_SIZE, DEFAULT_SIZE)
-            floatView?.setBackgroundColor(Color.TRANSPARENT)
-        }
     }
 
     private fun getWindowManager(): WindowManager? {
@@ -69,41 +40,74 @@ class StmFloatWindowHelper {
             return
         }
         closeWindow()
-        initDragFloatWindowParams()
-        addPanel()
+        StmDragFloatWindow<View>(getContext()).apply {
+            setCustomView(getFloatView())
+            updateViewSize()
+        }.let {
+            initDragFloatWindowParams(it)
+            dragFloatWindow = it
+            addPanel()
+        }
+
+    }
+
+    private fun getFloatView(): View {
+        val floatView = RelativeLayout(getContext())
+        //测试面板
+        if (PushLogUtils.isDebug) {
+            val debugPanel =
+                LayoutInflater.from(getContext()).inflate(R.layout.view_debug_floatwindow, null)
+            floatView.addView(debugPanel)
+
+            floatView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+
+            floatView.setBackgroundColor(Color.BLACK)
+
+        } else {
+            floatView.layoutParams = ViewGroup.LayoutParams(DEFAULT_SIZE, DEFAULT_SIZE)
+            floatView.setBackgroundColor(Color.TRANSPARENT)
+        }
+        return floatView
     }
 
     fun closeWindow() {
         if (hasNoPer()) {
             return
         }
-        if (floatView?.isAttachedToWindow == true) {
-            try {
-                getWindowManager()?.removeView(floatView)
-            } catch (e: BadTokenException) {
+        dragFloatWindow?.let { panel ->
+            if (panel.isAttachedToWindow) {
+                try {
+                    getWindowManager()?.removeView(panel)
+                } catch (e: BadTokenException) {
+                }
             }
         }
     }
 
     private fun addPanel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(
-                getContext()
-            )
-        ) {
-            try {
-                getWindowManager()?.addView(floatView, windowParams)
-            } catch (e: BadTokenException) {
+        dragFloatWindow?.let { panel ->
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(
+                    getContext()
+                )
+            ) {
+                try {
+                    getWindowManager()?.addView(panel, panel.windowParams)
+                } catch (e: BadTokenException) {
+                }
             }
         }
     }
 
-    private fun initDragFloatWindowParams() {
+    private fun initDragFloatWindowParams(window: StmDragFloatWindow<View>) {
+        val windowParams = window.windowParams
         windowParams.type = getFloatWindowType()
         //测试面板
         if (PushLogUtils.isDebug) {
-            floatView?.measure(0, 0)
-            windowParams.width = floatView?.measuredWidth ?: 1
-            windowParams.height = floatView?.measuredHeight ?: 1
+            windowParams.width = window.windowWidth
+            windowParams.height = window.windowHeight
         } else {
             windowParams.width = DEFAULT_SIZE
             windowParams.height = DEFAULT_SIZE

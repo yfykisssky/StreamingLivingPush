@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit
 @RequiresApi(Build.VERSION_CODES.M)
 class MainActivity : Activity() {
 
-    private var videoBitRate = 6000
+    private var videoBitRate = 8000
     private var videoFps = 30
     private var videoWith = 1280
     private var videoHeight = 720
@@ -52,8 +52,6 @@ class MainActivity : Activity() {
             ),
             10
         )
-
-        stmFloatWindowHelper.initHelper(this)
 
         if (stmFloatWindowHelper.hasNoPer()) {
             stmFloatWindowHelper.startOverlaySettingActivity(this)
