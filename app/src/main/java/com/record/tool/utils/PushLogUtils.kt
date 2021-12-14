@@ -54,8 +54,8 @@ class PushLogUtils {
             }
             Log.e(
                 TAG,
-                "encodeVideoCount:" + "[" + fps + "f/s]" + ":[" + bit / 1024 + "kb/s]"
-                        + " target:" + "[" + tagFps + "f/s]" + ":[" + tagBit / 1024 + "kb/s]"
+                "encodeVideoCount:" + "[" + fps + "f/s]" + ":[" + bit + "kb/s]"
+                        + " target:" + "[" + tagFps + "f/s]" + ":[" + tagBit + "kb/s]"
             )
 
             Log.e(TAG, "ptsCount: videoPts:$lastPtsVideo audioPts:$lastPtsAudio")
@@ -67,8 +67,8 @@ class PushLogUtils {
             }
             Log.e(
                 TAG,
-                "encodeAudioCount:" + ":[" + bit / 1024 + "kb/s]"
-                        + ":[" + tagBit / 1024 + "kb/s]"
+                "encodeAudioCount:" + ":[" + bit + "kb/s]"
+                        + ":[" + tagBit + "kb/s]"
             )
 
         }

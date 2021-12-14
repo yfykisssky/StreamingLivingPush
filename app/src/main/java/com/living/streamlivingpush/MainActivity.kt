@@ -33,7 +33,7 @@ class MainActivity : Activity() {
     private var videoWith = 1280
     private var videoHeight = 720
 
-    private var audioBitRate = 1280
+    private var audioBitRate = 128
 
     private var pushInstance = StreamSocketScreenPushInstance.instance
 

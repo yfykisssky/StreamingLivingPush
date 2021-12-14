@@ -126,7 +126,7 @@ abstract class BaseStreamPushInstance {
         initEncoder()
 
         encodeVideoTool?.updateEncodeSettings(
-            TransUtils.kbps2bs(bitRateVideo),
+            TransUtils.kbps2bps(bitRateVideo),
             fps,
             screenWith,
             screenHeight,
@@ -134,10 +134,10 @@ abstract class BaseStreamPushInstance {
         )
         encodeVideoTool?.initEncoder()
 
-        encodeAudioTool?.initEncoder(TransUtils.kbps2bs(audioBitRate))
+        encodeAudioTool?.initEncoder(TransUtils.kbps2bps(audioBitRate))
 
-        encoderMonitorTool.updateTargetData(TransUtils.kbps2bs(bitRateVideo), fps)
-        encoderMonitorTool.updateTargetDataAudio(TransUtils.kbps2bs(audioBitRate))
+        encoderMonitorTool.updateTargetData(TransUtils.kbps2bps(bitRateVideo), fps)
+        encoderMonitorTool.updateTargetDataAudio(TransUtils.kbps2bps(audioBitRate))
 
         encodeControlTool.resetData()
 
@@ -174,6 +174,9 @@ abstract class BaseStreamPushInstance {
         encodeVideoTool?.setIFrameReqSetListener(object : VideoEncoder.IFrameReqSetListener {
 
             override fun onIFrameReqSet(gopTime: Int): Boolean {
+
+                //todo：
+                return false
 
                 encodeControlTool.countGopTime()
                 val gopCountTimes = encodeControlTool.getGopCountTimes()

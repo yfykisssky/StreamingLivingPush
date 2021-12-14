@@ -101,11 +101,11 @@ class StateMonitorTool {
 
                 override fun onNext(time: Long) {
                     countCallBack?.onCount(bitsSize, fpsCount)
-                    PushLogUtils.encodeVideoCount(bitsSize, fpsCount, tagBitRate, tagFps)
+                    PushLogUtils.encodeVideoCount(TransUtils.bs2kbs(bitsSize), fpsCount, TransUtils.bps2kbs(tagBitRate), tagFps)
                     resetBit()
                     resetFps()
 
-                    PushLogUtils.encodeAudioCount(bitsSizeAudio, tagBitRateAudio)
+                    PushLogUtils.encodeAudioCount(TransUtils.bs2kbs(bitsSizeAudio), TransUtils.bps2kbs(tagBitRateAudio))
                     resetBitAudio()
                 }
 
