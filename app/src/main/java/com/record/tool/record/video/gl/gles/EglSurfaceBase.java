@@ -27,13 +27,13 @@ public class EglSurfaceBase {
     private static final String TAG = "EglSurfaceBase";
 
     // EglCore object we're associated with. It may be associated with multiple surfaces.
-    protected EglCore mEglCore;
+    protected GLESEglCore mEglCore;
 
     private EGLSurface mEGLSurface = EGL14.EGL_NO_SURFACE;
     private int mWidth = -1;
     private int mHeight = -1;
 
-    protected EglSurfaceBase(EglCore eglCore) {
+    protected EglSurfaceBase(GLESEglCore eglCore) {
         mEglCore = eglCore;
     }
 

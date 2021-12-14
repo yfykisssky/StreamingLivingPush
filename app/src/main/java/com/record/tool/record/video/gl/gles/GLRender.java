@@ -37,7 +37,7 @@ public class GLRender {
     private Handler mGLHandler;
 
     private TextureView mTextureView;
-    private EglCore mEglCore;
+    private GLESEglCore mEglCore;
     private WindowSurface mWindowSurface;
     private EGLContext mEGLContext;
     private GLSurfaceView mGLSurfaceView;
@@ -325,7 +325,7 @@ public class GLRender {
     }
 
     private void prepareGlSurface(SurfaceTexture st, int width, int height) {
-        mEglCore = new EglCore(mEGLContext, 0);
+        mEglCore = new GLESEglCore(mEGLContext, 0);
 
         if (st != null) {
             mWindowSurface = new WindowSurface(mEglCore, st);

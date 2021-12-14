@@ -13,8 +13,8 @@ import android.util.Log;
 import android.view.Surface;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-public final class EglCore {
-    private static final String TAG = EglCore.class.getSimpleName();
+public final class GLESEglCore {
+    private static final String TAG = GLESEglCore.class.getSimpleName();
 
     /**
      * Constructor flag: surface must be recordable.  This discourages EGL from using a
@@ -37,7 +37,7 @@ public final class EglCore {
     private EGLConfig mEGLConfig = null;
     private int mGlVersion = -1;
 
-    public EglCore() {
+    public GLESEglCore() {
         this(null, 0);
     }
 
@@ -48,7 +48,7 @@ public final class EglCore {
      * @param sharedContext The context to share, or null if sharing is not desired.
      * @param flags         Configuration bit flags, e.g. FLAG_RECORDABLE.
      */
-    public EglCore(EGLContext sharedContext, int flags) {
+    public GLESEglCore(EGLContext sharedContext, int flags) {
         if (mEGLDisplay != EGL14.EGL_NO_DISPLAY) {
             throw new RuntimeException("EGL already set up");
         }

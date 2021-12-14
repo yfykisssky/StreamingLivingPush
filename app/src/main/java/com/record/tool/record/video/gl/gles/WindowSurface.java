@@ -14,18 +14,18 @@ import android.view.Surface;
 public class WindowSurface extends EglSurfaceBase {
     private Surface mSurface;
 
-    public WindowSurface(EglCore eglCore, int width, int height) {
+    public WindowSurface(GLESEglCore eglCore, int width, int height) {
         super(eglCore);
         this.createOffscreenSurface(width, height);
     }
 
-    public WindowSurface(EglCore eglCore, Surface surface) {
+    public WindowSurface(GLESEglCore eglCore, Surface surface) {
         super(eglCore);
         this.createWindowSurface(surface);
         this.mSurface = surface;
     }
 
-    public WindowSurface(EglCore eglCore, SurfaceTexture texture) {
+    public WindowSurface(GLESEglCore eglCore, SurfaceTexture texture) {
         super(eglCore);
         this.createWindowSurface(texture);
     }
@@ -52,7 +52,7 @@ public class WindowSurface extends EglSurfaceBase {
      * context somewhere, the create call will fail with complaints from the Surface
      * about already being connected.
      */
-    public void recreate(EglCore newEglCore) {
+    public void recreate(GLESEglCore newEglCore) {
         if (this.mSurface == null) {
             throw new RuntimeException("not yet implemented for SurfaceTexture");
         } else {
