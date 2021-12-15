@@ -11,6 +11,8 @@ import android.os.Build
 import android.provider.Settings
 import android.view.*
 import android.view.WindowManager.BadTokenException
+import android.widget.Button
+import android.widget.EditText
 import android.widget.RelativeLayout
 import com.living.streamlivingpush.AppApplication
 import com.living.streamlivingpush.R
@@ -23,6 +25,15 @@ class StmFloatWindowHelper {
 
     companion object {
         private const val DEFAULT_SIZE = 1
+    }
+
+    interface CallBackListener {
+        fun onChangeBitrate(newBit: Int)
+    }
+
+    private var callBackListener: CallBackListener? = null
+    fun setCallBackListener(callBackListener: CallBackListener?) {
+        this.callBackListener = callBackListener
     }
 
     private fun getWindowManager(): WindowManager? {
@@ -58,6 +69,12 @@ class StmFloatWindowHelper {
             val debugPanel =
                 LayoutInflater.from(getContext()).inflate(R.layout.view_debug_floatwindow, null)
             floatView.addView(debugPanel)
+
+            (debugPanel?.findViewById<Button>(R.id.bitSetBnt))?.setOnClickListener { view ->
+                val newBit =
+                    (view.findViewById<EditText>(R.id.bitSet))?.text?.toString()?.toInt() ?: 0
+                callBackListener?.onChangeBitrate(2000)
+            }
 
             floatView.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,

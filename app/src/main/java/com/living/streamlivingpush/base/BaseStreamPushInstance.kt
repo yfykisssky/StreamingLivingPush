@@ -248,7 +248,7 @@ abstract class BaseStreamPushInstance {
 
                 onAudioFrameAva(aFrame)
 
-                encoderMonitorTool.updateBitrateAudio(aFrame.byteArray?.size?:0)
+                encoderMonitorTool.updateBitrateAudio(aFrame.byteArray?.size ?: 0)
             }
 
             override fun onEncodeError() {
@@ -262,6 +262,11 @@ abstract class BaseStreamPushInstance {
 
         encodeAudioTool?.startEncode()
 
+    }
+
+    fun resetVideoBit(bitRate: Int) {
+        val bitRateVideo = TransUtils.kbps2bps(bitRate)
+        toResetVideoEncode(bitRateVideo,-1)
     }
 
     private fun toResetVideoEncode(bit: Int, fps: Int) {

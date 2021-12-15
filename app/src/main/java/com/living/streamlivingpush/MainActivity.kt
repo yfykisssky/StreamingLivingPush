@@ -53,6 +53,12 @@ class MainActivity : Activity() {
             10
         )
 
+        stmFloatWindowHelper.setCallBackListener(object: StmFloatWindowHelper.CallBackListener{
+            override fun onChangeBitrate(newBit: Int) {
+                pushInstance.resetVideoBit(newBit)
+            }
+        })
+
         if (stmFloatWindowHelper.hasNoPer()) {
             stmFloatWindowHelper.startOverlaySettingActivity(this)
         }

@@ -102,8 +102,12 @@ class VideoEncoder {
         bitRate: Int,
         maxFps: Int
     ) {
-        this.bitRate = bitRate
-        this.maxFps = maxFps
+        if (bitRate > 0) {
+            this.bitRate = bitRate
+        }
+        if (maxFps > 0) {
+            this.maxFps = maxFps
+        }
     }
 
     fun updateEncodeSettings(

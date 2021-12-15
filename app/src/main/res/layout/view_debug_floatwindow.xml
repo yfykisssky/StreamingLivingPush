@@ -12,10 +12,25 @@
         android:layout_height="100dp"
         android:background="#00FF00">
 
-        <Button
-            android:id="@+id/drop"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="drop" />
+            android:orientation="horizontal">
+
+            <EditText
+                android:text="2000"
+                android:id="@+id/bitSet"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:background="@color/white"
+                android:hint="kbps" />
+
+            <Button
+                android:id="@+id/bitSetBnt"
+                android:layout_width="100dp"
+                android:layout_height="50dp"
+                android:text="drop" />
+        </LinearLayout>
+
     </RelativeLayout>
 </RelativeLayout>
