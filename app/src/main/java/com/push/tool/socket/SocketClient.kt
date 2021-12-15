@@ -2,6 +2,7 @@ package com.push.tool.socket
 
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
+import com.push.tool.base.BasePushTool
 import java.io.DataOutputStream
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -10,7 +11,7 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.LinkedBlockingQueue
 
 
-class SocketClient {
+class SocketClient : BasePushTool() {
 
     companion object {
         private const val WRITE_TIME_OUT = 10000
@@ -18,18 +19,17 @@ class SocketClient {
     }
 
     private var clientSocket: Socket? = null
+    private var connectThread: ConnectThread? = null
     private var outPutStream: DataOutputStream? = null
-    private var queueVideoFrame: LinkedBlockingQueue<VideoFrame>? = null
-    private var queueAudioFrame: LinkedBlockingQueue<AudioFrame>? = null
     private var isConnecting = false
 
-    fun addVideoFrame(frame: VideoFrame) {
-        if (!isConnecting) return
+    override fun addVideoFrame(frame: VideoFrame) {
+        super.addVideoFrame(frame)
         queueVideoFrame?.add(frame)
     }
 
-    fun addAudioFrame(frame: AudioFrame) {
-        if (!isConnecting) return
+    override fun addAudioFrame(frame: AudioFrame) {
+        super.addAudioFrame(frame)
         queueAudioFrame?.add(frame)
     }
 
@@ -72,10 +72,14 @@ class SocketClient {
 
             } finally {
                 isConnecting = false
-                outPutStream?.close()
-                outPutStream = null
-                clientSocket?.close()
-                clientSocket = null
+                try {
+                    outPutStream?.close()
+                    outPutStream = null
+                    clientSocket?.close()
+                    clientSocket = null
+                } catch (e: IOException) {
+
+                }
             }
         }
     }
@@ -84,11 +88,14 @@ class SocketClient {
         isConnecting = true
         queueVideoFrame = LinkedBlockingQueue<VideoFrame>(Integer.MAX_VALUE)
         queueAudioFrame = LinkedBlockingQueue<AudioFrame>(Integer.MAX_VALUE)
-        ConnectThread(host, port).start()
+        connectThread = ConnectThread(host, port)
+        connectThread?.start()
     }
 
     fun closeSocket() {
         isConnecting = false
+        clientSocket?.close()
+        connectThread?.join()
     }
 
 }

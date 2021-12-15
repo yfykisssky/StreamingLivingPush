@@ -14,9 +14,6 @@ class StreamSocketCamPushInstance : StreamCamPushInstance() {
 
     companion object {
         private val TAG_NAME = this::class.java.simpleName
-        val instance: StreamSocketCamPushInstance by lazy {
-            StreamSocketCamPushInstance()
-        }
     }
 
     var isRecordAndEncoding = false

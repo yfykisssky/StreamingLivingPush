@@ -2,12 +2,11 @@ package com.push.tool.rtmp
 
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
-import com.record.tool.utils.CheckUtils
-import com.record.tool.utils.FrameType
+import com.push.tool.base.BasePushTool
 import com.record.tool.utils.PushLogUtils
 import java.util.concurrent.LinkedBlockingQueue
 
-open class RtmpPushTool {
+open class RtmpPushTool : BasePushTool() {
 
     interface Callback {
         fun onStatus(status: Int)
@@ -21,8 +20,6 @@ open class RtmpPushTool {
 
     private val callback: Callback? = null
     private var url: String? = null
-    private var queueVideoFrame: LinkedBlockingQueue<VideoFrame>? = null
-    private var queueAudioFrame: LinkedBlockingQueue<AudioFrame>? = null
     private var isPushing = false
 
     private external fun connect(url: String?): Boolean
@@ -85,11 +82,13 @@ open class RtmpPushTool {
         }
     }
 
-    fun addVideoFrame(frame: VideoFrame) {
+    override fun addVideoFrame(frame: VideoFrame) {
+        super.addVideoFrame(frame)
         queueVideoFrame?.add(frame)
     }
 
-    fun addAudioFrame(frame: AudioFrame) {
+    override fun addAudioFrame(frame: AudioFrame) {
+        super.addAudioFrame(frame)
         queueAudioFrame?.add(frame)
     }
 
@@ -108,32 +107,5 @@ open class RtmpPushTool {
     fun stopPushing() {
         isPushing = false
     }
-
-    fun disCardVideoGop(): Long {
-
-        while (true) {
-            val currentFrame = queueVideoFrame?.peek()
-            if (CheckUtils.judgeBytesFrameKind(currentFrame?.byteArray) == FrameType.I_FRAME) {
-                return currentFrame?.timestamp ?: 0L
-            } else {
-                queueVideoFrame?.remove()
-            }
-        }
-
-    }
-
-    fun disCardAudioFrames(timeStamp: Long) {
-
-        while (true) {
-            val currentFrame = queueVideoFrame?.peek()
-            if (currentFrame?.timestamp ?: Long.MAX_VALUE >= timeStamp) {
-                break
-            } else {
-                queueVideoFrame?.remove()
-            }
-        }
-
-    }
-
 
 }

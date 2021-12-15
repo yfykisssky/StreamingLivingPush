@@ -6,7 +6,7 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
+import com.living.streamlivingpush.push.*
 import com.record.tool.record.video.screen.service.ProjectionForegroundService
 import kotlinx.android.synthetic.main.activity_main.*
 import com.huawei.hms.ml.scan.HmsScan
@@ -35,7 +35,7 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 128
 
-    private var pushInstance = StreamSocketScreenPushInstance.instance
+    private var pushInstance = StreamSocketScreenPushInstance()
 
     private var checkDis: Disposable? = null
     private var stmFloatWindowHelper = StmFloatWindowHelper()

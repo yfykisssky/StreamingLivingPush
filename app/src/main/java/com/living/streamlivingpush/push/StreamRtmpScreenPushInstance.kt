@@ -12,9 +12,6 @@ class StreamRtmpScreenPushInstance : StreamScreenPushInstance() {
 
     companion object {
         private val TAG_NAME = this::class.java.simpleName
-        val instance: StreamRtmpScreenPushInstance by lazy {
-            StreamRtmpScreenPushInstance()
-        }
     }
 
     var isRecordAndEncoding = false

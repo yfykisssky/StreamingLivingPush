@@ -12,9 +12,6 @@ class StreamSocketScreenPushInstance : StreamScreenPushInstance() {
 
     companion object {
         private val TAG_NAME = this::class.java.simpleName
-        val instance: StreamSocketScreenPushInstance by lazy {
-            StreamSocketScreenPushInstance()
-        }
     }
 
     var isRecordAndEncoding = false
