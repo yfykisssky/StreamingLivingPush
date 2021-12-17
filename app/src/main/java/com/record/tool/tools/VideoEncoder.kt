@@ -37,6 +37,22 @@ class VideoEncoder {
 
     private var mCustomSurfaceRender: ToSurfaceFrameRender? = null
 
+    //crash
+    private var tryCrashFromats = HashMap<String, Int>()
+
+    init {
+        //BITRATE_MODE_CBR输出码率恒定
+        //BITRATE_MODE_CQ保证图像质量
+        //BITRATE_MODE_VBR图像复杂则码率高，图像简单则码率低
+        tryCrashFromats[MediaFormat.KEY_BITRATE_MODE] =
+            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR
+        tryCrashFromats[MediaFormat.KEY_COMPLEXITY] =
+            MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR
+
+        tryCrashFromats[MediaFormat.KEY_PROFILE] =
+            MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline
+    }
+
     private fun createInputRender(outSurface: Surface) {
         if (mCustomSurfaceRender == null) {
             mCustomSurfaceRender = ToSurfaceFrameRender()
@@ -126,6 +142,7 @@ class VideoEncoder {
 
     private fun configEncoder() {
         try {
+            tryConfigCrashFormat()
             codec?.configure(getEncodeFormat(), null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         } catch (e: Exception) {
             e.printStackTrace()
@@ -187,11 +204,36 @@ class VideoEncoder {
         format.setInteger(MediaFormat.KEY_WIDTH, frameWith)
         format.setInteger(MediaFormat.KEY_HEIGHT, frameHeight)
 
+        tryCrashFromats.forEach { map ->
+            format.setInteger(
+                map.key,
+                map.value
+            )
+        }
+
         //部分机型最大帧率无效
         //MediaFormat.KEY_MAX_FPS_TO_ENCODER
-        //crash
-        //MediaFormat.KEY_PROFILE
         return format
+    }
+
+    private fun tryConfigCrashFormat() {
+
+        val entries = tryCrashFromats.entries.iterator()
+        while (entries.hasNext()) {
+            val entry = entries.next()
+            try {
+                val format = MediaFormat()
+                format.setInteger(
+                    entry.key,
+                    entry.value
+                )
+                codec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                entries.remove()
+            }
+        }
+
     }
 
     fun startEncode() {
