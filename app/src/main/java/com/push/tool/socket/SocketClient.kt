@@ -16,12 +16,16 @@ class SocketClient : BasePushTool() {
     companion object {
         private const val WRITE_TIME_OUT = 10000
         private const val CONNECT_TIME_OUT = 10000
+
+        private const val CONNECT_TIME_ACK = 100
     }
 
     private var clientSocket: Socket? = null
     private var connectThread: ConnectThread? = null
     private var outPutStream: DataOutputStream? = null
     private var isConnecting = false
+
+    private var lastWriteTimeStamp = 0L
 
     override fun addVideoFrame(frame: VideoFrame) {
         super.addVideoFrame(frame)
@@ -33,7 +37,36 @@ class SocketClient : BasePushTool() {
         queueAudioFrame?.add(frame)
     }
 
+    private fun refreshWriteTimeStamp() {
+        lastWriteTimeStamp = System.currentTimeMillis()
+    }
+
     inner class ConnectThread(private val host: String, private val port: Int) : Thread() {
+
+        private fun getSendBytes(): ByteArray? {
+
+            queueVideoFrame?.poll()?.let { frame ->
+                val byteData = frame.byteArray
+                if (byteData?.isNotEmpty() == true) {
+                    return DataEncodeTool.addVideoExtraData(byteData, frame.timestamp)
+                }
+            }
+            queueAudioFrame?.poll()?.let { frame ->
+                val byteData = frame.byteArray
+                if (byteData?.isNotEmpty() == true) {
+                    return DataEncodeTool.addAudioExtraData(byteData, frame.timestamp)
+                }
+            }
+
+            //心跳包
+            if ((System.currentTimeMillis() - lastWriteTimeStamp) > CONNECT_TIME_ACK) {
+                return DataEncodeTool.getSocketAckExtraData()
+            }
+
+            return null
+        }
+
+
         override fun run() {
             super.run()
             try {
@@ -47,25 +80,16 @@ class SocketClient : BasePushTool() {
                     }
                 }
                 outPutStream = DataOutputStream(clientSocket?.getOutputStream())
+                refreshWriteTimeStamp()
                 while (isConnecting) {
-                    queueVideoFrame?.poll()?.let { frame ->
-                        val byteData = frame.byteArray
-                        if (byteData?.isNotEmpty() == true) {
-                            val sendData =
-                                DataEncodeTool.addVideoExtraData(byteData, frame.timestamp)
-                            outPutStream?.write(sendData)
-                            outPutStream?.flush()
-                        }
+
+                    val sendBytes = getSendBytes()
+                    if (sendBytes != null) {
+                        outPutStream?.write(sendBytes)
+                        outPutStream?.flush()
+                        refreshWriteTimeStamp()
                     }
-                    queueAudioFrame?.poll()?.let { frame ->
-                        val byteData = frame.byteArray
-                        if (byteData?.isNotEmpty() == true) {
-                            val sendData =
-                                DataEncodeTool.addAudioExtraData(byteData, frame.timestamp)
-                            outPutStream?.write(sendData)
-                            outPutStream?.flush()
-                        }
-                    }
+
                 }
 
             } catch (e: IOException) {
