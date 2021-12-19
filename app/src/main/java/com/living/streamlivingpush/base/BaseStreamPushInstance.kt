@@ -240,9 +240,9 @@ abstract class BaseStreamPushInstance {
 
         encodeAudioTool?.setDataCallBackListener(object : AudioEncoder.DataCallBackListener {
 
-            override fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long, isHeader: Boolean) {
+            override fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long) {
                 val aFrame = AudioFrame()
-                aFrame.isHeader = isHeader
+
                 aFrame.byteArray = byteArray
                 aFrame.timestamp = timeStamp
 

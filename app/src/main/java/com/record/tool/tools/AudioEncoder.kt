@@ -23,8 +23,6 @@ class AudioEncoder {
     private var dataCallBackListener: DataCallBackListener? = null
     private val vBufferInfo = MediaCodec.BufferInfo()
 
-    private var specificInfo: ByteArray? = null
-
     private var recordAudioQueue: LinkedBlockingQueue<RecordAudioFrame>? = null
 
     private var encodeStartTimeStamp = 0L
@@ -34,7 +32,7 @@ class AudioEncoder {
     }
 
     interface DataCallBackListener {
-        fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long, isHeader: Boolean)
+        fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long)
         fun onEncodeError()
 
         fun onLogTest(log: String)
@@ -55,15 +53,6 @@ class AudioEncoder {
             format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
             codec = MediaCodec.createEncoderByType(MIME_TYPE)
             codec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-
-            //faac库实现
-            specificInfo = AudioSpecificConfig.getAudioDecoderSpecificInfo(
-                MediaCodecInfo.CodecProfileLevel.AACObjectLC,
-                AudioConstants.SAMPLE_RATE,
-                AudioConstants.CHANNEL
-            )
-            //另外的方式
-            //codec?.outputFormat?.getByteBuffer("csd-0")
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -104,8 +93,6 @@ class AudioEncoder {
             try {
                 encodeStartTimeStamp = 0L
 
-                dataCallBackListener?.onDataCallBack(specificInfo, encodeStartTimeStamp, true)
-
                 codec?.start()
                 while (isEncoding) {
                     if (recordAudioQueue?.size ?: 0 > 0) {
@@ -134,10 +121,22 @@ class AudioEncoder {
                     }
                     var indexOut = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
                     while (indexOut >= 0 && isEncoding) {
+
                         val outputBuffer = codec?.getOutputBuffer(indexOut)
-                        val outData = ByteArray(vBufferInfo.size)
-                        outputBuffer?.get(outData)
-                        dataCallBackListener?.onDataCallBack(outData, handlePts(), false)
+
+                        val outDataSize = vBufferInfo.size + AudioConfigUtils.ADTS_SIZE
+
+                        outputBuffer?.position(vBufferInfo.offset)
+                        outputBuffer?.limit(vBufferInfo.offset + vBufferInfo.size)
+
+                        val outData = ByteArray(outDataSize)
+
+                        AudioConfigUtils.addADTStoPacket(AudioConstants.SAMPLE_RATE, outData)
+
+                        outputBuffer?.get(outData, AudioConfigUtils.ADTS_SIZE, vBufferInfo.size)
+                        outputBuffer?.position(vBufferInfo.offset)
+
+                        dataCallBackListener?.onDataCallBack(outData, handlePts())
                         codec?.releaseOutputBuffer(indexOut, false)
                         indexOut = codec?.dequeueOutputBuffer(vBufferInfo, 0) ?: -1
                     }
