@@ -9,3 +9,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "StreamLivingPush"
 include ':app'
+include ':faac'

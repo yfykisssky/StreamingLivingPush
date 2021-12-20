@@ -90,4 +90,3 @@ Java_com_push_tool_rtmp_RtmpPushTool_sendAudioData(JNIEnv *env, jobject obj, jby
     (*env)->ReleaseByteArrayElements(env, data_, data, 0);
     return ret;
 }
-
