@@ -5,8 +5,9 @@ import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
 import com.record.tool.bean.RecordAudioFrame
 import com.record.tool.record.video.gl.TextureVideoFrame
-import com.record.tool.tools.AudioEncoder
-import com.record.tool.tools.VideoEncoder
+import com.encoder.AudioEncoder
+import com.encoder.AudioSoftEncoder
+import com.encoder.VideoEncoder
 import com.record.tool.utils.*
 import java.lang.ref.WeakReference
 
@@ -25,7 +26,7 @@ abstract class BaseStreamPushInstance {
     }
 
     private var encodeVideoTool: VideoEncoder? = null
-    private var encodeAudioTool: AudioEncoder? = null
+    private var encodeAudioTool: AudioSoftEncoder? = null
 
     private var encoderMonitorTool = StateMonitorTool()
     private var encodeControlTool = EncodeControlTool()
@@ -57,7 +58,7 @@ abstract class BaseStreamPushInstance {
 
     private fun initEncoder() {
         encodeVideoTool = VideoEncoder()
-        encodeAudioTool = AudioEncoder()
+        encodeAudioTool = AudioSoftEncoder()
 
         streamPushHandlerThread = HandlerThread("StreamPushThread")
         streamPushHandlerThread?.start()
@@ -238,7 +239,7 @@ abstract class BaseStreamPushInstance {
         encodeVideoTool?.startEncode()
 
 
-        encodeAudioTool?.setDataCallBackListener(object : AudioEncoder.DataCallBackListener {
+        encodeAudioTool?.setDataCallBackListener(object : AudioSoftEncoder.DataCallBackListener {
 
             override fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long) {
                 val aFrame = AudioFrame()

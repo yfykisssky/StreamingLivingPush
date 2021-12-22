@@ -1,4 +1,4 @@
-package com.record.tool.tools;
+package com.encoder;
 
 public class AudioSpecificConfig {
 

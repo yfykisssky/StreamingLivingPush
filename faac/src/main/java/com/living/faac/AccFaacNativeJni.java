@@ -10,4 +10,6 @@ class AccFaacNativeJni {
 
     public native static void stopFaacEngine();
 
+    public native static byte[] convertToAac(byte[] bytesPcm);
+
 }
