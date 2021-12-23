@@ -16,11 +16,11 @@ unsigned long inputMaxBufferSize;
 //pcm位深，用于计算一帧pcm大小
 const int PCM_BITS_SIZE = 16;
 
-int initEncoder(unsigned long sampleRate, int channels,int useBitRate) {
+int initEncoder(unsigned long sampleRate, int channels, int useBitRate) {
 
     encoder = faacEncOpen(sampleRate, channels, &inputSamples, &maxOutputSamples);
 
-    inputMaxBufferSize = inputSamples * maxOutputSamples / 8;
+    inputMaxBufferSize = inputSamples * PCM_BITS_SIZE / 8;
 
     LOGE("inputSamples:%d", inputSamples);
     LOGE("maxOutputSamples:%d", maxOutputSamples);
@@ -37,7 +37,7 @@ int initEncoder(unsigned long sampleRate, int channels,int useBitRate) {
     encodeConfig->allowMidside = 0;
     //RAW_STREAM = 0, ADTS_STREAM=1
     encodeConfig->outputFormat = 0;
-    //设置比特率
+    //设置比特率 bps
     encodeConfig->bitRate = useBitRate;
     //设置输入PCM格式
     encodeConfig->inputFormat = FAAC_INPUT_16BIT;
@@ -48,17 +48,17 @@ int initEncoder(unsigned long sampleRate, int channels,int useBitRate) {
 
 }
 
+unsigned long getMaxAacBytesSize() {
+    return maxOutputSamples;
+}
+
 int unInitEncoder() {
     faacEncClose(encoder);
     return 0;
 }
 
 int convertToAac(unsigned char *bufferPCM,
-                 unsigned char *bufferAAC,
-                 int bufferAacSize) {
-
-    // 输入样本数，用实际读入字节数计算，一般只有读到文件尾时才不是nPCMBufferSize/(nPCMBitSize/8);
-    //inputSamples = buf_sizePCM / (PCM_BITS_SIZE / 8);
+                 unsigned char *bufferAAC) {
     int ret = 0;
     //ret为0时不代表编码失败，而是编码速度较慢，导致缓存还未完全flush
     while (ret == 0) {

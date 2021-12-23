@@ -6,9 +6,9 @@ class AccFaacNativeJni {
         System.loadLibrary("pcmtoaac");
     }
 
-    public native static void startFaacEngine();
+    public native static int initFaacEngine(long sampleRate, int channels, int bitRate);
 
-    public native static void stopFaacEngine();
+    public native static void destoryFaacEngine();
 
     public native static byte[] convertToAac(byte[] bytesPcm);
 

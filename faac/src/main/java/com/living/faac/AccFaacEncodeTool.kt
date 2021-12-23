@@ -2,21 +2,16 @@ package com.living.faac
 
 class AccFaacEncodeTool {
 
-    fun test(){
-        AccFaacNativeJni.startFaacEngine()
-    }
-
-    fun startFaacEngine(
-/*        type: Int,
-        fomtType: Int,
+    fun initFaacEngine(
         sampleRate: Long,
-        channels: Int*/
-    ) {
-        AccFaacNativeJni.startFaacEngine()
+        channels: Int,
+        bitRate:Int
+    ):Int {
+        return AccFaacNativeJni.initFaacEngine(sampleRate,channels,bitRate)
     }
 
-    fun stopFaacEngine() {
-        AccFaacNativeJni.stopFaacEngine()
+    fun destoryFaacEngine() {
+        AccFaacNativeJni.destoryFaacEngine()
     }
 
     fun convertToAac(pcmBytes: ByteArray?): ByteArray? {
