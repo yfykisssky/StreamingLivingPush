@@ -37,6 +37,9 @@ class VideoEncoder {
 
     private var mCustomSurfaceRender: ToSurfaceFrameRender? = null
 
+    //部分机型会jni crash,需要加黑名单
+    private var canTrySetCrashFromats = false
+
     //crash
     private var tryCrashFromats = HashMap<String, Int>()
 
@@ -218,20 +221,24 @@ class VideoEncoder {
 
     private fun tryConfigCrashFormat() {
 
-        val entries = tryCrashFromats.entries.iterator()
-        while (entries.hasNext()) {
-            val entry = entries.next()
-            try {
-                val format = MediaFormat()
-                format.setInteger(
-                    entry.key,
-                    entry.value
-                )
-                codec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                entries.remove()
+        if (canTrySetCrashFromats) {
+            val entries = tryCrashFromats.entries.iterator()
+            while (entries.hasNext()) {
+                val entry = entries.next()
+                try {
+                    val format = MediaFormat()
+                    format.setInteger(
+                        entry.key,
+                        entry.value
+                    )
+                    codec?.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    entries.remove()
+                }
             }
+        } else {
+            tryCrashFromats.clear()
         }
 
     }

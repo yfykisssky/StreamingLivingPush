@@ -19,6 +19,9 @@ class AudioSoftEncoder {
 
     private var recordAudioQueue: LinkedBlockingQueue<RecordAudioFrame>? = null
 
+    private var encodeThread: EncodeThread? = null
+    private var addressToByteBufferThread: AddToByteBufferThread? = null
+
     //bytes缓冲，截取正确长度
     private var audioByteBuffers: ByteBuffer? = null
     private var inputBufferSize = 0
@@ -61,8 +64,10 @@ class AudioSoftEncoder {
 
         recordAudioQueue = LinkedBlockingQueue<RecordAudioFrame>(Integer.MAX_VALUE)
 
-        EncodeThread().start()
-        AddToByteBufferThread().start()
+        encodeThread = EncodeThread()
+        encodeThread?.start()
+        addressToByteBufferThread = AddToByteBufferThread()
+        addressToByteBufferThread?.start()
 
     }
 
@@ -71,6 +76,11 @@ class AudioSoftEncoder {
         encodeStartTimeStamp = 0L
         audioByteBuffers?.clear()
         audioByteBuffers = null
+
+        encodeThread?.join()
+        encodeThread = null
+        addressToByteBufferThread?.join()
+        addressToByteBufferThread = null
 
         accFaacEncodeTool?.destoryFaacEngine()
     }
