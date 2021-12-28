@@ -5,7 +5,7 @@ include $(FAAC_TOP)/libfaac/Android.mk
 
 include $(CLEAR_VARS)
 LOCAL_MODULE    := pcmtoaac
-LOCAL_SRC_FILES := $(FAAC_TOP)/pcmtoaac/native-interfaces.cpp
+LOCAL_SRC_FILES := $(FAAC_TOP)/pcmtoaac/faacinterfaces.cpp
 LOCAL_C_INCLUDES += $(FAAC_TOP)/include/
 LOCAL_LDLIBS +=  -llog -ldl -lz
 LOCAL_SHARED_LIBRARIES := faac

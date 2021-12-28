@@ -1,9 +1,8 @@
-#include "pcmtoaac.h"
-#include "pcmtoaac.cpp"
 #include <jni.h>
 #include "tools.h"
 #include "tools.c"
-#include <jni.h>
+#include "pcmtoaac.h"
+#include "pcmtoaac.cpp"
 
 extern "C"
 JNIEXPORT jint JNICALL

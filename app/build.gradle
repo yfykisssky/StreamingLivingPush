@@ -66,4 +66,6 @@ dependencies {
 
     implementation project(":faac")
 
+    implementation project(":x264")
+
 }
