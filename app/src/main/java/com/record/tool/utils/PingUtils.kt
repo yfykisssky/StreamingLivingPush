@@ -1,36 +1,42 @@
-package com.record.tool.utils;
+package com.record.tool.utils
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
 
-public class PingUtils {
+class PingUtils {
 
-    public static boolean ping(String hostIp) {
+    companion object {
+        fun ping(hostIp: String): Boolean {
+            return try {
+                //ping -c 3 -w 5  中  ，-c 是指ping的次数 3是指ping 3次 ，-w 5  以秒为单位指定超时间隔，是指超时时间为5秒
+                val p = Runtime.getRuntime().exec("ping -c 1 -w 2 $hostIp")
+                val status = p.waitFor()
+                val input = p.inputStream
+                val bufIn = BufferedReader(InputStreamReader(input))
+                val buffer = StringBuffer()
+                var line: String?
+                while (bufIn.readLine().also { line = it } != null) {
+                    buffer.append(line)
+                    if (line?.contains("avg") == true) {
+                        val i = line?.indexOf("/", 20) ?: -1
+                        val j = line?.indexOf(".", i) ?: -1
 
-        try {
-            //ping -c 3 -w 5  中  ，-c 是指ping的次数 3是指ping 3次 ，-w 5  以秒为单位指定超时间隔，是指超时时间为5秒
-            Process p = Runtime.getRuntime().exec("ping -c 1 -w 2 " + hostIp);
-            int status = p.waitFor();
+                        val delay = line?.substring(i + 1, j)
 
-            InputStream input = p.getInputStream();
-            BufferedReader in = new BufferedReader(new InputStreamReader(input));
-            StringBuffer buffer = new StringBuffer();
-            String line = "";
-            while ((line = in.readLine()) != null) {
-                buffer.append(line);
+                        PushLogUtils.outLog("PING_DELAY", delay)
+
+                    }
+                }
+                status == 0
+            } catch (e: IOException) {
+                e.printStackTrace()
+                false
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+                false
             }
-
-            if (status == 0) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return false;
         }
     }
+
 }

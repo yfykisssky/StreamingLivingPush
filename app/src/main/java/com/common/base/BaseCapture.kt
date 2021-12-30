@@ -88,7 +88,6 @@ abstract class BaseCapture : OnFrameAvailableListener {
                     mGLCubeBuffer,
                     mGLTextureBuffer
                 )
-                mEglCore?.swapBuffer()
 
                 val textureFrame = TextureVideoFrame()
                 textureFrame.eglContext14 = mEglCore?.eglContext as? EGLContext
