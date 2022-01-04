@@ -1,11 +1,34 @@
 package com.encoder
 
+import android.content.Context
+import com.encoder.utils.ImgTransJavaUtils
+import com.encoder.utils.ImgTransUtils
+import com.living.streamlivingpush.R
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.gl.trans.TransToNv21Tool
+import com.record.tool.utils.FileTestUtils
 
 class VideoSoftEncoder {
 
-    companion object {}
+    companion object {
+
+        //todo:测试
+
+        private val nv21List = ArrayList<ByteArray>()
+
+        fun initBitmaps(con: Context) {
+            val listBitmaps = ImgTransUtils.getBitmapsFromGif(con, R.raw.giftest)
+            listBitmaps.forEach { bitmap ->
+                val nv21Bytes = ImgTransJavaUtils.bitmapToNv21(bitmap, 1280, 720)
+                nv21List.add(nv21Bytes)
+            }
+
+            var fileTest = FileTestUtils()
+            fileTest.initFile()
+            fileTest.writeToJpg(nv21List[3])
+        }
+
+    }
 
     private var isEncoding = false
     private var encodeStartTimeStamp = 0L
@@ -20,9 +43,10 @@ class VideoSoftEncoder {
     private var frameWith = 0
     private var frameHeight = 0
 
-    private var transToNv21Tool: TransToNv21Tool?=null
+    private var transToNv21Tool: TransToNv21Tool? = null
 
     private var dataCallBackListener: DataCallBackListener? = null
+
 
     init {
 

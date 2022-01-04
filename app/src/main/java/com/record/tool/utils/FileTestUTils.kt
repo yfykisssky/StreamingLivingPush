@@ -6,13 +6,18 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import android.graphics.ImageFormat
+import android.graphics.Rect
 
-class FileTestUTils {
+import android.graphics.YuvImage
+
+
+class FileTestUtils {
     companion object {
         fun reqPre(activity: Activity) {
-           /* YppPermission.requestStorage(activity, YppPermissionScene.XXQ_NORMAL) { aBoolean ->
+            /* YppPermission.requestStorage(activity, YppPermissionScene.XXQ_NORMAL) { aBoolean ->
 
-            }*/
+             }*/
         }
     }
 
@@ -21,7 +26,7 @@ class FileTestUTils {
 
     fun initFile() {
         val path =
-            appContext?.filesDir?.absolutePath + "/record_" + System.currentTimeMillis() + ".h264"
+            appContext?.filesDir?.absolutePath + "/record_" + System.currentTimeMillis() + ".jpg"
 
         val file = File(path)
         if (!file.exists()) {
@@ -51,6 +56,13 @@ class FileTestUTils {
 
     fun writeData(bytes: ByteArray) {
         fos?.write(bytes)
+    }
+
+    fun writeToJpg(bytes: ByteArray) {
+        val imgWidth = 1280
+        val imgHeight = 720
+        val image = YuvImage(bytes, ImageFormat.NV21, imgWidth, imgHeight, null)
+        image.compressToJpeg(Rect(0, 0, imgWidth, imgHeight), 100, fos)
     }
 
 }

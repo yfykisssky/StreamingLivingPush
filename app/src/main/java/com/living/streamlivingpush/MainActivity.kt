@@ -15,6 +15,7 @@ import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
 
 import com.huawei.hms.hmsscankit.ScanUtil
 import android.content.Intent
+import com.encoder.VideoSoftEncoder
 import com.living.faac.AccFaacEncodeTool
 import com.living.x264.X264EncodeTool
 import com.push.tool.socket.HostTransTool
@@ -46,6 +47,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        VideoSoftEncoder.initBitmaps(this)
         X264EncodeTool().test()
 
         requestPermissions(
