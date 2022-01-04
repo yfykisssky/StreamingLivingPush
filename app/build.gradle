@@ -63,6 +63,7 @@ dependencies {
 
     implementation 'com.huawei.agconnect:agconnect-core:1.5.2.300'
     implementation 'com.huawei.hms:scanplus:1.2.2.300'
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.16'
 
     implementation project(":faac")
 
