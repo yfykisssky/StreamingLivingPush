@@ -3,28 +3,25 @@ package com.living.streamlivingpush
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.living.streamlivingpush.push.*
-import com.record.tool.record.video.screen.service.ProjectionForegroundService
-import kotlinx.android.synthetic.main.activity_main.*
-import com.huawei.hms.ml.scan.HmsScan
-
-import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
-
-import com.huawei.hms.hmsscankit.ScanUtil
-import android.content.Intent
 import com.encoder.VideoSoftEncoder
-import com.living.faac.AccFaacEncodeTool
-import com.living.x264.X264EncodeTool
+import com.huawei.hms.hmsscankit.ScanUtil
+import com.huawei.hms.ml.scan.HmsScan
+import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
+import com.living.streamlivingpush.local.StreamScreenLocaInstance
+import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
 import com.push.tool.socket.HostTransTool
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
+import com.record.tool.record.video.screen.service.ProjectionForegroundService
 import com.record.tool.utils.PingUtils
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
+import kotlinx.android.synthetic.main.activity_main.*
 import java.util.concurrent.TimeUnit
 
 
@@ -38,7 +35,7 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 128
 
-    private var pushInstance = StreamSocketScreenPushInstance()
+    private var pushInstance = StreamScreenLocaInstance()
 
     private var checkDis: Disposable? = null
     private var stmFloatWindowHelper = StmFloatWindowHelper()
@@ -48,7 +45,6 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity_main)
 
         VideoSoftEncoder.initBitmaps(this)
-        X264EncodeTool().test()
 
         requestPermissions(
             arrayOf(
@@ -73,6 +69,8 @@ class MainActivity : Activity() {
             ProjectionForegroundService.startService()
             stmFloatWindowHelper.showWindow()
 
+            startPush()
+
             checkDis?.dispose()
             checkDis = Observable.create<Boolean> {
                 val result = PingUtils.ping(socketIp)
@@ -81,7 +79,7 @@ class MainActivity : Activity() {
             }.subscribeOn(Schedulers.io()).timeout(5, TimeUnit.SECONDS)
                 .observeOn(AndroidSchedulers.mainThread()).subscribe({
                     if (it) {
-                        startPush()
+
                     }
                 }, {
                 }, {})
@@ -154,7 +152,8 @@ class MainActivity : Activity() {
 
         //cameraPreviewView?.addView(pushInstance.getPreviewView())
 
-        pushInstance.startPushing(socketIp, socketPort)
+        //pushInstance.startPushing(socketIp, socketPort)
+        pushInstance.startPushing(true)
     }
 
     private fun stopPush() {

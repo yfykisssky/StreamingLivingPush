@@ -1,12 +1,58 @@
 #include <jni.h>
 #include "tools.h"
 #include "tools.c"
+#include <malloc.h>
+#include "x264encoder.h"
 
-#include <x264.h>
-extern "C"
+extern "C" {
+
+X264Encoder x264Encoder;
+
 JNIEXPORT void JNICALL
-Java_com_living_x264_X264NativeJni_test(JNIEnv *env, jclass clazz) {
-x264_zone_t *p;
-x264_picture_t *c;
-LOGE("XXXXXXXXXX");
+Java_com_living_x264_X264NativeJni_initEncoder(JNIEnv *env, jclass clazz) {
+
+    bool initX264Encoder = x264Encoder.openX264Encoder();
+    LOGE("init %d", initX264Encoder);
+
+}
+
+JNIEXPORT void JNICALL
+Java_com_living_x264_X264NativeJni_destoryEncoder(JNIEnv
+                                                  *env,
+                                                  jclass clazz
+) {
+    x264Encoder.closeX264Encoder();
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_living_x264_X264NativeJni_nv21EncodeToH264(JNIEnv *env, jclass clazz,
+                                                    jbyteArray nv21_bytes) {
+
+    unsigned char *array = as_unsigned_char_array(env, nv21_bytes);
+    x264_nal_t *nals;
+    int nalsCount;
+    x264Encoder.x264EncoderProcess(array, 0, &nals, nalsCount);
+
+    jbyteArray retArray = as_byte_array(env, nals->p_payload, nals->i_payload);
+
+    return retArray;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_living_x264_X264NativeJni_getHeaders(JNIEnv *env, jclass clazz) {
+    x264_nal_t *nals;
+    int nalsCount;
+    x264Encoder.getX264Headers(&nals, nalsCount);
+    return as_byte_array(env, nals->p_payload, nals->i_payload);
+}
+
+JNIEXPORT void JNICALL
+Java_com_living_x264_X264NativeJni_updateSettings(JNIEnv *env, jclass clazz, jint bitrate, jint fps,
+                                                  jint width, jint height) {
+    x264Encoder.setBitrate(bitrate);
+    x264Encoder.setResolution(width, height);
+    x264Encoder.setFps(fps);
+
+}
+
 }

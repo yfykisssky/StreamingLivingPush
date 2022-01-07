@@ -57,7 +57,7 @@ open class BasePushTool {
                 continue
             }
             //remove到指定时间节点之后直到I帧或SPS
-            val frameKind = CheckUtils.judgeBytesFrameKind(currentFrame?.byteArray)
+            val frameKind = CheckUtils.checkBytesFrameKind(currentFrame?.byteArray)
             if (frameKind != FrameType.I_FRAME || frameKind != FrameType.SPS_FRAME) {
                 queueVideoFrame?.remove()
             } else {

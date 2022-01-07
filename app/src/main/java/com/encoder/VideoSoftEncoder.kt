@@ -4,9 +4,12 @@ import android.content.Context
 import com.encoder.utils.ImgTransJavaUtils
 import com.encoder.utils.ImgTransUtils
 import com.living.streamlivingpush.R
+import com.living.x264.X264EncodeTool
+import com.record.tool.bean.RecordVideoFrame
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.gl.trans.TransToNv21Tool
-import com.record.tool.utils.FileTestUtils
+import com.record.tool.utils.CheckUtils
+import java.util.concurrent.LinkedBlockingQueue
 
 class VideoSoftEncoder {
 
@@ -23,9 +26,6 @@ class VideoSoftEncoder {
                 nv21List.add(nv21Bytes)
             }
 
-            var fileTest = FileTestUtils()
-            fileTest.initFile()
-            fileTest.writeToJpg(nv21List[3])
         }
 
     }
@@ -35,7 +35,10 @@ class VideoSoftEncoder {
 
     private var encodeControlStartTimeStamp = 0L
 
+    private var x264EncodeTool: X264EncodeTool? = null
+
     private var encoderThread: Thread? = null
+    private var recordVideoQueue: LinkedBlockingQueue<RecordVideoFrame>? = null
 
     private var iFrameInterval = 2
     private var bitRate = 0
@@ -46,7 +49,6 @@ class VideoSoftEncoder {
     private var transToNv21Tool: TransToNv21Tool? = null
 
     private var dataCallBackListener: DataCallBackListener? = null
-
 
     init {
 
@@ -68,9 +70,23 @@ class VideoSoftEncoder {
 
     }
 
+    private var index = 0;
+
+    private var spsPpsData: ByteArray? = null
+
     fun addRenderFrame(textureFrame: TextureVideoFrame) {
-        createTransToolIfNeed()
-        transToNv21Tool?.trans(textureFrame.textureId)
+
+        /*    createTransToolIfNeed()
+            val nv21Bytes = transToNv21Tool?.trans(textureFrame.textureId)
+            recordVideoQueue?.add(RecordVideoFrame(nv21Bytes, textureFrame.captureTimeStamp))*/
+
+        if (index == nv21List.size) {
+            index = 0
+        }
+        recordVideoQueue?.add(RecordVideoFrame(nv21List[index], textureFrame.captureTimeStamp))
+
+        index++
+
     }
 
     fun setDataCallBackListener(dataCallBackListener: DataCallBackListener) {
@@ -130,7 +146,7 @@ class VideoSoftEncoder {
 
     private fun configEncoder() {
         try {
-
+            x264EncodeTool?.updateSettings(bitRate, maxFps, frameWith, frameHeight)
         } catch (e: Exception) {
             e.printStackTrace()
             dataCallBackListener?.onLogTest(e.message ?: "")
@@ -138,12 +154,14 @@ class VideoSoftEncoder {
     }
 
     fun initEncoder(): Boolean {
-
+        x264EncodeTool = X264EncodeTool()
+        configEncoder()
+        x264EncodeTool?.initEncoder()
         return false
-
     }
 
     fun startEncode() {
+        recordVideoQueue = LinkedBlockingQueue<RecordVideoFrame>()
         encodeControlStartTimeStamp = System.currentTimeMillis()
         beginEncode()
     }
@@ -164,7 +182,7 @@ class VideoSoftEncoder {
     }
 
     private fun releaseEncoder() {
-
+        x264EncodeTool?.destoryEncoder()
     }
 
     private var iFrameReqSetListener: IFrameReqSetListener? = null
@@ -181,6 +199,24 @@ class VideoSoftEncoder {
 
         override fun run() {
 
+            while (isEncoding) {
+
+                recordVideoQueue?.take()?.let { frame ->
+                /*    if (spsPpsData == null) {
+                        spsPpsData = x264EncodeTool?.getHeaders()
+                        CheckUtils.checkBytesFrameKind(spsPpsData)
+                        dataCallBackListener?.onDataCallBack(spsPpsData, frame.timeStamp)
+                    }*/
+                    frame.byteArray?.let { dataBytes ->
+                        x264EncodeTool?.nv21EncodeToH264(dataBytes)?.let { h264Data ->
+                            CheckUtils.checkBytesFrameKind(h264Data)
+                            dataCallBackListener?.onDataCallBack(h264Data, frame.timeStamp)
+                        }
+                    }
+
+                }
+
+            }
 
         }
     }
