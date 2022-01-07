@@ -37,4 +37,26 @@ public class ImgTransJavaUtils {
         return nv21;
     }
 
+    public static byte[] yuv420spToYuv420(byte[] yuv420sp, int width, int height) {
+        byte[] yuv420 = new byte[width * height * 3 / 2];
+        if (yuv420sp == null) return null;
+        int framesize = width * height;
+        int i = 0, j = 0;
+        //copy y
+        for (i = 0; i < framesize; i++) {
+            yuv420[i] = yuv420sp[i];
+        }
+        i = 0;
+        for (j = 0; j < framesize / 2; j += 2) {
+            yuv420[i + framesize * 5 / 4] = yuv420sp[j + framesize];
+            i++;
+        }
+        i = 0;
+        for (j = 1; j < framesize / 2; j += 2) {
+            yuv420[i + framesize] = yuv420sp[j + framesize];
+            i++;
+        }
+        return yuv420;
+    }
+
 }

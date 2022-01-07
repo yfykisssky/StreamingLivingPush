@@ -29,21 +29,20 @@ Java_com_living_x264_X264NativeJni_nv21EncodeToH264(JNIEnv *env, jclass clazz,
                                                     jbyteArray nv21_bytes) {
 
     unsigned char *array = as_unsigned_char_array(env, nv21_bytes);
-    x264_nal_t *nals;
-    int nalsCount;
-    x264Encoder.x264EncoderProcess(array, 0, &nals, nalsCount);
-
-    jbyteArray retArray = as_byte_array(env, nals->p_payload, nals->i_payload);
-
+    uint8_t *bufData = nullptr;
+    int bufLen = x264Encoder.x264EncoderProcess(array, &bufData);
+    jbyteArray retArray = as_byte_array(env, bufData, bufLen);
     return retArray;
+
 }
 
 JNIEXPORT jbyteArray JNICALL
 Java_com_living_x264_X264NativeJni_getHeaders(JNIEnv *env, jclass clazz) {
-    x264_nal_t *nals;
-    int nalsCount;
-    x264Encoder.getX264Headers(&nals, nalsCount);
-    return as_byte_array(env, nals->p_payload, nals->i_payload);
+
+    uint8_t *bufData = nullptr;
+    int bufLen = x264Encoder.getX264Headers(&bufData);
+    return as_byte_array(env, bufData, bufLen);
+
 }
 
 JNIEXPORT void JNICALL

@@ -2,11 +2,11 @@
 
 X264Encoder::X264Encoder() {
 
-    qp_max = 30;
+    qp_max = 0;
     qp_min = 0;
-    i_fps = 20;
-    width = 352;
-    height = 288;
+    i_fps = 0;
+    width = 0;
+    height = 0;
 
     pParameter = nullptr;
     x264EncoderHandle = nullptr;
@@ -25,7 +25,7 @@ void X264Encoder::setResolution(int w, int h) {
 }
 
 void X264Encoder::setBitrate(int i_bitrate) {
-    this->bitrateVideo = i_bitrate;
+    this->bitrateVideo = i_bitrate / 1024;
 }
 
 void X264Encoder::setFps(int fps) {
@@ -113,28 +113,29 @@ void X264Encoder::configParams() {
     //允许的误差
     pParameter->rc.f_rate_tolerance = 0.1;
     //平均码率模式下，最大瞬时码率，默认0
-    pParameter->rc.i_vbv_max_bitrate = (int) ((bitrateVideo * 1.2) / 1000);
+    pParameter->rc.i_vbv_max_bitrate = (int) (bitrateVideo * 1.2);
 
 
-    pParameter->analyse.b_transform_8x8 = 1;
-    pParameter->rc.f_aq_strength = 1.5;
+    //baseline模式无效
+    /*   pParameter->analyse.b_transform_8x8 = 0;
+       pParameter->rc.f_aq_strength = 1.5;
 
-    pParameter->rc.i_aq_mode = 0;
-    pParameter->rc.f_qcompress = 0.0;
-    pParameter->rc.f_ip_factor = 0.5;
-    pParameter->rc.f_rate_tolerance = 0.1;
+       pParameter->rc.i_aq_mode = 0;
+       pParameter->rc.f_qcompress = 0.0;
+       pParameter->rc.f_ip_factor = 0.5;
+       pParameter->rc.f_rate_tolerance = 0.1;
 
-    pParameter->i_slice_max_size = 1200;
+       pParameter->i_slice_max_size = 1200;
 
-    pParameter->b_deblocking_filter = 1;
-    pParameter->i_deblocking_filter_alphac0 = 4;
-    pParameter->i_deblocking_filter_beta = 4;
+       pParameter->b_deblocking_filter = 1;
+       pParameter->i_deblocking_filter_alphac0 = 4;
+       pParameter->i_deblocking_filter_beta = 4;
 
-    pParameter->analyse.i_direct_mv_pred = X264_DIRECT_PRED_AUTO;
-    pParameter->analyse.i_me_method = X264_ME_DIA;
-    pParameter->analyse.i_me_range = 16;
-    pParameter->analyse.i_subpel_refine = 2;
-    pParameter->analyse.i_noise_reduction = 1;
+       pParameter->analyse.i_direct_mv_pred = X264_DIRECT_PRED_AUTO;
+       pParameter->analyse.i_me_method = X264_ME_DIA;
+       pParameter->analyse.i_me_range = 16;
+       pParameter->analyse.i_subpel_refine = 2;
+       pParameter->analyse.i_noise_reduction = 1;*/
 
     pParameter->i_log_level = X264_LOG_NONE;
 
@@ -238,14 +239,17 @@ bool X264Encoder::closeX264Encoder() {
     return true;
 }
 
-long X264Encoder::getX264Headers(x264_nal_t **nals, int &nalsCount) {
-    int ret = x264_encoder_headers(x264EncoderHandle, nals, &nalsCount);
+int X264Encoder::getX264Headers(uint8_t **outBuf) {
+    x264_nal_t *nals;
+    int nalsCount = 0;
+    int ret = x264_encoder_headers(x264EncoderHandle, &nals, &nalsCount);
     if (ret < 0) {
         LOGE("encode header error:%d", ret);
+        return -1;
     } else {
         LOGE("encode header pi_nal:%d", nalsCount);
+        return getBytesFromNal(outBuf, nals, nalsCount);
     }
-    return ret;
 }
 
 /*
@@ -262,8 +266,7 @@ long X264Encoder::getX264Headers(x264_nal_t **nals, int &nalsCount) {
     关键帧 : 如果这个帧是关键帧, 那么 pp_nal 将会编码出 3 帧数据, pi_nal 表示帧数为 3
     关键帧数据 : SPS 帧, PPS 帧, 画面帧
  */
-long X264Encoder::x264EncoderProcess(uint8_t *pSrcData, int srcDataSize, x264_nal_t **nals,
-                                     int &nalsCount) {
+int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
     // 参数中的 data 是 NV21 格式的
     // 前面 YByteCount 字节个 Y 灰度数据
     // 之后是 UVByteCount 字节个 VU 数据交替存储
@@ -282,13 +285,32 @@ long X264Encoder::x264EncoderProcess(uint8_t *pSrcData, int srcDataSize, x264_na
         // V 色彩饱和度数据, 存储在 YByteCount 后的偶数索引位置
         *(pPicture->img.plane[2] + i) = *(pSrcData + YByteCount + i * 2);
     }
-
-    int ret = x264_encoder_encode(x264EncoderHandle, nals, &nalsCount, pPicture, pOutput);
+    x264_nal_t *nals;
+    int nalsCount = 0;
+    int ret = x264_encoder_encode(x264EncoderHandle, &nals, &nalsCount, pPicture, pOutput);
     if (ret < 0) {
         LOGE("encode error:%d", ret);
+        return -1;
     } else {
         LOGE("encode pi_nal:%d", nalsCount);
+        return getBytesFromNal(outBuf, nals, nalsCount);
     }
 
-    return ret;
+}
+
+int X264Encoder::getBytesFromNal(uint8_t **outBuf, x264_nal_t *nals, int nalsCount) {
+    int outBufSize = -1;
+    for (int i = 0; i < nalsCount; i++) {
+        outBufSize += nals[i].i_payload;
+    }
+    *outBuf = new uint8_t[outBufSize];
+    memset(*outBuf, 0, outBufSize);
+    uint8_t *tempData = *outBuf;
+    for (int i = 0; i < nalsCount; i++) {
+        if (nals[i].p_payload != nullptr) {
+            memcpy(tempData, nals[i].p_payload, nals[i].i_payload);
+            tempData += nals[i].i_payload;
+        }
+    }
+    return outBufSize;
 }

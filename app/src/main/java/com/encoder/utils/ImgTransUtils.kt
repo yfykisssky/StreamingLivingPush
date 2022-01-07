@@ -2,6 +2,7 @@ package com.encoder.utils
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import pl.droidsonroids.gif.GifDrawable
 
 class ImgTransUtils {
@@ -15,6 +16,11 @@ class ImgTransUtils {
                 list.add(gifResources.seekToFrameAndGet(index))
             }
             return list
+        }
+
+        fun getBitmapFromPng(con: Context, resId: Int):Bitmap{
+            val res = con.resources.openRawResource(resId)
+            return BitmapDrawable(res).bitmap
         }
     }
 }

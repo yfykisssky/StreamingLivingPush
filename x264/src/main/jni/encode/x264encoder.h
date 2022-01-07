@@ -18,7 +18,7 @@ public:
 
     bool openX264Encoder();
 
-    long x264EncoderProcess(uint8_t *pSrcData, int srcDataSize, x264_nal_t **nals, int& nalsCount);
+    int x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf);
 
     bool closeX264Encoder();
 
@@ -32,7 +32,7 @@ public:
 
     void setQp_Min(unsigned int qp_min);
 
-    long getX264Headers(x264_nal_t **nals, int &nalsCount);
+    int getX264Headers(uint8_t **outBuf);
 
 private:
 
@@ -60,6 +60,8 @@ private:
     bool updateSettings();
 
     void configParams();
+
+    int getBytesFromNal(uint8_t **outBuf, x264_nal_t *nals, int nalsCount);
 
 };
 
