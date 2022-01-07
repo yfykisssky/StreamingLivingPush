@@ -19,16 +19,16 @@ X264Encoder::~X264Encoder() {
     this->closeX264Encoder();
 }
 
-void X264Encoder::setResolution(unsigned int w, unsigned int h) {
+void X264Encoder::setResolution(int w, int h) {
     width = w;
     height = h;
 }
 
-void X264Encoder::setBitrate(unsigned int i_bitrate) {
+void X264Encoder::setBitrate(int i_bitrate) {
     this->bitrateVideo = i_bitrate;
 }
 
-void X264Encoder::setFps(unsigned int fps) {
+void X264Encoder::setFps(int fps) {
     i_fps = fps;
 }
 
@@ -81,12 +81,12 @@ void X264Encoder::configParams() {
     //如果b_sliced_threads=0，那么是并行frame编码。并行slice无延时，并行frame有延时
     pParameter->i_threads = 1;
     //编码比特流的CSP，仅支持i420，色彩空间设置
-    pParameter->i_csp = X264_CSP_I420;//X264_CSP_NV12;//X264_CSP_I420;
+    pParameter->i_csp = X264_CSP_I420;
     //帧率的分子
     pParameter->i_fps_num = i_fps;
-    // 帧率的分母
+    //帧率的分母
     pParameter->i_fps_den = 1;
-    // 两个参考帧之间的B帧数目
+    //两个参考帧之间的B帧数目
     pParameter->i_bframe = 0;
     //将I帧拆成一个一个I块，然后放到P帧中
     pParameter->b_intra_refresh = 0;
@@ -103,8 +103,8 @@ void X264Encoder::configParams() {
     //最大码率因子，该选项仅在使用CRF并开启VBV时有效，
     //图像质量的最大值，可能会导致VBV下溢
     //pParameter->rc.f_rf_constant_max = 45;
-    //允许的误差
-    pParameter->rc.i_bitrate = bitrateVideo / 1000;
+    //码率,单位kbps
+    pParameter->rc.i_bitrate = bitrateVideo;
 
     //是否开启基于macroblock的qp控制方法
     //这个不为0,将导致编码延时帧
@@ -153,6 +153,22 @@ bool X264Encoder::updateSettings() {
         memset(pParameter, 0, sizeof(x264_param_t));
     }
 
+    /*
+    * 获取 x264 编码器参数
+    * int x264_param_default_preset( x264_param_t *, const char *preset, const char *tune )
+    * 参数一 : x264_param_t * : x264 编码参数指针
+    *
+    * 参数二 : const char *preset : 设置编码速度, 这里开发直播, 需要尽快编码推流,
+    * 这里设置最快的速度 ultrafast, 字符串常量, 值从 下面的参数中选择 ;
+    * static const char * const x264_preset_names[] = { "ultrafast", "superfast", "veryfast",
+    * "faster", "fast", "medium", "slow", "slower", "veryslow", "placebo", 0 };
+    *
+    * 参数三 : const char *tune : 视频编码场景设置, 这里选择 zerolatency 无延迟编码
+    * static const char * const x264_tune_names[] = { "film", "animation", "grain",
+    * "stillimage", "psnr", "ssim", "fastdecode", "zerolatency", 0 };
+    *
+    * 编码速度快, 意味着牺牲了画面的质量
+    */
     int ret = x264_param_default_preset(pParameter, "ultrafast", "zerolatency");
     if (ret != 0) {
         closeWithError("default_preset");
@@ -212,12 +228,12 @@ bool X264Encoder::closeX264Encoder() {
     if (pPicture) {
         x264_picture_clean(pPicture);
         delete pPicture;
-        pPicture = 0;
+        pPicture = nullptr;
     }
     if (pOutput) {
         x264_picture_clean(pOutput);
         delete pOutput;
-        pOutput = 0;
+        pOutput = nullptr;
     }
     return true;
 }

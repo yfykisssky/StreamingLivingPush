@@ -22,11 +22,11 @@ public:
 
     bool closeX264Encoder();
 
-    void setResolution(unsigned int w, unsigned int h);
+    void setResolution(int w, int h);
 
-    void setBitrate(unsigned int i_bitrate);
+    void setBitrate(int i_bitrate);
 
-    void setFps(unsigned int fps);
+    void setFps(int fps);
 
     void setQp_Max(unsigned int qp_max);
 
@@ -44,10 +44,10 @@ private:
     int YByteCount = 1280 * 720;
     int UVByteCount = YByteCount / 4;
 
-    unsigned int bitrateVideo;
-    unsigned int i_fps;
-    unsigned int width;
-    unsigned int height;
+    int bitrateVideo;
+    int i_fps;
+    int width;
+    int height;
     unsigned int qp_max;
     unsigned int qp_min;
 
