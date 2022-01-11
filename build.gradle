@@ -26,4 +26,7 @@ ext {
 
     versionCode = 1
     versionName = '1.0.0'
+
+    ndkAbiFilter = 'arm64-v8a'
+    useNdkVersion = '23.0.7599858'
 }

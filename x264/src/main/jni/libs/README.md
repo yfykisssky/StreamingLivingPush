@@ -1,72 +1,42 @@
-#最好在linux环境编译
+#Mac系统编译
 #编译报错可以先看下生成的.a文件是否正确
+#NDK:17.2.4988734
 
-#!/bin/sh
-#本机NDK路径
-NDK=……
-API=21 #最低支持Android版本
-HOST_PLATFORM=darwin-x86_64
-cd x264
-function build_one {
-  OUTPUT=$(pwd)/builds
-  echo "开始编译"
-  echo "CPU = $CPU "
-  echo "OUTPUT = $OUTPUT "
-  echo "CROSS_PREFIX = $CROSS_PREFIX "
-  echo "SYSROOT = $SYSROOT "
-  echo "EXTRA_CFLAGS = $EXTRA_CFLAGS "
-  echo "EXTRA_LDFLAGS = $EXTRA_LDFLAGS "
-  ./configure \
-  --prefix=$OUTPUT \
-  --cross-prefix=$CROSS_PREFIX \
-  --sysroot=$SYSROOT \
-  --host=$HOST \
-  --disable-asm \
-  --disable-shared \
-  --enable-static \
-  --disable-opencl \
-  --enable-pic \
-  --disable-cli \
-  --extra-cflags="$EXTRA_CFLAGS" \
-  --extra-ldflags="$EXTRA_LDFLAGS"
-   make clean
-   make -j4
-   make install
-   echo "编译结束  $OUTPUT"
- }
-CPUS="armeabi-v7a x86 arm64-v8a"
+#!/bin/bash
+#arm-v7a
+# 将NDK的路径替换成你自己的NDK路径
+NDK_ROOT=......
+TOOLCHAIN=$NDK_ROOT/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64
+PREFIX=./android/armeabi-v7a
+FLAGS="-isysroot $NDK_ROOT/sysroot -isystem $NDK_ROOT/sysroot/usr/include/arm-linux-androideabi -D__ANDROID_API__=21 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mthumb -Wa,--noexecstack -Wformat -Werror=format-security  -O0 -fPIC"
 
-echo "编译以下 架构 $CPUS"
+./configure \
+--prefix=$PREFIX \
+--enable-static \
+--enable-pic \
+--disable-asm \
+--disable-cli \
+--host=arm-linux \
+--cross-prefix=$TOOLCHAIN/bin/arm-linux-androideabi- \
+--sysroot=$NDK_ROOT/platforms/android-21/arch-arm \
+--extra-cflags="$FLAGS"
 
-for CPU_TEMP in $CPUS
-do
-     case $CPU_TEMP in
-          "armeabi-v7a")
-               CPU="armeabi-v7a"
-               CROSS_PREFIX=$NDK/toolchains/arm-linux-androideabi-4.9/prebuilt/$HOST_PLATFORM/bin/arm-linux-androideabi-
-               SYSROOT=$NDK/platforms/android-$API/arch-arm/
-               EXTRA_CFLAGS="-D__ANDROID_API__=$API -isysroot $NDK/sysroot -I$NDK/sysroot/usr/include/arm-linux-androideabi -Os -fPIC -marm"
-               EXTRA_LDFLAGS="-marm"
-               HOST=arm-linux
-               build_one
-          ;;
-          "arm64-v8a")
-               CPU="arm64-v8a"
-               CROSS_PREFIX=$NDK/toolchains/aarch64-linux-android-4.9/prebuilt/$HOST_PLATFORM/bin/aarch64-linux-android-
-               SYSROOT=$NDK/platforms/android-$API/arch-arm/
-               EXTRA_CFLAGS="-D__ANDROID_API__=$API -isysroot $NDK/sysroot -I$NDK/sysroot/usr/include/aarch64-linux-android -Os -fPIC -marm"
-               EXTRA_LDFLAGS="-marm"
-               HOST=arm-linux
-               build_one
-          ;;
-          "x86")
-               CPU="x86"
-               CROSS_PREFIX=$NDK/toolchains/x86-4.9/prebuilt/$HOST_PLATFORM/bin/i686-linux-android-
-               SYSROOT=$NDK/platforms/android-$API/arch-x86/
-               EXTRA_CFLAGS="-D__ANDROID_API__=$API -isysroot $NDK/sysroot -I$NDK/sysroot/usr/include/i686-linux-android -Os -fPIC"
-               EXTRA_LDFLAGS=""
-               HOST=i686-linux
-               build_one
-          ;;
-     esac
-done
+
+#!/bin/bash
+#arm64-v8a
+# 将NDK的路径替换成你自己的NDK路径
+NDK_ROOT=......
+TOOLCHAIN=$NDK_ROOT/toolchains/aarch64-linux-android-4.9/prebuilt/darwin-x86_64
+PREFIX=./android/arm64
+FLAGS="-isysroot $NDK_ROOT/sysroot -isystem $NDK_ROOT/sysroot/usr/include/aarch64-linux-android -D__ANDROID_API__=21 -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -march=armv8-a -Wa,--noexecstack -Wformat -Werror=format-security  -O0 -fPIC"
+
+./configure \
+--prefix=$PREFIX \
+--enable-static \
+--enable-pic \
+--disable-asm \
+--disable-cli \
+--host=arm-linux \
+--cross-prefix=$TOOLCHAIN/bin/aarch64-linux-android- \
+--sysroot=$NDK_ROOT/platforms/android-21/arch-arm64 \
+--extra-cflags="$FLAGS"
