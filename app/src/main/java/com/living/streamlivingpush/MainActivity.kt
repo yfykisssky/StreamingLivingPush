@@ -35,7 +35,7 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 128
 
-    private var pushInstance = StreamScreenLocaInstance()
+    private var pushInstance = StreamSocketScreenPushInstance()
 
     private var checkDis: Disposable? = null
     private var stmFloatWindowHelper = StmFloatWindowHelper()
@@ -152,8 +152,8 @@ class MainActivity : Activity() {
 
         //cameraPreviewView?.addView(pushInstance.getPreviewView())
 
-        //pushInstance.startPushing(socketIp, socketPort)
-        pushInstance.startPushing(true)
+        pushInstance.startPushing(socketIp, socketPort)
+        //pushInstance.startPushing(true)
     }
 
     private fun stopPush() {

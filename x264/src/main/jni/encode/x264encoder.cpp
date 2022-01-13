@@ -80,7 +80,7 @@ void X264Encoder::configParams() {
     //i_threads = N并行编码的时候如果b_sliced_threads=1那么是并行slice编码，
     //如果b_sliced_threads=0，那么是并行frame编码。并行slice无延时，并行frame有延时
     pParameter->i_threads = 1;
-    //编码比特流的CSP，仅支持i420，色彩空间设置
+    //编码比特流的CSP
     pParameter->i_csp = X264_CSP_I420;
     //帧率的分子
     pParameter->i_fps_num = i_fps;
@@ -114,29 +114,7 @@ void X264Encoder::configParams() {
     pParameter->rc.f_rate_tolerance = 0.1;
     //平均码率模式下，最大瞬时码率，默认0
     pParameter->rc.i_vbv_max_bitrate = (int) (bitrateVideo * 1.2);
-
-
-    //baseline模式无效
-    /*   pParameter->analyse.b_transform_8x8 = 0;
-       pParameter->rc.f_aq_strength = 1.5;
-
-       pParameter->rc.i_aq_mode = 0;
-       pParameter->rc.f_qcompress = 0.0;
-       pParameter->rc.f_ip_factor = 0.5;
-       pParameter->rc.f_rate_tolerance = 0.1;
-
-       pParameter->i_slice_max_size = 1200;
-
-       pParameter->b_deblocking_filter = 1;
-       pParameter->i_deblocking_filter_alphac0 = 4;
-       pParameter->i_deblocking_filter_beta = 4;
-
-       pParameter->analyse.i_direct_mv_pred = X264_DIRECT_PRED_AUTO;
-       pParameter->analyse.i_me_method = X264_ME_DIA;
-       pParameter->analyse.i_me_range = 16;
-       pParameter->analyse.i_subpel_refine = 2;
-       pParameter->analyse.i_noise_reduction = 1;*/
-
+    //日志
     pParameter->i_log_level = X264_LOG_NONE;
 
 }
@@ -239,6 +217,11 @@ bool X264Encoder::closeX264Encoder() {
     return true;
 }
 
+//一般包含3帧数据,类型判断i_type=NAL_SPS,NAL_SPS,NAL_SEI
+//SPS 00 00 00 01 67
+//PPS 00 00 00 01 68
+//SEI 00 00 00 01 06
+//IDR Slice 00 00 00 01 65
 int X264Encoder::getX264Headers(uint8_t **outBuf) {
     x264_nal_t *nals;
     int nalsCount = 0;
@@ -252,20 +235,6 @@ int X264Encoder::getX264Headers(uint8_t **outBuf) {
     }
 }
 
-/*
-    int x264_encoder_encode( x264_t *, x264_nal_t **pp_nal, int *pi_nal,
-                             x264_picture_t *pic_in, x264_picture_t *pic_out );
-    函数原型 :
-        x264_t * 参数 : x264 视频编码器
-        x264_nal_t **pp_nal 参数 : 编码后的帧数据, 可能是 1 帧, 也可能是 3 帧
-        int *pi_nal 参数 : 编码后的帧数, 1 或 3
-        x264_picture_t *pic_in 参数 : 输入的 NV21 格式的图片数据
-        x264_picture_t *pic_out 参数 : 输出的图片数据
-
-    普通帧 : 一般情况下, 一张图像编码出一帧数据, pp_nal 是一帧数据, pi_nal 表示帧数为 1
-    关键帧 : 如果这个帧是关键帧, 那么 pp_nal 将会编码出 3 帧数据, pi_nal 表示帧数为 3
-    关键帧数据 : SPS 帧, PPS 帧, 画面帧
- */
 int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
     // 参数中的 data 是 NV21 格式的
     // 前面 YByteCount 字节个 Y 灰度数据
@@ -298,6 +267,7 @@ int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
 
 }
 
+//从nal中解析帧byte数据,nal可能有多帧,需要解析或拼接
 int X264Encoder::getBytesFromNal(uint8_t **outBuf, x264_nal_t *nals, int nalsCount) {
     int outBufSize = -1;
     for (int i = 0; i < nalsCount; i++) {
