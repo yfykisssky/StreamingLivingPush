@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <usb-accessory
+        manufacturer="Android2AndroidAccessory"
+        model="PushingAOA"
+        version="1.0" />
+</resources>
