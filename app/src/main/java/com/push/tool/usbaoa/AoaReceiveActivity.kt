@@ -1,109 +1,98 @@
 package com.push.tool.usbaoa
 
-import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.hardware.usb.UsbManager
+import android.os.Build
 import android.os.Bundle
+import androidx.annotation.RequiresApi
+import com.activity.base.BasePushActivity
 import com.living.streamlivingpush.R
 import kotlinx.android.synthetic.main.activity_usb_aoa.*
 
-class AoaReceiveActivity : Activity() {
+@RequiresApi(Build.VERSION_CODES.M)
+class AoaReceiveActivity : BasePushActivity() {
 
     companion object {
         private val TAG = this::class.java.simpleName
-        private const val CHECK_TIME_OUT_READDATA = 200L
     }
 
     private val channelName = AoaReceiveActivity::class.java.canonicalName
-
-    private var usbConnectTool: UsbConnectTool? = null
-
-    //aoa连接状态
-    var isAoaConnected = false
-        private set
-
-    private fun initUsbTool(context: Context, activityName: String?) {
-        usbConnectTool = UsbConnectTool()
-        usbConnectTool?.init(activityName, context)
-    }
-
-    fun stopConnect() {
-        setUsbCloseState()
-        usbConnectTool?.stopConnect()
-        usbConnectTool = null
-    }
-
-    private fun setUsbConnectState() {
-        isAoaConnected = true
-    }
-
-    private fun setUsbCloseState() {
-        isAoaConnected = false
-    }
+    private var logState = ""
 
     private fun setUsbStateListener() {
-        usbConnectTool?.setUsbConnectCallBackListener(object : UsbConnectTool.UsbConnectCallBack {
+        pushInstance.setUsbConnectCallBackListener(object : UsbConnectTool.UsbConnectCallBack {
             override fun onConnect() {
-                setUsbConnectState()
-                runOnUiThread{
-                    state?.text="conn"
-                }
-
+                logState("conn")
             }
 
             override fun onDisConnect() {
-                setUsbCloseState()
-                runOnUiThread {
-                    state?.text = "disconn"
-                }
+                logState("dis conn")
             }
 
             override fun onRefused() {
-                setUsbCloseState()
+
             }
 
             override fun onWiteDataError() {
-                runOnUiThread {
-                    state?.text = "w err"
-                }
+                logState("write err")
             }
 
             override fun onReadDataError() {
-                runOnUiThread {
-                    state?.text = "r err"
-                }
+                logState("read err")
             }
 
             override fun onReadData(byteArray: ByteArray) {
-                runOnUiThread {
-                    state?.text = "wwwww"
-                }
+                //logState("data read")
+            }
+
+            override fun onLogOut(log: String) {
+                logState(log)
             }
 
         })
     }
 
-    private fun startUsbConnect(intent: Intent): Boolean {
-        return if (usbConnectTool?.startConnect(intent) == true) {
-            setUsbStateListener()
-            true
-        } else {
-            false
+    private fun logState(stateStr: String) {
+        runOnUiThread {
+            logState += "\n"
+            logState += stateStr
+            state?.text = logState
+        }
+    }
+
+    private fun clearState() {
+        runOnUiThread {
+            state?.text = ""
+        }
+    }
+
+    private fun initView(){
+        startBnt?.setOnClickListener {
+            startPush()
+        }
+        stopBnt?.setOnClickListener {
+            stopPush()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_usb_aoa)
 
-        initUsbTool(this, channelName)
+        initView()
 
+        pushInstance.updateContext(this)
+        pushInstance.updateActivityName(channelName)
+
+        initTool()
+
+        setUsbStateListener()
         checkUsbAndConnect()
     }
 
     private fun checkUsbAndConnect() {
-        startUsbConnect(intent)
+        clearState()
+        pushInstance.startUsbConnect(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {

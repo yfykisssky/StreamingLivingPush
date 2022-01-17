@@ -48,6 +48,7 @@
         <!--华为扫码-->
         <activity android:name="com.huawei.hms.hmsscankit.ScanKitActivity" />
 
+        <!--launchMode最好为singleTask，防止重复启动-->
         <activity
             android:name="com.push.tool.usbaoa.AoaReceiveActivity"
             android:exported="true"

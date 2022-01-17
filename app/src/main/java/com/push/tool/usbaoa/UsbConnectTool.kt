@@ -10,15 +10,20 @@ import android.hardware.usb.UsbManager
 import android.os.ParcelFileDescriptor
 import android.os.Parcelable
 import android.widget.Toast
+import com.push.tool.AudioFrame
+import com.push.tool.VideoFrame
+import com.push.tool.base.BasePushTool
+import com.push.tool.socket.DataEncodeTool
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import java.io.FileDescriptor
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
-class UsbConnectTool {
+class UsbConnectTool : BasePushTool() {
 
     companion object {
         private var ACTION_USB_PERMISSION = ""
@@ -29,7 +34,9 @@ class UsbConnectTool {
 
         private const val RW_DATA_TIME_OUT = 500
 
-        private const val CHECK_TIME_OUT_READDATA = 200L
+        private const val CHECK_TIME_OUT_READ_DATA = 200L
+
+        private const val CONNECT_TIME_ACK = 100
     }
 
     private var fileDescriptor: ParcelFileDescriptor? = null
@@ -41,16 +48,24 @@ class UsbConnectTool {
     private var outputStream: FileOutputStream? = null
     private var inputStream: FileInputStream? = null
 
-    private var usbConnectCallBack: UsbConnectCallBack? = null
+    private var writeDataThread: Thread? = null
+    private var readDataThread: Thread? = null
 
     @Volatile
     private var isRegisListener = false
 
-    private var isReading = false
+    private var isConnecting = false
     private var lastReadDataTimeStamp = Long.MAX_VALUE
 
+    private var lastWriteTimeStamp = 0L
+
+    private var usbConnectCallBack: UsbConnectCallBack? = null
     fun setUsbConnectCallBackListener(usbConnectCallBack: UsbConnectCallBack?) {
         this.usbConnectCallBack = usbConnectCallBack
+    }
+
+    private fun refreshWriteTimeStamp() {
+        lastWriteTimeStamp = System.currentTimeMillis()
     }
 
     interface UsbConnectCallBack {
@@ -62,6 +77,18 @@ class UsbConnectTool {
         fun onReadDataError()
 
         fun onReadData(byteArray: ByteArray)
+
+        fun onLogOut(log: String)
+    }
+
+    override fun addVideoFrame(frame: VideoFrame) {
+        super.addVideoFrame(frame)
+        queueVideoFrame?.add(frame)
+    }
+
+    override fun addAudioFrame(frame: AudioFrame) {
+        super.addAudioFrame(frame)
+        queueAudioFrame?.add(frame)
     }
 
     fun init(canonicalName: String?, context: Context?) {
@@ -111,9 +138,17 @@ class UsbConnectTool {
         } catch (e: IOException) {
             e.printStackTrace()
         }
-        isReading = false
+        isConnecting = false
+
         outputStream = null
         inputStream = null
+
+        readDataThread?.join()
+        writeDataThread?.join()
+
+        readDataThread = null
+        writeDataThread = null
+
     }
 
     private val mAccessoryPermissionReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -218,9 +253,53 @@ class UsbConnectTool {
                 isConnected()
             }
         } catch (e: Exception) {
-            Toast.makeText(context,e.message,Toast.LENGTH_LONG).show()
+            Toast.makeText(context, e.message, Toast.LENGTH_LONG).show()
         }
 
+    }
+
+    inner class WriteDataThread : Thread() {
+
+        private fun getSendBytes(): ByteArray? {
+
+            queueVideoFrame?.poll()?.let { frame ->
+                val byteData = frame.byteArray
+                if (byteData?.isNotEmpty() == true) {
+                    return DataEncodeTool.addVideoExtraData(byteData, frame.timestamp)
+                }
+            }
+            queueAudioFrame?.poll()?.let { frame ->
+                val byteData = frame.byteArray
+                if (byteData?.isNotEmpty() == true) {
+                    return DataEncodeTool.addAudioExtraData(byteData, frame.timestamp)
+                }
+            }
+
+            //心跳包
+            if ((System.currentTimeMillis() - lastWriteTimeStamp) > CONNECT_TIME_ACK) {
+                return DataEncodeTool.getSocketAckExtraData()
+            }
+
+            return null
+        }
+
+
+        override fun run() {
+            super.run()
+            refreshWriteTimeStamp()
+            usbConnectCallBack?.onLogOut("begin write")
+            while (isConnecting) {
+
+                val sendBytes = getSendBytes()
+                if (sendBytes != null) {
+                    usbConnectCallBack?.onLogOut("start write")
+                    writeDataToUsb(sendBytes)
+                    usbConnectCallBack?.onLogOut("write end")
+                    refreshWriteTimeStamp()
+                }
+
+            }
+        }
     }
 
     @Synchronized
@@ -236,7 +315,6 @@ class UsbConnectTool {
     }
 
     private fun isConnected() {
-        //startTimer()
         usbConnectCallBack?.onConnect()
         startToReadData()
     }
@@ -245,7 +323,7 @@ class UsbConnectTool {
         override fun run() {
             lastReadDataTimeStamp = Long.MAX_VALUE
             try {
-                while (isReading) {
+                while (isConnecting) {
                     val readBytes = ByteArray(READ_DATA_BYTES_SIZE)
                     lastReadDataTimeStamp = System.currentTimeMillis()
                     inputStream?.read(readBytes)
@@ -255,15 +333,21 @@ class UsbConnectTool {
             } catch (e: IOException) {
                 e.printStackTrace()
                 inputStream = null
-                isReading = false
+                isConnecting = false
                 usbConnectCallBack?.onReadDataError()
             }
         }
     }
 
     private fun startToReadData() {
-        isReading = true
-        Thread(ReadDataThread()).start()
+        isConnecting = true
+        readDataThread = Thread(ReadDataThread())
+        readDataThread?.start()
+    }
+
+    private fun startToWriteData() {
+        writeDataThread = Thread(WriteDataThread())
+        writeDataThread?.start()
     }
 
     fun checkReadDataTimeOut(): Boolean {
@@ -271,11 +355,22 @@ class UsbConnectTool {
         return (currentTimeStamp - lastReadDataTimeStamp) >= RW_DATA_TIME_OUT
     }
 
+    fun isRealConnect(){
+        queueVideoFrame = LinkedBlockingQueue<VideoFrame>(Integer.MAX_VALUE)
+        queueAudioFrame = LinkedBlockingQueue<AudioFrame>(Integer.MAX_VALUE)
 
-    private fun startTimer() {
+        //开始监测心跳是否超时
+        startCheckTimer()
+
+        startToWriteData()
+    }
+
+    private fun startCheckTimer() {
         timerDis?.dispose()
-        io.reactivex.Observable.interval(CHECK_TIME_OUT_READDATA, TimeUnit.MILLISECONDS)
-            .observeOn(AndroidSchedulers.mainThread())
+        io.reactivex.Observable.interval(
+            CHECK_TIME_OUT_READ_DATA,
+            TimeUnit.MILLISECONDS
+        ).observeOn(AndroidSchedulers.mainThread())
             .subscribe(object : io.reactivex.Observer<Long?> {
                 override fun onComplete() {
                 }
@@ -286,7 +381,7 @@ class UsbConnectTool {
 
                 override fun onNext(time: Long) {
                     if (checkReadDataTimeOut()) {
-
+                        usbConnectCallBack?.onDisConnect()
                     }
                 }
 
