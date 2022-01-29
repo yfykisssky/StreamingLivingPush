@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.4.1)
-add_subdirectory(src/main/cpp/librtmp)
+add_subdirectory(./librtmp)
 add_library(
              librtmplib
              SHARED
-             src/main/cpp/native-interfaces.c
+             rtmp/rtmpinterfaces.c
              )
 
 find_library(   log-lib

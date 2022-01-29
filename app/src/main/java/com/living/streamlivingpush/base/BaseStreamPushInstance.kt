@@ -176,63 +176,7 @@ abstract class BaseStreamPushInstance {
         encodeVideoTool?.setIFrameReqSetListener(object : VideoSoftEncoder.IFrameReqSetListener {
 
             override fun onIFrameReqSet(gopTime: Int): Boolean {
-
-                //todo：
                 return false
-/*
-                encodeControlTool.countGopTime()
-                val gopCountTimes = encodeControlTool.getGopCountTimes()
-
-                val oldBit = encodeVideoTool?.getSetBitRate() ?: 1
-
-                var newBit = EncodeControlUtils.checkNeedReset(
-                    encodeControlTool.getCountBitRate() / (gopTime * gopCountTimes),
-                    encoderMonitorTool.tagBitRate,
-                    oldBit
-                )
-
-                val oldFps = encodeVideoTool?.getSetFps() ?: 1
-
-                val nowFps = encodeControlTool.getCountFps() / (gopTime * gopCountTimes)
-
-                var newFps = EncodeControlUtils.checkNeedResetFps(nowFps, encoderMonitorTool.tagFps)
-
-                var resetBit = false
-
-                var resetFps = false
-
-                if (newBit > 0) {
-                    resetBit = EncodeControlUtils.checkCanChangeWithRange(
-                        oldBit,
-                        newBit
-                    )
-                }
-
-                encodeVideoTool?.checkCanSetBitRate(newBit)?.let { bitRate ->
-                    if (bitRate != 0) {
-                        newBit = bitRate
-                    }
-                }
-
-                if (newFps > 0) {
-                    resetFps = EncodeControlUtils.checkCanChangeFpsWithRange(
-                        oldFps,
-                        newFps
-                    )
-                }
-
-                if (!resetFps) {
-                    newFps = oldFps
-                }
-
-                if (resetBit || resetFps) {
-                    encodeControlTool.resetData()
-                    toResetVideoEncode(newBit, newFps)
-
-                    PushLogUtils.logVideoResetTime(newBit, newFps, resetBit, resetFps)
-                }
-
-                return resetBit || resetFps*/
             }
 
         })
@@ -280,8 +224,6 @@ abstract class BaseStreamPushInstance {
         msg.what = MSG_RESET_ENCODER
         mHandleHandler?.sendMessage(msg)
     }
-
-    private var time = 0
 
     private fun startMonitor() {
         encoderMonitorTool.setCountCallBack(object : StateMonitorTool.CountCallBack {

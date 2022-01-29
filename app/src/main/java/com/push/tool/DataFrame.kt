@@ -7,6 +7,5 @@ class VideoFrame(
 
 class AudioFrame(
     var byteArray: ByteArray? = null,
-    var timestamp: Long = 0L,
-    var isHeader: Boolean = false
+    var timestamp: Long = 0L
 )

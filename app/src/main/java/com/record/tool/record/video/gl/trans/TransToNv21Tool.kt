@@ -147,7 +147,7 @@ class TransToNv21Tool {
         val nv21Buf = ByteArray(nv21BufSize)
 
         nv21ByteBuf?.rewind()
-        nv21ByteBuf?.get(nv21Buf, 0, 100)
+        nv21ByteBuf?.get(nv21Buf, 0, nv21BufSize)
 
         glDisableVertexAttribArray(VERTEX_POS_INDX)
         glDisableVertexAttribArray(TEXTURE_POS_INDX)

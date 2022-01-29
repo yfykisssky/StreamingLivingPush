@@ -11,3 +11,4 @@ rootProject.name = "StreamLivingPush"
 include ':app'
 include ':faac'
 include ':x264'
+include ':rtmp'

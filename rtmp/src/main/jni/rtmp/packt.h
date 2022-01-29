@@ -4,12 +4,12 @@
 
 
 #include <string.h>
-#include "librtmp/rtmp.h"
+#include "../librtmp/rtmp.h"
 #include <android/log.h>
 #include <malloc.h>
 #include <stdbool.h>
 
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,"RTMP",__VA_ARGS__)
+#include "tools.h"
 
 typedef struct {
     int sps_len;
@@ -105,19 +105,19 @@ RTMPPacket *packetVideoData(char *buf, int len, const long tms, Pusher *pusher) 
 
 }
 
-RTMPPacket *packetAudioData(const char *buf, const int len, const bool isHeader, const long tms,
+RTMPPacket *packetAudioData(const char *buf, const int len,const long tms,
                             Pusher *pusher) {
     int body_size = len + 2;
     RTMPPacket *packet = (RTMPPacket *) malloc(sizeof(RTMPPacket));
     RTMPPacket_Alloc(packet, body_size);
     //aac的数据头
     packet->m_body[0] = 0xAF;
-    //解码信息
+   /* //解码信息
     if (isHeader == 1) {
         packet->m_body[1] = 0x00;
     } else {
         packet->m_body[1] = 0x01;
-    }
+    }*/
     memcpy(&packet->m_body[2], buf, len);
 
     packet->m_packetType = RTMP_PACKET_TYPE_AUDIO;

@@ -1,5 +1,6 @@
 package com.push.tool.rtmp
 
+import com.living.rtmp.RtmpSendTool
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
 import com.push.tool.base.BasePushTool
@@ -13,43 +14,29 @@ open class RtmpPushTool : BasePushTool() {
     }
 
     companion object {
-        init {
-            System.loadLibrary("librtmplib")
-        }
+
     }
 
     private val callback: Callback? = null
     private var url: String? = null
     private var isPushing = false
 
-    private external fun connect(url: String?): Boolean
-    private external fun isConnect(): Boolean
-    private external fun disConnect()
-
-    private external fun sendAudioData(
-        data: ByteArray?,
-        len: Int,
-        tms: Long,
-        isHeader: Boolean
-    ): Boolean
-
-    private external fun sendVideoData(data: ByteArray?, len: Int, tms: Long): Boolean
+    private var rtmpSendTool: RtmpSendTool? = null
 
     inner class PushSendDataRunnable : Runnable {
         override fun run() {
-            if (connect(url)) {
+            if (rtmpSendTool?.connect(url) == true) {
                 while (isPushing) {
 
                     if (queueAudioFrame?.size ?: 0 > 0) {
 
                         queueAudioFrame?.take()?.let { frame ->
-                            if (frame.byteArray?.isNotEmpty() == true) {
-                                val frameSize = frame.byteArray?.size ?: 0
-                                val isSend = sendAudioData(
-                                    frame.byteArray,
+                            frame.byteArray?.let { bytes ->
+                                val frameSize = bytes.size
+                                val isSend = rtmpSendTool?.sendAudioData(
+                                    bytes,
                                     frameSize,
-                                    frame.timestamp,
-                                    frame.isHeader
+                                    frame.timestamp
                                 )
                                 PushLogUtils.logAudioPushTimeStamp(isSend, frameSize)
                             }
@@ -59,10 +46,10 @@ open class RtmpPushTool : BasePushTool() {
                     if (queueVideoFrame?.size ?: 0 > 0) {
 
                         queueVideoFrame?.take()?.let { frame ->
-                            if (frame.byteArray?.isNotEmpty() == true) {
-                                val frameSize = frame.byteArray?.size ?: 0
-                                val isSend = sendVideoData(
-                                    frame.byteArray,
+                            frame.byteArray?.let { bytes ->
+                                val frameSize = bytes.size
+                                val isSend = rtmpSendTool?.sendVideoData(
+                                    bytes,
                                     frameSize,
                                     frame.timestamp
                                 )
@@ -77,7 +64,7 @@ open class RtmpPushTool : BasePushTool() {
                 queueVideoFrame = null
                 queueAudioFrame?.clear()
                 queueAudioFrame = null
-                disConnect()
+                rtmpSendTool?.disConnect()
             }
         }
     }
@@ -96,6 +83,8 @@ open class RtmpPushTool : BasePushTool() {
 
         this.url = url
 
+        rtmpSendTool = RtmpSendTool()
+
         isPushing = true
 
         queueVideoFrame = LinkedBlockingQueue<VideoFrame>(Integer.MAX_VALUE)
@@ -105,6 +94,10 @@ open class RtmpPushTool : BasePushTool() {
     }
 
     fun stopPushing() {
+
+        rtmpSendTool?.disConnect()
+        rtmpSendTool = null
+
         isPushing = false
     }
 

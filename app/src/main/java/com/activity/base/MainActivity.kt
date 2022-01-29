@@ -31,8 +31,6 @@ open class BasePushActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        VideoSoftEncoder.initBitmaps(this)
-
         requestPermissions(
             arrayOf(
                 Manifest.permission.RECORD_AUDIO,

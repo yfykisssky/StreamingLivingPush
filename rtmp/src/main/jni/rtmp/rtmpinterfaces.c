@@ -4,7 +4,7 @@
 Pusher *pusher = 0;
 
 JNIEXPORT jboolean JNICALL
-Java_com_push_tool_rtmp_RtmpPushTool_connect(JNIEnv *env, jobject obj, jstring url_) {
+Java_com_living_rtmp_RtmpNativeJni_connect(JNIEnv *env, jobject obj, jstring url_) {
     const char *url = (*env)->GetStringUTFChars(env, url_, 0);
     int ret;
     do {
@@ -27,12 +27,12 @@ Java_com_push_tool_rtmp_RtmpPushTool_connect(JNIEnv *env, jobject obj, jstring u
 }
 
 JNIEXPORT jboolean JNICALL
-Java_com_push_tool_rtmp_RtmpPushTool_isConnect(JNIEnv *env, jobject obj) {
+Java_com_living_rtmp_RtmpNativeJni_isConnect(JNIEnv *env, jobject obj) {
     return pusher && pusher->rtmp && RTMP_IsConnected(pusher->rtmp);
 }
 
 JNIEXPORT void JNICALL
-Java_com_push_tool_rtmp_RtmpPushTool_disConnect(JNIEnv *env, jobject obj) {
+Java_com_living_rtmp_RtmpNativeJni_disConnect(JNIEnv *env, jobject obj) {
     if (pusher) {
         if (pusher->sps) {
             free(pusher->sps);
@@ -57,8 +57,8 @@ int sendPacket(RTMPPacket *packet) {
 }
 
 JNIEXPORT  jboolean JNICALL
-Java_com_push_tool_rtmp_RtmpPushTool_sendVideoData(JNIEnv *env, jobject obj, jbyteArray data_,
-                                                  jint len, jlong tms) {
+Java_com_living_rtmp_RtmpNativeJni_sendVideoData(JNIEnv *env, jobject obj, jbyteArray data_,
+                                                 jint len, jlong tms) {
     jbyte *data = (*env)->GetByteArrayElements(env, data_, NULL);
     int ret = 0;
     do {
@@ -82,11 +82,13 @@ Java_com_push_tool_rtmp_RtmpPushTool_sendVideoData(JNIEnv *env, jobject obj, jby
 }
 
 JNIEXPORT  jboolean JNICALL
-Java_com_push_tool_rtmp_RtmpPushTool_sendAudioData(JNIEnv *env, jobject obj, jbyteArray data_,
-                                                  jint len, jlong tms, jboolean isHeader) {
+Java_com_living_rtmp_RtmpNativeJni_sendAudioData(JNIEnv *env, jobject obj, jbyteArray data_,
+                                                 jint len, jlong tms) {
     jbyte *data = (*env)->GetByteArrayElements(env, data_, NULL);
-    RTMPPacket *packet = packetAudioData(data, len, isHeader, tms, pusher);
+    RTMPPacket *packet = packetAudioData(data, len, tms, pusher);
     int ret = sendPacket(packet);
     (*env)->ReleaseByteArrayElements(env, data_, data, 0);
     return ret;
 }
+
+

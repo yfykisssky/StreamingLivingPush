@@ -1,9 +1,5 @@
 package com.encoder
 
-import android.content.Context
-import com.encoder.utils.ImgTransJavaUtils
-import com.encoder.utils.ImgTransUtils
-import com.living.streamlivingpush.R
 import com.living.x264.X264EncodeTool
 import com.record.tool.bean.RecordVideoFrame
 import com.record.tool.record.video.gl.TextureVideoFrame
@@ -14,19 +10,6 @@ import java.util.concurrent.LinkedBlockingQueue
 class VideoSoftEncoder {
 
     companion object {
-
-        //todo:测试
-
-        private val nv21List = ArrayList<ByteArray>()
-
-        fun initBitmaps(con: Context) {
-            val listBitmaps = ImgTransUtils.getBitmapsFromGif(con, R.raw.giftest)
-            listBitmaps.forEach { bitmap ->
-                val nv21Bytes = ImgTransJavaUtils.bitmapToNv21(bitmap, 1280, 720)
-                nv21List.add(nv21Bytes)
-            }
-
-        }
 
     }
 
@@ -70,22 +53,13 @@ class VideoSoftEncoder {
 
     }
 
-    private var index = 0;
-
     private var spsPpsData: ByteArray? = null
 
     fun addRenderFrame(textureFrame: TextureVideoFrame) {
 
-        /*    createTransToolIfNeed()
-            val nv21Bytes = transToNv21Tool?.trans(textureFrame.textureId)
-            recordVideoQueue?.add(RecordVideoFrame(nv21Bytes, textureFrame.captureTimeStamp))*/
-
-        if (index == nv21List.size) {
-            index = 0
-        }
-        recordVideoQueue?.add(RecordVideoFrame(nv21List[index], textureFrame.captureTimeStamp))
-
-        index++
+        createTransToolIfNeed()
+        val nv21Bytes = transToNv21Tool?.trans(textureFrame.textureId)
+        recordVideoQueue?.add(RecordVideoFrame(nv21Bytes, textureFrame.captureTimeStamp))
 
     }
 

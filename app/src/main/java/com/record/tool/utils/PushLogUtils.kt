@@ -119,7 +119,7 @@ class PushLogUtils {
         private var pushAudioDataTimeStamp = 0L
         private var pushVideoDataTimeStamp = 0L
 
-        fun logAudioPushTimeStamp(success: Boolean, frameSize: Int) {
+        fun logAudioPushTimeStamp(success: Boolean?, frameSize: Int) {
             if (!isDebug) {
                 return
             }
@@ -130,7 +130,7 @@ class PushLogUtils {
             pushAudioDataTimeStamp = System.currentTimeMillis()
         }
 
-        fun logVideoPushTimeStamp(success: Boolean, frameSize: Int) {
+        fun logVideoPushTimeStamp(success: Boolean?, frameSize: Int) {
             if (!isDebug) {
                 return
             }

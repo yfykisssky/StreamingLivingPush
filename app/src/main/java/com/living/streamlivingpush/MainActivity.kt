@@ -44,8 +44,6 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        VideoSoftEncoder.initBitmaps(this)
-
         requestPermissions(
             arrayOf(
                 Manifest.permission.RECORD_AUDIO,
