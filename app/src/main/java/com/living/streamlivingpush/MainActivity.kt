@@ -37,7 +37,6 @@ class MainActivity : Activity() {
 
     private var pushInstance = StreamSocketScreenPushInstance()
 
-    private var checkDis: Disposable? = null
     private var stmFloatWindowHelper = StmFloatWindowHelper()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,19 +67,6 @@ class MainActivity : Activity() {
             stmFloatWindowHelper.showWindow()
 
             startPush()
-
-            checkDis?.dispose()
-            checkDis = Observable.create<Boolean> {
-                val result = PingUtils.ping(socketIp)
-                it.onNext(result)
-                it.onComplete()
-            }.subscribeOn(Schedulers.io()).timeout(5, TimeUnit.SECONDS)
-                .observeOn(AndroidSchedulers.mainThread()).subscribe({
-                    if (it) {
-
-                    }
-                }, {
-                }, {})
 
         }
 

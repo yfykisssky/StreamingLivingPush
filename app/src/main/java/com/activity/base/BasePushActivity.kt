@@ -50,65 +50,6 @@ open class BasePushActivity : Activity() {
             stmFloatWindowHelper.startOverlaySettingActivity(this)
         }
 
-        /*      start?.setOnClickListener {
-
-
-                  startPush()
-
-                  checkDis?.dispose()
-                  checkDis = Observable.create<Boolean> {
-                      val result = PingUtils.ping(socketIp)
-                      it.onNext(result)
-                      it.onComplete()
-                  }.subscribeOn(Schedulers.io()).timeout(5, TimeUnit.SECONDS)
-                      .observeOn(AndroidSchedulers.mainThread()).subscribe({
-                          if (it) {
-
-                          }
-                      }, {
-                      }, {})
-
-              }*/
-
-/*        stop?.setOnClickListener {
-
-
-
-            stopPush()
-        }
-
-        sanCode?.setOnClickListener {
-            toScan()
-        }*/
-
-        /*     pause?.setOnClickListener {
-                 StreamPushInstance.instance.s()
-             }
-
-             resume?.setOnClickListener {
-                 StreamPushInstance.instance.r()
-             }
-
-             switchCamera?.setOnClickListener {
-                 StreamPushInstance.instance.switchCamera()
-             }
-
-             flip?.setOnClickListener {
-                 StreamPushInstance.instance.toogle()
-             }*/
-
-/*        resetBnt?.setOnClickListener {
-            val fps = editFps?.text.toString().toInt()
-            val bit = editBit?.text.toString().toInt()
-
-            videoBitRate = bit
-            videoFps = fps
-
-            *//* *//*
-
-            updateFpsBitShow()
-        }*/
-
     }
 
     protected fun reset(){
@@ -157,10 +98,6 @@ open class BasePushActivity : Activity() {
         stmFloatWindowHelper.closeWindow()
 
         pushInstance.stopPushing()
-    }
-
-    companion object {
-        const val REQUEST_CODE_SCAN_ONE = 1011
     }
 
 }

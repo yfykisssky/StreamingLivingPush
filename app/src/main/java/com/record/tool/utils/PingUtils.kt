@@ -1,8 +1,13 @@
 package com.record.tool.utils
 
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
+import java.util.concurrent.TimeUnit
 
 class PingUtils {
 
@@ -37,6 +42,32 @@ class PingUtils {
                 false
             }
         }
+
+    }
+
+    private var checkDis: Disposable? = null
+    private var callBack: ((Boolean) -> Unit?)? = null
+
+    fun setCallBack(callBack: ((Boolean) -> Unit?)? = null) {
+        this.callBack = callBack
+    }
+
+    fun pingWithUIThread(socketIp: String) {
+        checkDis?.dispose()
+        checkDis = Observable.create<Boolean> {
+            val result = ping(socketIp)
+            it.onNext(result)
+            it.onComplete()
+        }.subscribeOn(Schedulers.io()).timeout(5, TimeUnit.SECONDS)
+            .observeOn(AndroidSchedulers.mainThread()).subscribe({
+                callBack?.invoke(it)
+            }, {
+                callBack?.invoke(false)
+            }, {})
+    }
+
+    fun destoryPingWithUIThread() {
+        checkDis?.dispose()
     }
 
 }
