@@ -82,6 +82,7 @@ abstract class BaseCapture : OnFrameAvailableListener {
 
                 sur.getTransformMatrix(mTextureTransform)
                 mOesInputFilter?.setTexutreTransform(mTextureTransform)
+                mGpuImageFilterGroup?.resetDrawViewSize(getCaptureWith(), getCaptureHeight())
                 mGpuImageFilterGroup?.draw(
                     mSurfaceTextureId,
                     mFrameBuffer?.frameBufferId ?: 0,

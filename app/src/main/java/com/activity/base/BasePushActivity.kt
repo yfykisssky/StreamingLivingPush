@@ -5,7 +5,6 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.encoder.VideoSoftEncoder
 import com.living.streamlivingpush.push.StreamAoaScreenPushInstance
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
 import com.record.tool.record.video.screen.service.ProjectionForegroundService

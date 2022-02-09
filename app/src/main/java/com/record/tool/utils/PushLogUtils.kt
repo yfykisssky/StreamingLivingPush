@@ -162,6 +162,24 @@ class PushLogUtils {
             videoResetTimeStamp = System.currentTimeMillis()
         }
 
+        private var videoSoftTrans = 0L
+
+        fun updateVideoSoftTransTime() {
+            videoSoftTrans = System.currentTimeMillis()
+        }
+
+        fun logVideoSoftTransTime() {
+            if (!isDebug) {
+                return
+            }
+            val useTime=System.currentTimeMillis()-videoSoftTrans
+            Log.e(
+                TAG,
+                "encodeCount:videoSoftTrans:$useTime"
+            )
+            videoResetTimeStamp = System.currentTimeMillis()
+        }
+
     }
 
 }

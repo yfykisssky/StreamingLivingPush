@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.encoder.VideoSoftEncoder
 import com.huawei.hms.hmsscankit.ScanUtil
 import com.huawei.hms.ml.scan.HmsScan
 import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
@@ -16,13 +15,7 @@ import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
 import com.push.tool.socket.HostTransTool
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
 import com.record.tool.record.video.screen.service.ProjectionForegroundService
-import com.record.tool.utils.PingUtils
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.concurrent.TimeUnit
 
 
 @RequiresApi(Build.VERSION_CODES.M)

@@ -181,13 +181,13 @@ class VideoSoftEncoder {
                         CheckUtils.checkBytesFrameKind(spsPpsData)
                         dataCallBackListener?.onDataCallBack(spsPpsData, frame.timeStamp)
                     }
+
                     frame.byteArray?.let { dataBytes ->
                         x264EncodeTool?.nv21EncodeToH264(dataBytes)?.let { h264Data ->
                             CheckUtils.checkBytesFrameKind(h264Data)
                             dataCallBackListener?.onDataCallBack(h264Data, frame.timeStamp)
                         }
                     }
-
                 }
 
             }

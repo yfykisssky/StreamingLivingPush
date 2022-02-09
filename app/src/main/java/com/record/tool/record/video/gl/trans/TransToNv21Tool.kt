@@ -85,6 +85,8 @@ class TransToNv21Tool {
     private var nv21BufSize = 0
     private var nv21ByteBuf: ByteBuffer? = null
 
+    private var texelOffset = 0F
+
     private var program: Program? = null
     private var mFboSamplerLoc = 0
 
@@ -105,11 +107,16 @@ class TransToNv21Tool {
         mFboSamplerLoc = glGetUniformLocation(program?.programId ?: 0, "s_TextureMap")
 
         //NV21 buffer = width * height * 1.5;
-        nv21BufSize = imgWidth * imgHeight * 3 / 2
-        nv21ByteBuf = ByteBuffer.allocate(nv21BufSize * 4).order(ByteOrder.LITTLE_ENDIAN)
+        nv21BufSize = inputWidth * inputHeight * 3 / 2
+        nv21ByteBuf = ByteBuffer.allocate(nv21BufSize).order(ByteOrder.LITTLE_ENDIAN)
+
+        //归一化坐标换算
+        texelOffset = 1F / inputWidth
     }
 
     fun trans(inputTextureId: Int): ByteArray {
+
+        PushLogUtils.updateVideoSoftTransTime()
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
@@ -136,18 +143,16 @@ class TransToNv21Tool {
         glBindTexture(GL_TEXTURE_2D, inputTextureId)
         glUniform1i(mFboSamplerLoc, 0)
 
-        val texelOffset = 1F / imgWidth
         glUniform1f(glGetUniformLocation(program?.programId ?: 0, "u_Offset"), texelOffset)
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4)
 
-        nv21ByteBuf?.clear()
         glReadPixels(0, 0, imgWidth, imgHeight, GL_RGBA, GL_UNSIGNED_BYTE, nv21ByteBuf)
 
         val nv21Buf = ByteArray(nv21BufSize)
 
-        nv21ByteBuf?.rewind()
-        nv21ByteBuf?.get(nv21Buf, 0, nv21BufSize)
+        nv21ByteBuf?.get(nv21Buf)
+        nv21ByteBuf?.clear()
 
         glDisableVertexAttribArray(VERTEX_POS_INDX)
         glDisableVertexAttribArray(TEXTURE_POS_INDX)
@@ -156,7 +161,7 @@ class TransToNv21Tool {
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-        PushLogUtils.outLog("BYTE_SIZE2", nv21Buf.size.toString())
+        PushLogUtils.logVideoSoftTransTime()
 
         return nv21Buf
     }

@@ -128,6 +128,11 @@ public class GPUImageFilterGroup extends GPUImageFilter {
         throw new RuntimeException("this method should not been call!");
     }
 
+    //后续操作可能改变size大小，需要先重置下
+    public void resetDrawViewSize(int drawWidth,int drawHeight){
+        GLES20.glViewport(0, 0,drawWidth,drawHeight);
+    }
+
     /**
      * 绘制当前特效
      * @param textureId 图像输入
