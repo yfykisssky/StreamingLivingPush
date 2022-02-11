@@ -12,6 +12,7 @@ import com.huawei.hms.ml.scan.HmsScan
 import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
 import com.living.streamlivingpush.local.StreamScreenLocaInstance
 import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
+import com.opencv.OpenCvTestActivity
 import com.push.tool.socket.HostTransTool
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
 import com.record.tool.record.video.screen.service.ProjectionForegroundService
@@ -35,6 +36,8 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        startActivity(Intent(this,OpenCvTestActivity::class.java))
 
         requestPermissions(
             arrayOf(

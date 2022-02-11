@@ -61,4 +61,6 @@ dependencies {
 
     implementation project(":rtmp")
 
+    implementation project(":opencv")
+
 }
