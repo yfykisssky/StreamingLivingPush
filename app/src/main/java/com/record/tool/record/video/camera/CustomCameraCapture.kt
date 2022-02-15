@@ -159,12 +159,13 @@ class CustomCameraCapture : BaseCapture() {
 
     }
 
+    //setDisplayOrientation 90,宽高取反
     override fun getCaptureWith(): Int {
-        return recordWith
+        return recordHeight
     }
 
     override fun getCaptureHeight(): Int {
-        return recordHeight
+        return recordWith
     }
 
     override fun getTransOutWith(): Int {
@@ -264,37 +265,22 @@ class CustomCameraCapture : BaseCapture() {
 
     //需要水平翻转
     private fun needCameraFlipHorizontal(): Boolean {
-        return mCameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_FRONT
+        return false
     }
 
     //旋转角度
     private fun cameraUseOrientation(): Rotation {
-        return when (mCameraInfo.orientation) {
-            Rotation.ROTATION_90.asInt() -> {
-                Rotation.ROTATION_270
-            }
-            Rotation.ROTATION_180.asInt() -> {
-                Rotation.ROTATION_0
-            }
-            Rotation.ROTATION_270.asInt() -> {
-                Rotation.ROTATION_90
-            }
-            Rotation.ROTATION_0.asInt() -> {
-                Rotation.ROTATION_180
-            }
-            else -> {
-                Rotation.NORMAL
-            }
-        }
+        return Rotation.ROTATION_0
     }
 
     //需要竖直翻转
     private fun needCameraFlipVertical(): Boolean {
-        return !(mCameraInfo.orientation == 90 || mCameraInfo.orientation == 270)
+        return false
     }
 
     private fun updateCamSettings(cameraId: Int) {
         mCamera = Camera.open(cameraId)
+        mCamera?.setDisplayOrientation(90)
         this.cameraId = cameraId
         Camera.getCameraInfo(cameraId, mCameraInfo)
         setDefaultParameters()

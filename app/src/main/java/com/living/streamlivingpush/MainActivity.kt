@@ -10,6 +10,7 @@ import androidx.annotation.RequiresApi
 import com.huawei.hms.hmsscankit.ScanUtil
 import com.huawei.hms.ml.scan.HmsScan
 import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
+import com.living.streamlivingpush.local.StreamCamLocaInstance
 import com.living.streamlivingpush.local.StreamScreenLocaInstance
 import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
 import com.opencv.OpenCvTestActivity
@@ -24,12 +25,12 @@ class MainActivity : Activity() {
 
     private var videoBitRate = 8000
     private var videoFps = 30
-    private var videoWith = 1280
-    private var videoHeight = 720
+    private var videoWith = 720
+    private var videoHeight = 1280
 
     private var audioBitRate = 128
 
-    private var pushInstance = StreamSocketScreenPushInstance()
+    private var pushInstance = StreamCamLocaInstance()
 
     private var stmFloatWindowHelper = StmFloatWindowHelper()
 
@@ -37,7 +38,7 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        startActivity(Intent(this,OpenCvTestActivity::class.java))
+        //startActivity(Intent(this,OpenCvTestActivity::class.java))
 
         requestPermissions(
             arrayOf(
@@ -130,9 +131,9 @@ class MainActivity : Activity() {
             audioBitRate
         )
 
-        //cameraPreviewView?.addView(pushInstance.getPreviewView())
+        cameraPreviewView?.addView(pushInstance.getPreviewView())
 
-        pushInstance.startPushing(socketIp, socketPort)
+        pushInstance.startPushing(false)
         //pushInstance.startPushing(true)
     }
 

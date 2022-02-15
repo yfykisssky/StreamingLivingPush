@@ -26,6 +26,7 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Pair;
+import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 
 import com.record.tool.utils.PushLogUtils;
@@ -191,6 +192,35 @@ public class OpenGlUtils {
         }
     }
 
+    public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height) {
+        return calcCubeAndTextureBuffer(ImageView.ScaleType.CENTER_CROP, Rotation.ROTATION_0,
+            false, true, width, height, width, height);
+    }
+
+    public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height, float[] cube) {
+        return calcCubeAndTextureBuffer(ImageView.ScaleType.CENTER_CROP, Rotation.ROTATION_0,
+            false, false, width, height, width, height, cube);
+    }
+
+    public static Pair<float[], float[]> calcCubeAndTextureBuffer(ScaleType scaleType,
+                                                                  Rotation inputRotation,
+                                                                  boolean needFlipHorizontal,
+                                                                  boolean needFlipVertical,
+                                                                  int inputWith,
+                                                                  int inputHeight,
+                                                                  int outputWidth,
+                                                                  int outputHeight) {
+        return calcCubeAndTextureBuffer(scaleType,
+            inputRotation,
+            needFlipHorizontal,
+            needFlipVertical,
+            inputWith,
+            inputHeight,
+            outputWidth,
+            outputHeight,
+            OpenGlUtils.CUBE);
+    }
+
     /**
      * 通过输入和输出的宽高，计算顶点数组和纹理数组
      *
@@ -210,7 +240,8 @@ public class OpenGlUtils {
                                                                   int inputWith,
                                                                   int inputHeight,
                                                                   int outputWidth,
-                                                                  int outputHeight) {
+                                                                  int outputHeight,
+                                                                  float[] cube) {
 
         boolean needRotate = (inputRotation == Rotation.ROTATION_90 || inputRotation == Rotation.ROTATION_270);
         int rotatedWidth = needRotate ? inputHeight : inputWith;
@@ -219,7 +250,6 @@ public class OpenGlUtils {
         float ratioWidth = 1.0f * Math.round(rotatedWidth * maxRratio) / outputWidth;
         float ratioHeight = 1.0f * Math.round(rotatedHeight * maxRratio) / outputHeight;
 
-        float[] cube = OpenGlUtils.CUBE;
         float[] textureCords = TextureRotationUtils.getRotation(inputRotation, needFlipHorizontal, needFlipVertical);
         if (scaleType == ScaleType.CENTER_CROP) {
             float distHorizontal = needRotate ? ((1 - 1 / ratioHeight) / 2) : ((1 - 1 / ratioWidth) / 2);
@@ -246,4 +276,19 @@ public class OpenGlUtils {
         return coordinate == 0.0f ? distance : 1 - distance;
     }
 
+    public static FloatBuffer getCubeBuffer(float[] floats) {
+        FloatBuffer mGLCubeBuffer =
+            ByteBuffer.allocateDirect(OpenGlUtils.CUBE.length * 4).order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        mGLCubeBuffer.put(floats);
+        return mGLCubeBuffer;
+    }
+
+    public static FloatBuffer getTextBuffer(float[] floats) {
+        FloatBuffer mGLTextureBuffer =
+            ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.length * 4).order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
+        mGLTextureBuffer.put(floats);
+        return mGLTextureBuffer;
+    }
 }

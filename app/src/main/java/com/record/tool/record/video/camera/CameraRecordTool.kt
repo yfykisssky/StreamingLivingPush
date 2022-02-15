@@ -4,6 +4,8 @@ import android.os.Build
 import android.view.TextureView
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
+import com.opencv.OpenCvFaceCheckTool
+import com.record.tool.record.video.gl.DrawImageTool
 import com.record.tool.record.video.gl.TextureVideoFrame
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
@@ -37,12 +39,29 @@ class CameraRecordManager {
         return mCameraCapture?.isMirror()
     }
 
+    var drawImageTool: DrawImageTool? = null
+
+    var openCvHeadCheckTool: OpenCvFaceCheckTool? = null
+
     fun startCapture(useCameraId: Int) {
         if (mCameraCapture == null) {
             mCameraCapture = CustomCameraCapture()
             mCameraCapture?.setTextureHandleCallBack(object :
                 CustomCameraCapture.TextureHandleCallBack {
                 override fun onTextureUpdate(frame: TextureVideoFrame): TextureVideoFrame {
+
+                    if (openCvHeadCheckTool == null) {
+                        openCvHeadCheckTool = OpenCvFaceCheckTool()
+                        openCvHeadCheckTool?.init(useWith, useHeight)
+                    }
+
+                    if (drawImageTool == null) {
+                        drawImageTool = DrawImageTool()
+                        drawImageTool?.init(useWith, useHeight)
+                    }
+
+                    frame.textureId = drawImageTool?.onDrawTexture(frame.textureId) ?: 0
+
                     return frame
                 }
             })
@@ -60,6 +79,8 @@ class CameraRecordManager {
 
     fun stopCapture() {
         mCameraCapture?.stopCapture()
+        // openCvHeadCheckTool?.destroy
+        drawImageTool?.destory()
     }
 
     fun getPreviewView(): TextureView? {

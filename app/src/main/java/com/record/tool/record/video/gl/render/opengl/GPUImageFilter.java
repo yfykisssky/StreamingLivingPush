@@ -58,7 +58,7 @@ public class GPUImageFilter {
         mProgram = new Program(vertexShader, fragmentShader);
     }
 
-    public final void init() {
+    public void init() {
         onInit();
         mIsInitialized = true;
     }

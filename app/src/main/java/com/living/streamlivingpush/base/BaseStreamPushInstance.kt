@@ -110,7 +110,7 @@ abstract class BaseStreamPushInstance {
     }
 
     protected fun addVideoRenderFrame(frame: TextureVideoFrame) {
-        encodeVideoTool?.addRenderFrame(frame)
+       // encodeVideoTool?.addRenderFrame(frame)
     }
 
     protected fun addAudioRenderFrame(frame: RecordAudioFrame) {
