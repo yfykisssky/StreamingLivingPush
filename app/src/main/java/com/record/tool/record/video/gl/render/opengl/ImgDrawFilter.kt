@@ -9,6 +9,7 @@ class ImgDrawFilter : GPUImageFilter() {
 
     companion object {
         val IMAGE_CUBE: FloatArray = FloatArray(OpenGlUtils.CUBE.size)
+        val IMAGE_CUBE_TEMP: FloatArray = FloatArray(OpenGlUtils.CUBE.size)
     }
 
     private val appContext = AppApplication.appContext
@@ -29,6 +30,16 @@ class ImgDrawFilter : GPUImageFilter() {
         System.arraycopy(OpenGlUtils.CUBE, 0, IMAGE_CUBE, 0, copySize)
     }
 
+    private fun resetCubeWithTemp() {
+        val copySize = OpenGlUtils.CUBE.size
+        System.arraycopy(IMAGE_CUBE_TEMP, 0, IMAGE_CUBE, 0, copySize)
+    }
+
+    fun copyToTemp(){
+        val copySize = OpenGlUtils.CUBE.size
+        System.arraycopy(IMAGE_CUBE, 0, IMAGE_CUBE_TEMP, 0, copySize)
+    }
+
     private fun loadBitmapId(resId: Int) {
         if (imgTextureId == OpenGlUtils.NO_TEXTURE) {
             val pauseBitmap =
@@ -40,6 +51,7 @@ class ImgDrawFilter : GPUImageFilter() {
         }
     }
 
+    //todo:需要换成mat方式
     fun updateDrawPanelSize(sizeWidth: Int, sizeHeight: Int) {
         this.sizeWidth = sizeWidth
         this.sizeHeight = sizeHeight
@@ -63,6 +75,7 @@ class ImgDrawFilter : GPUImageFilter() {
     }
 
     fun updateShowOnLocation(fromCenterX: Float, fromCenterY: Float) {
+        resetCubeWithTemp()
         //归一化比例参数，也可以构造mat在shader中转换
         for (index in IMAGE_CUBE.indices) {
             if (index % 2 == 1) {

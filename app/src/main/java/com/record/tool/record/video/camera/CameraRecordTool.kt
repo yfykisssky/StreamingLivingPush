@@ -4,7 +4,9 @@ import android.os.Build
 import android.view.TextureView
 import androidx.annotation.RequiresApi
 import com.living.streamlivingpush.AppApplication
+import com.opencv.FloatPoint
 import com.opencv.OpenCvFaceCheckTool
+import com.opencv.PointTransUtils
 import com.record.tool.record.video.gl.DrawImageTool
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.utils.PushLogUtils
@@ -56,14 +58,25 @@ class CameraRecordManager {
                         openCvHeadCheckTool?.init(useWith, useHeight)
                     }
 
+                    var drawImgPoint = FloatPoint(0.0f, 0.0f)
+
                     openCvHeadCheckTool?.onFrameUpdate(frame.textureId)?.let { rects ->
                         PushLogUtils.logVideoFaceCheckRects(rects)
+
+                        if (rects.isNotEmpty()) {
+                            val rect = rects[0]
+                            val centerPoint = PointTransUtils.getCenterPoint(rect.tl(), rect.br())
+                            drawImgPoint=PointTransUtils.transToGlCenterPoint(centerPoint, useWith, useHeight)
+                        }
+
                     }
 
                     if (drawImageTool == null) {
                         drawImageTool = DrawImageTool()
                         drawImageTool?.init(useWith, useHeight)
                     }
+
+                    drawImageTool?.updatePoints(drawImgPoint.x, drawImgPoint.y)
 
                     frame.textureId = drawImageTool?.onDrawTexture(frame.textureId) ?: 0
 

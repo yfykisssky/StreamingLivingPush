@@ -18,6 +18,14 @@ class DrawImageTool {
 
     private var imgDrawFilter: ImgDrawFilter? = null
 
+    private var pointX = 0.0f
+    private var pointY = 0.0f
+
+    fun updatePoints(x: Float, y: Float) {
+        pointX = x
+        pointY = y
+    }
+
     fun onDrawTexture(inputTextureId: Int): Int {
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, mFrameBuffer?.frameBufferId ?: 0)
@@ -28,18 +36,13 @@ class DrawImageTool {
 
         nomalDrawFilter?.onDraw(inputTextureId, mGLCubeBuffer, mGLTextureBuffer)
 
-        w += 0.00005f
-        h += 0.00008f
-        imgDrawFilter?.updateShowOnLocation(w, h)
+        imgDrawFilter?.updateShowOnLocation(pointX, pointY)
         imgDrawFilter?.onDraw()
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
 
         return mFrameBuffer?.textureId ?: 0
     }
-
-    var w = 0.0f
-    var h = 0.0f
 
     fun init(width: Int, height: Int) {
 
@@ -61,6 +64,7 @@ class DrawImageTool {
         imgDrawFilter?.init()
         imgDrawFilter?.updateDrawPanelSize(width, height)
         imgDrawFilter?.updateShowScaleWithWidth(0.2f)
+        imgDrawFilter?.copyToTemp()
 
     }
 
