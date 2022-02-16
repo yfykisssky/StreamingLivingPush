@@ -160,12 +160,18 @@
                 android:text="ScanCode" />
 
             <TextView
-                android:textColor="@color/white"
                 android:id="@+id/scanCodeResult"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="5dp" />
+                android:layout_margin="5dp"
+                android:textColor="@color/white" />
         </LinearLayout>
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/testImageViewId"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true" />
 </RelativeLayout>

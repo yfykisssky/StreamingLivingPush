@@ -6,14 +6,13 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.ImageView
 import androidx.annotation.RequiresApi
 import com.huawei.hms.hmsscankit.ScanUtil
 import com.huawei.hms.ml.scan.HmsScan
 import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
 import com.living.streamlivingpush.local.StreamCamLocaInstance
-import com.living.streamlivingpush.local.StreamScreenLocaInstance
-import com.living.streamlivingpush.push.StreamSocketScreenPushInstance
-import com.opencv.OpenCvTestActivity
+import com.opencv.OpenCvFaceCheckTool
 import com.push.tool.socket.HostTransTool
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
 import com.record.tool.record.video.screen.service.ProjectionForegroundService
@@ -38,6 +37,9 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        testImageView = findViewById(R.id.testImageViewId)
+
+        OpenCvFaceCheckTool.initClassifier()
         //startActivity(Intent(this,OpenCvTestActivity::class.java))
 
         requestPermissions(
@@ -49,7 +51,7 @@ class MainActivity : Activity() {
             10
         )
 
-        stmFloatWindowHelper.setCallBackListener(object: StmFloatWindowHelper.CallBackListener{
+        stmFloatWindowHelper.setCallBackListener(object : StmFloatWindowHelper.CallBackListener {
             override fun onChangeBitrate(newBit: Int) {
                 pushInstance.resetVideoBit(newBit)
             }
@@ -143,6 +145,9 @@ class MainActivity : Activity() {
 
     companion object {
         const val REQUEST_CODE_SCAN_ONE = 1011
+
+        @SuppressLint("StaticFieldLeak")
+        var testImageView: ImageView? = null
     }
 
     private fun toScan() {

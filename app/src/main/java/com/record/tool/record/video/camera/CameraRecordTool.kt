@@ -7,6 +7,7 @@ import com.living.streamlivingpush.AppApplication
 import com.opencv.OpenCvFaceCheckTool
 import com.record.tool.record.video.gl.DrawImageTool
 import com.record.tool.record.video.gl.TextureVideoFrame
+import com.record.tool.utils.PushLogUtils
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class CameraRecordManager {
@@ -55,6 +56,10 @@ class CameraRecordManager {
                         openCvHeadCheckTool?.init(useWith, useHeight)
                     }
 
+                    openCvHeadCheckTool?.onFrameUpdate(frame.textureId)?.let { rects ->
+                        PushLogUtils.logVideoFaceCheckRects(rects)
+                    }
+
                     if (drawImageTool == null) {
                         drawImageTool = DrawImageTool()
                         drawImageTool?.init(useWith, useHeight)
@@ -79,7 +84,7 @@ class CameraRecordManager {
 
     fun stopCapture() {
         mCameraCapture?.stopCapture()
-        // openCvHeadCheckTool?.destroy
+        openCvHeadCheckTool?.destory()
         drawImageTool?.destory()
     }
 

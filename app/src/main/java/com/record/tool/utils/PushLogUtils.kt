@@ -1,10 +1,7 @@
 package com.record.tool.utils
 
 import android.util.Log
-import com.common.base.RecordType
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import java.util.concurrent.TimeUnit
+import org.opencv.core.Rect
 
 class PushLogUtils {
 
@@ -172,12 +169,51 @@ class PushLogUtils {
             if (!isDebug) {
                 return
             }
-            val useTime=System.currentTimeMillis()-videoSoftTrans
+            val useTime = System.currentTimeMillis() - videoSoftTrans
             Log.e(
                 TAG,
                 "encodeCount:videoSoftTrans:$useTime"
             )
-            videoResetTimeStamp = System.currentTimeMillis()
+        }
+
+        private var videoFaceCheck = 0L
+
+        fun updateVideoFaceCheckTime() {
+            videoFaceCheck = System.currentTimeMillis()
+        }
+
+        fun logVideoFaceCheckTime() {
+            if (!isDebug) {
+                return
+            }
+            val useTime = System.currentTimeMillis() - videoFaceCheck
+            Log.e(
+                TAG,
+                "encodeCount:videoFaceCheck:$useTime"
+            )
+        }
+
+        fun logVideoFaceCheckRects(rects: Array<Rect>) {
+            if (!isDebug) {
+                return
+            }
+
+            if(rects.isEmpty()){
+                return
+            }
+
+            var rectLog = "" + rects.size + ":"
+            rects.forEach {
+                val tl = it.tl()
+                val br = it.br()
+                rectLog += "tl:" + tl.x + "," + tl.y + ":"
+                rectLog += "br:" + br.x + "," + br.y + ","
+            }
+
+            Log.e(
+                TAG,
+                "encodeCount:videoFaceCheckRects:$rectLog"
+            )
         }
 
     }

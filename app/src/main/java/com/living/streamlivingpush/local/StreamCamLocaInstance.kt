@@ -33,7 +33,7 @@ class StreamCamLocaInstance : StreamCamPushInstance() {
 
     fun startPushing(needSave: Boolean = false) {
 
-        super.startRecode(1)
+        super.startRecode(0)
 
         if (needSave) {
             fileWriteTool = FileWriteTool()

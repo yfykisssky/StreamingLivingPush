@@ -1,10 +1,20 @@
 package com.opencv
 
+import android.graphics.Bitmap
+import com.living.streamlivingpush.AppApplication
+import com.living.streamlivingpush.MainActivity
+import com.record.tool.record.video.gl.trans.TransToNv21Tool
 import com.record.tool.utils.FileUtils
+import com.record.tool.utils.PushLogUtils
+import org.opencv.android.BaseLoaderCallback
+import org.opencv.android.LoaderCallbackInterface
+import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
 import org.opencv.core.*
+import org.opencv.imgproc.Imgproc
 import org.opencv.objdetect.CascadeClassifier
-import java.nio.ByteBuffer
 import kotlin.math.roundToInt
+
 
 class OpenCvFaceCheckTool {
 
@@ -12,25 +22,47 @@ class OpenCvFaceCheckTool {
     private var inputHeight = 0
 
     private var mAbsoluteFaceSize = 0
-    private var mGrayMatByteBuffer: ByteBuffer? = null
+
+    private var transToNv21Tool: TransToNv21Tool? = null
 
     fun init(inputWidth: Int, inputHeight: Int) {
 
         this.inputWidth = inputWidth
         this.inputHeight = inputHeight
 
-        // mGrayMatByteBuffer = ByteBuffer.allocate(nv21BufSize).order(ByteOrder.LITTLE_ENDIAN)
+        transToNv21Tool = TransToNv21Tool()
+        transToNv21Tool?.init(inputWidth, inputHeight)
+
     }
 
-    private fun y2GrayMat(bytesY: ByteArray): Mat {
-        mGrayMatByteBuffer?.clear()
-        mGrayMatByteBuffer?.put(bytesY)
-        return Mat(inputHeight, inputWidth, CvType.CV_8UC1, mGrayMatByteBuffer, inputWidth.toLong())
+    fun destory() {
+        transToNv21Tool?.destory()
+        transToNv21Tool = null
     }
 
-    fun onFrameUpdate(bytesY: ByteArray): Array<Rect> {
+    private fun nv21To2GrayMat(bytesY: ByteArray): Mat {
+        val mat = Mat((inputHeight * 1.5).toInt(), inputWidth, CvType.CV_8UC1)
+        mat.put(0, 0, bytesY)
+        val desGray = Mat(inputHeight, inputWidth, CvType.CV_8UC1)
+        Imgproc.cvtColor(mat, desGray, Imgproc.COLOR_YUV2GRAY_NV21)
+        mat.release()
+        return desGray
+    }
 
-        val mGray = y2GrayMat(bytesY)
+    fun coverToBitmap(mGray:Mat){
+        val graybmp = Bitmap.createBitmap(mGray.width(), mGray.height(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(mGray, graybmp)
+        MainActivity.testImageView?.setImageBitmap(graybmp)
+    }
+
+    fun onFrameUpdate(textureId: Int): Array<Rect> {
+
+        PushLogUtils.updateVideoFaceCheckTime()
+
+        val nv21Bytes = transToNv21Tool?.trans(textureId)
+
+        val mGray = nv21To2GrayMat(nv21Bytes!!)
+
         val mRelativeFaceSize = 0.2f
         if (mAbsoluteFaceSize == 0) {
             val height = mGray.rows()
@@ -43,6 +75,11 @@ class OpenCvFaceCheckTool {
             mGray, faces, 1.1, 2, 2,
             Size(mAbsoluteFaceSize.toDouble(), mAbsoluteFaceSize.toDouble()), Size()
         )
+
+        mGray.release()
+
+        PushLogUtils.logVideoFaceCheckTime()
+
         return faces.toArray()
 
     }
@@ -54,14 +91,33 @@ class OpenCvFaceCheckTool {
 
         private var classifier: CascadeClassifier? = null
 
-        //初始化人脸级联分类器
-        private fun initClassifier() {
+        private val appContext = AppApplication.appContext
 
-            FileUtils.copyFileFromRaw(
-                RES_RAW_FLIE,
-                COPYED_FILE_NAME
-            )?.let { path ->
-                classifier = CascadeClassifier(path)
+        private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(appContext) {
+            override fun onManagerConnected(status: Int) {
+                when (status) {
+                    SUCCESS -> {
+                        FileUtils.copyFileFromRaw(
+                            RES_RAW_FLIE,
+                            COPYED_FILE_NAME
+                        )?.let { path ->
+                            classifier = CascadeClassifier(path)
+                        }
+                    }
+                    else -> {
+                        super.onManagerConnected(status)
+                    }
+                }
+            }
+        }
+
+        //初始化人脸级联分类器
+        fun initClassifier() {
+
+            if (!OpenCVLoader.initDebug()) {
+                OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION, appContext, mLoaderCallback)
+            } else {
+                mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
             }
 
         }
