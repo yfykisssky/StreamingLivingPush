@@ -61,11 +61,11 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
     private Size mLastInputSize = new Size();
     private Size mLastOutputSize = new Size();
 
-    private boolean needFlipHorizontal = true;
+    private boolean needFlipHorizontal = false;
     private boolean flipHorizontalLast = false;
-    private boolean needFlipVertical = true;
+    private boolean needFlipVertical = false;
 
-    private Rotation useRotation = Rotation.ROTATION_180;
+    private Rotation useRotation = Rotation.ROTATION_0;
 
     private final HandlerThread mGLThread;
     protected final GLHandler mGLHandler;
@@ -94,13 +94,8 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
     }
 
     public CustomFrameRender() {
-        mGLCubeBuffer = ByteBuffer.allocateDirect(OpenGlUtils.CUBE.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mGLCubeBuffer.put(OpenGlUtils.getNormalCube()).position(0);
-
-        mGLTextureBuffer = ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.length * 4)
-                .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mGLTextureBuffer.put(OpenGlUtils.TEXTURE).position(0);
+        mGLCubeBuffer = OpenGlUtils.getCubeBuffer(OpenGlUtils.getNormalCube());
+        mGLTextureBuffer = OpenGlUtils.getTextBuffer(OpenGlUtils.getNormalShowTexture());
 
         mGLThread = new HandlerThread(TAG);
         mGLThread.start();
@@ -143,7 +138,7 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         if (mLastInputSize.width != frame.getWidth() || mLastInputSize.height != frame.getHeight()
                 || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height
                 || flipHorizontalLast != needFlipHorizontal) {
-            Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(useScaleType,
+            Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBufferWithShow(useScaleType,
                     useRotation, needFlipHorizontal, needFlipVertical, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
             mGLCubeBuffer.clear();
             mGLCubeBuffer.put(cubeAndTextureBuffer.first);

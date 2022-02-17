@@ -80,7 +80,6 @@ class CustomCameraCapture : BaseCapture() {
                 screenWith = width
                 screenHeight = height
             }
-            mCustomSurfaceViewRender?.setIsFlipHorizontal(true)
             mCustomSurfaceViewRender?.updateRenderTextureView(mCustomPreviewView)
         }
     }
@@ -275,7 +274,7 @@ class CustomCameraCapture : BaseCapture() {
 
     //需要竖直翻转
     private fun needCameraFlipVertical(): Boolean {
-        return false
+        return true
     }
 
     private fun updateCamSettings(cameraId: Int) {

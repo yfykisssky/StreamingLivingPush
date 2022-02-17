@@ -56,13 +56,13 @@ class DrawImageTool {
 
         drawFiltersTop.forEachIndexed { index, filter ->
             val pointX = postStartX + index * 0.3f
-            filter.updateShowOnLocation(pointX, yPoints[index])
+            filter.updateShowOnLocation(pointX, -yPoints[index])
             filter.onDraw()
         }
 
         drawFiltersBottom.forEachIndexed { index, filter ->
             val pointX = postStartX + index * 0.3f
-            filter.updateShowOnLocation(pointX, -yPoints[index])
+            filter.updateShowOnLocation(pointX, yPoints[index])
             filter.onDraw()
         }
 

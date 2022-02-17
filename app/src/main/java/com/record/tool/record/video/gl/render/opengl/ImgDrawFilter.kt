@@ -45,12 +45,14 @@ abstract class ImgDrawFilter : GPUImageFilter {
 
     private fun loadBitmapId(resId: Int) {
         if (imgTextureId == OpenGlUtils.NO_TEXTURE) {
-            val pauseBitmap =
+
+            BitmapFactory.decodeResource(appContext?.resources, resId)?.let { bitmap->
                 BitmapFactory.decodeResource(appContext?.resources, resId)
-            imgTextureId = OpenGlUtils.loadBitmapTexture(pauseBitmap, OpenGlUtils.NO_TEXTURE)
-            imageWidth = pauseBitmap.width
-            imageHeight = pauseBitmap.height
-            pauseBitmap.recycle()
+                imgTextureId = OpenGlUtils.loadBitmapTexture(bitmap, OpenGlUtils.NO_TEXTURE)
+                imageWidth = bitmap.width
+                imageHeight = bitmap.height
+                bitmap.recycle()
+            }
 
             OpenGlUtils.nomalCubeAndTextureBuffer(
                 imageWidth,

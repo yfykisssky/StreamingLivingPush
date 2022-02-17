@@ -11,8 +11,6 @@ import com.record.tool.record.video.gl.basic.FrameBuffer
 import com.record.tool.record.video.gl.render.EglCore
 import com.record.tool.record.video.gl.render.opengl.*
 import java.lang.ref.WeakReference
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.FloatBuffer
 import java.util.*
 
@@ -143,7 +141,7 @@ abstract class BaseCapture : OnFrameAvailableListener {
     @SuppressLint("Recycle")
     private fun initGLRender() {
 
-        val cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(
+        OpenGlUtils.calcCubeAndTextureBuffer(
             ImageView.ScaleType.CENTER_CROP,
             getOutRotation(),
             needFlipHorizontal(),
@@ -152,16 +150,10 @@ abstract class BaseCapture : OnFrameAvailableListener {
             getCaptureHeight(),
             getTransOutWith(),
             getTransOutHeight()
-        )
-
-        mGLCubeBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.CUBE.size * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-        mGLCubeBuffer?.put(cubeAndTextureBuffer.first)
-        mGLTextureBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.size * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer()
-        mGLTextureBuffer?.put(cubeAndTextureBuffer.second)
+        )?.let { bytes ->
+            mGLCubeBuffer = OpenGlUtils.getCubeBuffer(bytes.first)
+            mGLTextureBuffer = OpenGlUtils.getTextBuffer(bytes.second)
+        }
 
         mEglCore = EglCore(getCaptureWith(), getCaptureHeight())
         mEglCore?.makeCurrent()

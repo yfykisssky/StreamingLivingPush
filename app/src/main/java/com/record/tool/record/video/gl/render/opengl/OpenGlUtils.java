@@ -40,15 +40,26 @@ import javax.microedition.khronos.opengles.GL10;
 
 public class OpenGlUtils {
     public static final int NO_TEXTURE = -1;
-    public static final float[] CUBE = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
+    public static final float[] CUBE = {
+            -1.0f, -1.0f,
+            1.0f, -1.0f,
+            -1.0f, 1.0f,
+            1.0f, 1.0f
+    };
     public static final int CUBE_SIZE = CUBE.length * 4;
-    public static final float[] TEXTURE = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
+    public static final int TEXTURE_SIZE_C = TextureUtils.TEXTURE_SIZE * 4;
     static final String TAG = "OpenGlUtils";
 
     public static float[] getNormalCube() {
         float[] cube = new float[CUBE.length];
         System.arraycopy(CUBE, 0, cube, 0, CUBE.length);
         return cube;
+    }
+
+    public static float[] getNormalShowTexture() {
+        float[] texture = new float[TextureUtils.TEXTURE_SIZE];
+        System.arraycopy(TextureUtils.TEXTURE_WITH_SHOW, 0, texture, 0,TextureUtils.TEXTURE_SIZE);
+        return texture;
     }
 
     public static int generateFrameBufferId() {
@@ -59,10 +70,10 @@ public class OpenGlUtils {
 
     public static FloatBuffer createNormalCubeVerticesBuffer() {
         return (FloatBuffer) ByteBuffer.allocateDirect(GLConstants.CUBE_VERTICES_ARRAYS.length * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer()
-            .put(GLConstants.CUBE_VERTICES_ARRAYS)
-            .position(0);
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer()
+                .put(GLConstants.CUBE_VERTICES_ARRAYS)
+                .position(0);
     }
 
     public static FloatBuffer createTextureCoordsBuffer(Rotation rotation, boolean flipHorizontal, boolean flipVertical) {
@@ -70,8 +81,8 @@ public class OpenGlUtils {
         initTextureCoordsBuffer(temp, rotation, flipHorizontal, flipVertical);
 
         FloatBuffer buffer = ByteBuffer.allocateDirect(TEXTURE_COORDS_NO_ROTATION.length * 4)
-            .order(ByteOrder.nativeOrder())
-            .asFloatBuffer();
+                .order(ByteOrder.nativeOrder())
+                .asFloatBuffer();
         buffer.put(temp).position(0);
         return buffer;
     }
@@ -143,13 +154,13 @@ public class OpenGlUtils {
             GLES20.glGenTextures(1, textures, 0);
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+                    GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+                    GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+                    GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
             GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D,
-                GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+                    GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
         } else {
@@ -201,12 +212,12 @@ public class OpenGlUtils {
 
     public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height) {
         return calcCubeAndTextureBuffer(ImageView.ScaleType.CENTER_CROP, Rotation.ROTATION_0,
-            false, false, width, height, width, height);
+                false, false, width, height, width, height);
     }
 
-    public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height,boolean flipVert,boolean flipHoriz) {
+    public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height, boolean flipHorizontal, boolean flipVertical) {
         return calcCubeAndTextureBuffer(ImageView.ScaleType.CENTER_CROP, Rotation.ROTATION_0,
-            flipHoriz, flipVert, width, height, width, height);
+                flipHorizontal, flipVertical, width, height, width, height);
     }
 
     public static Pair<float[], float[]> calcCubeAndTextureBuffer(ScaleType scaleType,
@@ -217,15 +228,38 @@ public class OpenGlUtils {
                                                                   int inputHeight,
                                                                   int outputWidth,
                                                                   int outputHeight) {
+        float[] textureCords = TextureRotationUtils.getRotation(inputRotation, needFlipHorizontal, needFlipVertical);
         return calcCubeAndTextureBuffer(scaleType,
-            inputRotation,
-            needFlipHorizontal,
-            needFlipVertical,
-            inputWith,
-            inputHeight,
-            outputWidth,
-            outputHeight,
-            OpenGlUtils.getNormalCube());
+                inputRotation,
+                needFlipHorizontal,
+                needFlipVertical,
+                inputWith,
+                inputHeight,
+                outputWidth,
+                outputHeight,
+                OpenGlUtils.getNormalCube(),
+                textureCords);
+    }
+
+    public static Pair<float[], float[]> calcCubeAndTextureBufferWithShow(ScaleType scaleType,
+                                                                  Rotation inputRotation,
+                                                                  boolean needFlipHorizontal,
+                                                                  boolean needFlipVertical,
+                                                                  int inputWith,
+                                                                  int inputHeight,
+                                                                  int outputWidth,
+                                                                  int outputHeight) {
+        float[] textureCords = TextureShowRotationUtils.getRotation(inputRotation, needFlipHorizontal, needFlipVertical);
+        return calcCubeAndTextureBuffer(scaleType,
+                inputRotation,
+                needFlipHorizontal,
+                needFlipVertical,
+                inputWith,
+                inputHeight,
+                outputWidth,
+                outputHeight,
+                OpenGlUtils.getNormalCube(),
+                textureCords);
     }
 
     /**
@@ -248,7 +282,8 @@ public class OpenGlUtils {
                                                                   int inputHeight,
                                                                   int outputWidth,
                                                                   int outputHeight,
-                                                                  float[] cube) {
+                                                                  float[] cube,
+                                                                  float[] textureCords) {
 
         boolean needRotate = (inputRotation == Rotation.ROTATION_90 || inputRotation == Rotation.ROTATION_270);
         int rotatedWidth = needRotate ? inputHeight : inputWith;
@@ -257,24 +292,23 @@ public class OpenGlUtils {
         float ratioWidth = 1.0f * Math.round(rotatedWidth * maxRratio) / outputWidth;
         float ratioHeight = 1.0f * Math.round(rotatedHeight * maxRratio) / outputHeight;
 
-        float[] textureCords = TextureRotationUtils.getRotation(inputRotation, needFlipHorizontal, needFlipVertical);
         if (scaleType == ScaleType.CENTER_CROP) {
             float distHorizontal = needRotate ? ((1 - 1 / ratioHeight) / 2) : ((1 - 1 / ratioWidth) / 2);
             float distVertical = needRotate ? ((1 - 1 / ratioWidth) / 2) : ((1 - 1 / ratioHeight) / 2);
             textureCords = new float[]{
-                addDistance(textureCords[0], distHorizontal),
-                addDistance(textureCords[1], distVertical),
-                addDistance(textureCords[2], distHorizontal),
-                addDistance(textureCords[3], distVertical),
-                addDistance(textureCords[4], distHorizontal),
-                addDistance(textureCords[5], distVertical),
-                addDistance(textureCords[6], distHorizontal),
-                addDistance(textureCords[7], distVertical),};
+                    addDistance(textureCords[0], distHorizontal),
+                    addDistance(textureCords[1], distVertical),
+                    addDistance(textureCords[2], distHorizontal),
+                    addDistance(textureCords[3], distVertical),
+                    addDistance(textureCords[4], distHorizontal),
+                    addDistance(textureCords[5], distVertical),
+                    addDistance(textureCords[6], distHorizontal),
+                    addDistance(textureCords[7], distVertical),};
         } else {
             cube = new float[]{cube[0] / ratioHeight, cube[1] / ratioWidth,
-                cube[2] / ratioHeight, cube[3] / ratioWidth,
-                cube[4] / ratioHeight, cube[5] / ratioWidth,
-                cube[6] / ratioHeight, cube[7] / ratioWidth,};
+                    cube[2] / ratioHeight, cube[3] / ratioWidth,
+                    cube[4] / ratioHeight, cube[5] / ratioWidth,
+                    cube[6] / ratioHeight, cube[7] / ratioWidth,};
         }
         return new Pair<>(cube, textureCords);
     }
@@ -285,16 +319,16 @@ public class OpenGlUtils {
 
     public static FloatBuffer getCubeBuffer(float[] floats) {
         FloatBuffer mGLCubeBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.CUBE_SIZE).order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
+                ByteBuffer.allocateDirect(CUBE_SIZE).order(ByteOrder.nativeOrder())
+                        .asFloatBuffer();
         mGLCubeBuffer.put(floats);
         return mGLCubeBuffer;
     }
 
     public static FloatBuffer getTextBuffer(float[] floats) {
         FloatBuffer mGLTextureBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.length * 4).order(ByteOrder.nativeOrder())
-                .asFloatBuffer();
+                ByteBuffer.allocateDirect(TEXTURE_SIZE_C).order(ByteOrder.nativeOrder())
+                        .asFloatBuffer();
         mGLTextureBuffer.put(floats);
         return mGLTextureBuffer;
     }

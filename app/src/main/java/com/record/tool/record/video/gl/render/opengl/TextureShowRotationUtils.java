@@ -1,25 +1,25 @@
 package com.record.tool.record.video.gl.render.opengl;
 
-public class TextureRotationUtils extends BaseTextureRotationUtils {
+public class TextureShowRotationUtils extends BaseTextureRotationUtils {
 
-    public static final float[] TEXTURE_NO_ROTATION = TextureUtils.TEXTURE;
+    public static final float[] TEXTURE_NO_ROTATION = TextureUtils.TEXTURE_WITH_SHOW;
     public static final float[] TEXTURE_ROTATED_90 = {
+            1.0f, 1.0f,
             1.0f, 0.0f,
-            1.0f, 1.0f,
-            0.0f, 0.0f,
-            0.0f, 1.0f
-    };
-    public static final float[] TEXTURE_ROTATED_180 = {
-            1.0f, 1.0f,
             0.0f, 1.0f,
-            1.0f, 0.0f,
             0.0f, 0.0f
     };
-    public static final float[] TEXTURE_ROTATED_270 = {
+    public static final float[] TEXTURE_ROTATED_180 = {
             1.0f, 0.0f,
-            1.0f, 1.0f,
             0.0f, 0.0f,
+            1.0f, 1.0f,
             0.0f, 1.0f
+    };
+    public static final float[] TEXTURE_ROTATED_270 = {
+            0.0f, 0.0f,
+            0.0f, 1.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f
     };
 
     public static float[] getRotation(final Rotation rotation,
@@ -41,6 +41,7 @@ public class TextureRotationUtils extends BaseTextureRotationUtils {
                 rotatedTex = copyData(TEXTURE_NO_ROTATION);
                 break;
         }
+
         return flipTexture(rotatedTex, flipHorizontal, flipVertical);
     }
 
