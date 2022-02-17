@@ -1,6 +1,8 @@
 package com.record.tool.record.video.gl
 
 import android.opengl.GLES20
+import com.play.ArrowDrawFilter
+import com.play.PostDrawFilter
 import com.record.tool.record.video.gl.basic.FrameBuffer
 import com.record.tool.record.video.gl.render.opengl.GPUImageFilter
 import com.record.tool.record.video.gl.render.opengl.ImgDrawFilter
@@ -16,12 +18,25 @@ class DrawImageTool {
     private var mGLTextureBuffer: FloatBuffer? = null
     private var nomalDrawFilter: GPUImageFilter? = null
 
-    private var imgDrawFilter: ImgDrawFilter? = null
+    private var drawFiltersTop = ArrayList<ImgDrawFilter>()
+    private var drawFiltersBottom = ArrayList<ImgDrawFilter>()
+
+    private var imgArrowDrawFilter: ImgDrawFilter? = null
 
     private var pointX = 0.0f
     private var pointY = 0.0f
 
-    fun updatePoints(x: Float, y: Float) {
+    private var postStartX = -1.0f
+
+    private var yPoints =
+        floatArrayOf(
+            -0.7f, -0.75f, -0.8f, -0.85f, -0.9f,
+            -0.8f, -0.75f, -0.7f, -0.8f, -0.7f,
+            -0.9f, -0.7f, -0.8f, -0.85f, -0.7f,
+            -0.8f, -0.7f, -0.9f, -0.85f, -0.7f
+        )
+
+    fun updateHeadCheckPoints(x: Float, y: Float) {
         pointX = x
         pointY = y
     }
@@ -36,8 +51,22 @@ class DrawImageTool {
 
         nomalDrawFilter?.onDraw(inputTextureId, mGLCubeBuffer, mGLTextureBuffer)
 
-        imgDrawFilter?.updateShowOnLocation(pointX, pointY)
-        imgDrawFilter?.onDraw()
+        imgArrowDrawFilter?.updateShowOnLocation(pointX, pointY)
+        imgArrowDrawFilter?.onDraw()
+
+        drawFiltersTop.forEachIndexed { index, filter ->
+            val pointX = postStartX + index * 0.3f
+            filter.updateShowOnLocation(pointX, yPoints[index])
+            filter.onDraw()
+        }
+
+        drawFiltersBottom.forEachIndexed { index, filter ->
+            val pointX = postStartX + index * 0.3f
+            filter.updateShowOnLocation(pointX, -yPoints[index])
+            filter.onDraw()
+        }
+
+        postStartX -= 0.01f
 
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
 
@@ -60,11 +89,32 @@ class DrawImageTool {
         nomalDrawFilter = GPUImageFilter()
         nomalDrawFilter?.init()
 
-        imgDrawFilter = ImgDrawFilter()
-        imgDrawFilter?.init()
-        imgDrawFilter?.updateDrawPanelSize(width, height)
-        imgDrawFilter?.updateShowScaleWithWidth(0.2f)
+        imgArrowDrawFilter = ArrowDrawFilter()
+        imgArrowDrawFilter?.init()
+        imgArrowDrawFilter?.updateDrawPanelSize(width, height)
+        imgArrowDrawFilter?.updateShowScaleWithWidth(0.2f)
 
+        for (i in 1..20) {
+            drawFiltersTop.add(createPostDrawFilter(width, height, 0.05f, false))
+        }
+
+        for (i in 1..20) {
+            drawFiltersBottom.add(createPostDrawFilter(width, height, 0.05f, true))
+        }
+
+    }
+
+    private fun createPostDrawFilter(
+        width: Int,
+        height: Int,
+        scaleWithWith: Float,
+        filpVertical: Boolean
+    ): PostDrawFilter {
+        val filter = PostDrawFilter(filpVertical)
+        filter.init()
+        filter.updateDrawPanelSize(width, height)
+        filter.updateShowScaleWithWidth(scaleWithWith)
+        return filter
     }
 
     fun destory() {
@@ -72,7 +122,7 @@ class DrawImageTool {
         mFrameBuffer = null
 
         nomalDrawFilter?.destroy()
-        imgDrawFilter?.destroy()
+        imgArrowDrawFilter?.destroy()
     }
 
 

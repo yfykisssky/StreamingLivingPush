@@ -41,8 +41,15 @@ import javax.microedition.khronos.opengles.GL10;
 public class OpenGlUtils {
     public static final int NO_TEXTURE = -1;
     public static final float[] CUBE = {-1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f};
+    public static final int CUBE_SIZE = CUBE.length * 4;
     public static final float[] TEXTURE = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f};
     static final String TAG = "OpenGlUtils";
+
+    public static float[] getNormalCube() {
+        float[] cube = new float[CUBE.length];
+        System.arraycopy(CUBE, 0, cube, 0, CUBE.length);
+        return cube;
+    }
 
     public static int generateFrameBufferId() {
         int[] frameBufferIds = new int[1];
@@ -194,12 +201,12 @@ public class OpenGlUtils {
 
     public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height) {
         return calcCubeAndTextureBuffer(ImageView.ScaleType.CENTER_CROP, Rotation.ROTATION_0,
-            false, true, width, height, width, height);
+            false, false, width, height, width, height);
     }
 
-    public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height, float[] cube) {
+    public static Pair<float[], float[]> nomalCubeAndTextureBuffer(int width, int height,boolean flipVert,boolean flipHoriz) {
         return calcCubeAndTextureBuffer(ImageView.ScaleType.CENTER_CROP, Rotation.ROTATION_0,
-            false, false, width, height, width, height, cube);
+            flipHoriz, flipVert, width, height, width, height);
     }
 
     public static Pair<float[], float[]> calcCubeAndTextureBuffer(ScaleType scaleType,
@@ -218,7 +225,7 @@ public class OpenGlUtils {
             inputHeight,
             outputWidth,
             outputHeight,
-            OpenGlUtils.CUBE);
+            OpenGlUtils.getNormalCube());
     }
 
     /**
@@ -278,7 +285,7 @@ public class OpenGlUtils {
 
     public static FloatBuffer getCubeBuffer(float[] floats) {
         FloatBuffer mGLCubeBuffer =
-            ByteBuffer.allocateDirect(OpenGlUtils.CUBE.length * 4).order(ByteOrder.nativeOrder())
+            ByteBuffer.allocateDirect(OpenGlUtils.CUBE_SIZE).order(ByteOrder.nativeOrder())
                 .asFloatBuffer();
         mGLCubeBuffer.put(floats);
         return mGLCubeBuffer;

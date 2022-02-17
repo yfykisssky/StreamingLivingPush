@@ -3,11 +3,10 @@ package com.record.tool.record.video.gl.render.opengl
 import android.graphics.BitmapFactory
 import android.opengl.GLES20
 import com.living.streamlivingpush.AppApplication
-import com.living.streamlivingpush.R
 import com.record.tool.record.video.gl.utils.MatTransTool
 import java.nio.FloatBuffer
 
-class ImgDrawFilter : GPUImageFilter {
+abstract class ImgDrawFilter : GPUImageFilter {
 
     private val appContext = AppApplication.appContext
 
@@ -25,6 +24,11 @@ class ImgDrawFilter : GPUImageFilter {
     private var matTransTool = MatTransTool()
     private var mTextureTransform = 0
     private var mLocPoint = 0
+
+    abstract fun getImgResId(): Int
+
+    abstract fun flipHorizontal(): Boolean
+    abstract fun flipVertical(): Boolean
 
     constructor() : super(
         ShaderUtils.VERTEX_SHADER_WITH_TRANS,
@@ -48,7 +52,12 @@ class ImgDrawFilter : GPUImageFilter {
             imageHeight = pauseBitmap.height
             pauseBitmap.recycle()
 
-            OpenGlUtils.nomalCubeAndTextureBuffer(imageWidth, imageHeight, OpenGlUtils.CUBE).let { buffers->
+            OpenGlUtils.nomalCubeAndTextureBuffer(
+                imageWidth,
+                imageHeight,
+                flipHorizontal(),
+                flipVertical()
+            ).let { buffers ->
                 mGLCubeBuffer = OpenGlUtils.getCubeBuffer(buffers.first)
                 mGLTextureBuffer = OpenGlUtils.getTextBuffer(buffers.second)
             }
@@ -59,7 +68,8 @@ class ImgDrawFilter : GPUImageFilter {
         this.sizeWidth = sizeWidth
         this.sizeHeight = sizeHeight
         val scale = this.sizeWidth.toFloat() / this.sizeHeight.toFloat()
-        matTransTool.scale(1f, scale, 1f)
+        val scaleImg = this.imageWidth.toFloat() / this.imageHeight.toFloat()
+        matTransTool.scale(1f, (scale / scaleImg), 1f)
     }
 
     fun updateShowScaleWithWidth(scale: Float) {
@@ -75,7 +85,7 @@ class ImgDrawFilter : GPUImageFilter {
 
         matTransTool.init()
 
-        loadBitmapId(R.drawable.arrow_test)
+        loadBitmapId(getImgResId())
 
     }
 

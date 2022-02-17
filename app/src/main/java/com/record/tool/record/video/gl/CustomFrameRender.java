@@ -96,7 +96,7 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
     public CustomFrameRender() {
         mGLCubeBuffer = ByteBuffer.allocateDirect(OpenGlUtils.CUBE.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();
-        mGLCubeBuffer.put(OpenGlUtils.CUBE).position(0);
+        mGLCubeBuffer.put(OpenGlUtils.getNormalCube()).position(0);
 
         mGLTextureBuffer = ByteBuffer.allocateDirect(OpenGlUtils.TEXTURE.length * 4)
                 .order(ByteOrder.nativeOrder()).asFloatBuffer();

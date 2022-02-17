@@ -67,18 +67,18 @@ class CameraRecordManager {
                             val rect = rects[0]
                             val centerPoint = PointTransUtils.getCenterPoint(rect.tl(), rect.br())
                             drawImgPoint=PointTransUtils.transToGlCenterPoint(centerPoint, useWith, useHeight)
-
-                            if (drawImageTool == null) {
-                                drawImageTool = DrawImageTool()
-                                drawImageTool?.init(useWith, useHeight)
-                            }
-
-                            drawImageTool?.updatePoints(drawImgPoint.x, drawImgPoint.y)
-
-                            frame.textureId = drawImageTool?.onDrawTexture(frame.textureId) ?: 0
                         }
 
                     }
+
+                    if (drawImageTool == null) {
+                        drawImageTool = DrawImageTool()
+                        drawImageTool?.init(useWith, useHeight)
+                    }
+
+                    drawImageTool?.updateHeadCheckPoints(drawImgPoint.x, drawImgPoint.y)
+
+                    frame.textureId = drawImageTool?.onDrawTexture(frame.textureId) ?: 0
 
                     return frame
                 }
