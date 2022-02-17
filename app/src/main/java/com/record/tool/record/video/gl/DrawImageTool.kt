@@ -64,7 +64,6 @@ class DrawImageTool {
         imgDrawFilter?.init()
         imgDrawFilter?.updateDrawPanelSize(width, height)
         imgDrawFilter?.updateShowScaleWithWidth(0.2f)
-        imgDrawFilter?.copyToTemp()
 
     }
 

@@ -80,8 +80,6 @@ class CameraRecordManager {
 
                     }
 
-
-
                     return frame
                 }
             })

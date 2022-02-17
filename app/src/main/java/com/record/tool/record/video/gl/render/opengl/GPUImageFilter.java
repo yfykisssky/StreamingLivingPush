@@ -6,37 +6,7 @@ import java.nio.FloatBuffer;
 import java.util.LinkedList;
 
 public class GPUImageFilter {
-    public static final String NO_FILTER_VERTEX_SHADER = ""
-        + "attribute vec4 position;\n"
-        + "attribute vec4 inputTextureCoordinate;\n"
-        + " \n"
-        + "varying vec2 textureCoordinate;\n"
-        + " \n"
-        + "void main()\n"
-        + "{\n"
-        + "    gl_Position = position;\n"
-        + "    textureCoordinate = inputTextureCoordinate.xy;\n"
-        + "}";
 
-    public static final String NO_FILTER_FRAGMENT_SHADER = ""
-        + "varying highp vec2 textureCoordinate;\n"
-        + " \n"
-        + "uniform sampler2D inputImageTexture;\n"
-        + " \n"
-        + "void main()\n"
-        + "{\n"
-        + "     gl_FragColor = texture2D(inputImageTexture, textureCoordinate);\n"
-        + "}";
-
-    public static final String NO_FILTER_FRAGMENT_SHADER_FLIP = ""
-        + "varying highp vec2 textureCoordinate;\n"
-        + " \n"
-        + "uniform sampler2D inputImageTexture;\n"
-        + " \n"
-        + "void main()\n"
-        + "{\n"
-        + "     gl_FragColor = texture2D(inputImageTexture, vec2(textureCoordinate.x, 1.0 - textureCoordinate.y));\n"
-        + "}";
     protected final Program mProgram;
     private final LinkedList<Runnable> mRunOnDraw;
     protected float[] mTextureMatrix;
@@ -46,11 +16,7 @@ public class GPUImageFilter {
     private boolean mIsInitialized;
 
     public GPUImageFilter() {
-        this(false);
-    }
-
-    public GPUImageFilter(boolean flip) {
-        this(NO_FILTER_VERTEX_SHADER, flip ? NO_FILTER_FRAGMENT_SHADER_FLIP : NO_FILTER_FRAGMENT_SHADER);
+        this(ShaderUtils.VERTEX_SHADER,ShaderUtils.FRAGMENT_SHADER);
     }
 
     public GPUImageFilter(final String vertexShader, final String fragmentShader) {
@@ -119,6 +85,7 @@ public class GPUImageFilter {
 
         beforeDrawArrays(textureId);
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        endDrawArrays(textureId);
         GLES20.glDisableVertexAttribArray(mGLAttribPosition);
         GLES20.glDisableVertexAttribArray(mGLAttribTextureCoordinate);
 
@@ -126,6 +93,9 @@ public class GPUImageFilter {
     }
 
     protected void beforeDrawArrays(int textureId) {
+    }
+
+    protected void endDrawArrays(int textureId) {
     }
 
     protected void runPendingOnDrawTasks() {
