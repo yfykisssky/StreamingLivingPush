@@ -58,15 +58,14 @@ class CameraRecordManager {
                         openCvHeadCheckTool?.init(useWith, useHeight)
                     }
 
-                    var drawImgPoint = FloatPoint(0.0f, 0.0f)
-
                     openCvHeadCheckTool?.onFrameUpdate(frame.textureId)?.let { rects ->
                         PushLogUtils.logVideoFaceCheckRects(rects)
 
                         if (rects.isNotEmpty()) {
                             val rect = rects[0]
                             val centerPoint = PointTransUtils.getCenterPoint(rect.tl(), rect.br())
-                            drawImgPoint=PointTransUtils.transToGlCenterPoint(centerPoint, useWith, useHeight)
+                            val drawImgPoint = PointTransUtils.transToGlCenterPoint(centerPoint, useWith, useHeight)
+                            drawImageTool?.updateHeadCheckPoints(drawImgPoint.x, drawImgPoint.y)
                         }
 
                     }
@@ -75,8 +74,6 @@ class CameraRecordManager {
                         drawImageTool = DrawImageTool()
                         drawImageTool?.init(useWith, useHeight)
                     }
-
-                    drawImageTool?.updateHeadCheckPoints(drawImgPoint.x, drawImgPoint.y)
 
                     frame.textureId = drawImageTool?.onDrawTexture(frame.textureId) ?: 0
 

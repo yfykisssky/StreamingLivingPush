@@ -36,7 +36,7 @@ class StreamSocketCamPushInstance : StreamCamPushInstance() {
 
     fun startPushing(connectIp: String, connectPort: Int) {
 
-        super.startRecode(1)
+        super.startRecode(0)
 
         socketPushTool?.openSocket(connectIp, connectPort)
 

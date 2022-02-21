@@ -274,7 +274,7 @@ class CustomCameraCapture : BaseCapture() {
 
     //需要竖直翻转
     private fun needCameraFlipVertical(): Boolean {
-        return true
+        return false
     }
 
     private fun updateCamSettings(cameraId: Int) {
