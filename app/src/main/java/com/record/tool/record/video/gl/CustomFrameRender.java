@@ -1,9 +1,6 @@
 package com.record.tool.record.video.gl;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
-import android.opengl.GLUtils;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -15,7 +12,6 @@ import android.widget.ImageView.ScaleType;
 
 import androidx.annotation.RequiresApi;
 
-import com.living.streamlivingpush.R;
 import com.record.tool.record.video.gl.basic.Size;
 import com.record.tool.record.video.gl.render.EglCore;
 import com.record.tool.record.video.gl.render.opengl.GPUImageFilter;
@@ -23,8 +19,6 @@ import com.record.tool.record.video.gl.render.opengl.OpenGlUtils;
 import com.record.tool.record.video.gl.render.opengl.Rotation;
 import com.record.tool.utils.PushLogUtils;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.concurrent.CountDownLatch;
 
@@ -94,8 +88,9 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
     }
 
     public CustomFrameRender() {
+
         mGLCubeBuffer = OpenGlUtils.getCubeBuffer(OpenGlUtils.getNormalCube());
-        mGLTextureBuffer = OpenGlUtils.getTextBuffer(OpenGlUtils.getNormalShowTexture());
+        mGLTextureBuffer = OpenGlUtils.getTextBuffer(OpenGlUtils.getNormalTexture());
 
         mGLThread = new HandlerThread(TAG);
         mGLThread.start();
@@ -136,10 +131,12 @@ public abstract class CustomFrameRender implements Handler.Callback, RenderFrame
         }
 
         if (mLastInputSize.width != frame.getWidth() || mLastInputSize.height != frame.getHeight()
-                || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height
-                || flipHorizontalLast != needFlipHorizontal) {
-            Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBufferWithShow(useScaleType,
-                    useRotation, needFlipHorizontal, needFlipVertical, frame.getWidth(), frame.getHeight(), mSurfaceSize.width, mSurfaceSize.height);
+            || mLastOutputSize.width != mSurfaceSize.width || mLastOutputSize.height != mSurfaceSize.height
+            || flipHorizontalLast != needFlipHorizontal) {
+            Pair<float[], float[]> cubeAndTextureBuffer = OpenGlUtils.calcCubeAndTextureBuffer(useScaleType,
+                useRotation, needFlipHorizontal, needFlipVertical,
+                frame.getWidth(), frame.getHeight(),
+                mSurfaceSize.width, mSurfaceSize.height);
             mGLCubeBuffer.clear();
             mGLCubeBuffer.put(cubeAndTextureBuffer.first);
             mGLTextureBuffer.clear();

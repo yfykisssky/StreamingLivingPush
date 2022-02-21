@@ -16,7 +16,6 @@ import com.record.tool.utils.SysUtils
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class ScreenRecordManager {
 
-    private val TAG = this::class.java.simpleName
 
     private var appContext = AppApplication.appContext
 
@@ -38,7 +37,11 @@ class ScreenRecordManager {
     private var useFps: Int = 0
 
     companion object {
-        var perReqResultCallBack: PerReqResultCallBack? = null
+        private val CLASS_TAG_NAME = this::class.java.simpleName
+        var perReqHashMap = HashMap<String, PerReqResultCallBack?>()
+        fun getCallBackListener(): PerReqResultCallBack? {
+            return perReqHashMap[CLASS_TAG_NAME]
+        }
     }
 
     interface PerReqResultCallBack {
@@ -94,9 +97,9 @@ class ScreenRecordManager {
 
     fun reqRecordPerAndStart(callBack: ((projection: MediaProjection?) -> Unit?)?) {
 
-        perReqResultCallBack = object : PerReqResultCallBack {
+        val perReqResultCallBack = object : PerReqResultCallBack {
             override fun onResult(projection: MediaProjection?) {
-                //todo:回调需要置null
+                perReqHashMap.clear()
                 if (projection == null) {
                     dataCallBack?.onRefused()
                 } else {
@@ -106,15 +109,15 @@ class ScreenRecordManager {
             }
         }
 
+        perReqHashMap[CLASS_TAG_NAME] = perReqResultCallBack
+
         val intent = Intent(appContext, ScreenCaptureRequestPerActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
         appContext?.startActivity(intent)
     }
 
     fun stopCapture() {
-
-        perReqResultCallBack = null
-
+        perReqHashMap.clear()
         mScreenCapture?.stopCapture()
     }
 
@@ -148,7 +151,7 @@ class ScreenCaptureRequestPerActivity : Activity() {
             try {
                 this.startActivityForResult(intent, REQUEST_CODE)
             } catch (e: Exception) {
-                ScreenRecordManager.perReqResultCallBack?.onResult(null)
+                ScreenRecordManager.getCallBackListener()?.onResult(null)
                 finish()
             }
         }
@@ -160,9 +163,9 @@ class ScreenCaptureRequestPerActivity : Activity() {
 
         if (intent != null) {
             val projection = mMediaProjectionManager?.getMediaProjection(resultCode, intent)
-            ScreenRecordManager.perReqResultCallBack?.onResult(projection)
+            ScreenRecordManager.getCallBackListener()?.onResult(projection)
         } else {
-            ScreenRecordManager.perReqResultCallBack?.onResult(null)
+            ScreenRecordManager.getCallBackListener()?.onResult(null)
         }
 
         finish()

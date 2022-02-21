@@ -12,6 +12,7 @@ import com.huawei.hms.hmsscankit.ScanUtil
 import com.huawei.hms.ml.scan.HmsScan
 import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
 import com.living.streamlivingpush.local.StreamCamLocaInstance
+import com.living.streamlivingpush.push.*
 import com.opencv.OpenCvFaceCheckTool
 import com.push.tool.socket.HostTransTool
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
@@ -29,7 +30,7 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 128
 
-    private var pushInstance = StreamCamLocaInstance()
+    private var pushInstance = StreamSocketCamPushInstance()
 
     private var stmFloatWindowHelper = StmFloatWindowHelper()
 
@@ -135,7 +136,7 @@ class MainActivity : Activity() {
 
         cameraPreviewView?.addView(pushInstance.getPreviewView())
 
-        pushInstance.startPushing(false)
+        pushInstance.startPushing(socketIp,socketPort)
         //pushInstance.startPushing(true)
     }
 

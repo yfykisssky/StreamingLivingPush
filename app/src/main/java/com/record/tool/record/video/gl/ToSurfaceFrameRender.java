@@ -23,5 +23,4 @@ public class ToSurfaceFrameRender extends CustomFrameRender {
         setOutPutSurface(surface, renderWidth, renderHeight);
         mGLHandler.obtainMessage(MSG_DESTROY_CONTEXT).sendToTarget();
     }
-
 }

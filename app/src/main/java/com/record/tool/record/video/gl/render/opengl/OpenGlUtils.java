@@ -56,6 +56,12 @@ public class OpenGlUtils {
         return cube;
     }
 
+    public static float[] getNormalTexture() {
+        float[] texture = new float[TextureUtils.TEXTURE_SIZE];
+        System.arraycopy(TextureUtils.TEXTURE, 0, texture, 0,TextureUtils.TEXTURE_SIZE);
+        return texture;
+    }
+
     public static float[] getNormalShowTexture() {
         float[] texture = new float[TextureUtils.TEXTURE_SIZE];
         System.arraycopy(TextureUtils.TEXTURE_WITH_SHOW, 0, texture, 0,TextureUtils.TEXTURE_SIZE);

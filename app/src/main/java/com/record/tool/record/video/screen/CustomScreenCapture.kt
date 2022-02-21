@@ -101,7 +101,7 @@ class CustomScreenCapture : BaseCapture() {
     }
 
     override fun needFlipHorizontal(): Boolean {
-        return true
+        return false
     }
 
     override fun needFlipVertical(): Boolean {

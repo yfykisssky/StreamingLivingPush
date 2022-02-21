@@ -46,7 +46,7 @@ abstract class ImgDrawFilter : GPUImageFilter {
     private fun loadBitmapId(resId: Int) {
         if (imgTextureId == OpenGlUtils.NO_TEXTURE) {
 
-            BitmapFactory.decodeResource(appContext?.resources, resId)?.let { bitmap->
+            BitmapFactory.decodeResource(appContext?.resources, resId)?.let { bitmap ->
                 BitmapFactory.decodeResource(appContext?.resources, resId)
                 imgTextureId = OpenGlUtils.loadBitmapTexture(bitmap, OpenGlUtils.NO_TEXTURE)
                 imageWidth = bitmap.width
@@ -54,11 +54,12 @@ abstract class ImgDrawFilter : GPUImageFilter {
                 bitmap.recycle()
             }
 
+            //android图片纹理坐标上下镜像
             OpenGlUtils.nomalCubeAndTextureBuffer(
                 imageWidth,
                 imageHeight,
                 flipHorizontal(),
-                flipVertical()
+                !flipVertical()
             ).let { buffers ->
                 mGLCubeBuffer = OpenGlUtils.getCubeBuffer(buffers.first)
                 mGLTextureBuffer = OpenGlUtils.getTextBuffer(buffers.second)

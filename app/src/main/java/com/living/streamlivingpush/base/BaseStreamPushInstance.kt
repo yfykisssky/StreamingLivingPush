@@ -26,7 +26,7 @@ abstract class BaseStreamPushInstance {
         private const val KEY_RESET_ENCODER_FPS = "KEY_RESET_ENCODER_FPS"
     }
 
-    private var encodeVideoTool: VideoSoftEncoder? = null
+    private var encodeVideoTool: VideoEncoder? = null
     private var encodeAudioTool: AudioSoftEncoder? = null
 
     private var encoderMonitorTool = StateMonitorTool()
@@ -58,7 +58,7 @@ abstract class BaseStreamPushInstance {
     }
 
     private fun initEncoder() {
-        encodeVideoTool = VideoSoftEncoder()
+        encodeVideoTool = VideoEncoder()
         encodeAudioTool = AudioSoftEncoder()
 
         streamPushHandlerThread = HandlerThread("StreamPushThread")
@@ -110,7 +110,7 @@ abstract class BaseStreamPushInstance {
     }
 
     protected fun addVideoRenderFrame(frame: TextureVideoFrame) {
-       // encodeVideoTool?.addRenderFrame(frame)
+        encodeVideoTool?.addRenderFrame(frame)
     }
 
     protected fun addAudioRenderFrame(frame: RecordAudioFrame) {
@@ -149,7 +149,7 @@ abstract class BaseStreamPushInstance {
     abstract fun onAudioFrameAva(frame: AudioFrame)
 
     private fun startEncode() {
-        encodeVideoTool?.setDataCallBackListener(object : VideoSoftEncoder.DataCallBackListener {
+        encodeVideoTool?.setDataCallBackListener(object : VideoEncoder.DataCallBackListener {
 
             override fun onDataCallBack(byteArray: ByteArray?, timeStamp: Long) {
                 val vFrame = VideoFrame()
@@ -173,7 +173,7 @@ abstract class BaseStreamPushInstance {
             }
         })
 
-        encodeVideoTool?.setIFrameReqSetListener(object : VideoSoftEncoder.IFrameReqSetListener {
+        encodeVideoTool?.setIFrameReqSetListener(object : VideoEncoder.IFrameReqSetListener {
 
             override fun onIFrameReqSet(gopTime: Int): Boolean {
                 return false
