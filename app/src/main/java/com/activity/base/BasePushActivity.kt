@@ -5,7 +5,7 @@ import android.app.Activity
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-import com.living.streamlivingpush.push.StreamAoaScreenPushInstance
+import com.living.streamlivingpush.instances.push.StreamAoaScreenPushInstance
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
 import com.record.tool.record.video.screen.service.ProjectionForegroundService
 

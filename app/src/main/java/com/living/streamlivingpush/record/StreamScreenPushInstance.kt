@@ -1,18 +1,19 @@
 package com.living.streamlivingpush.record
 
 import com.living.streamlivingpush.base.BaseStreamPushInstance
+import com.living.streamlivingpush.record.interfaces.IRecord
 import com.record.tool.bean.RecordAudioFrame
 import com.record.tool.record.audio.AudioCapture
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.screen.ScreenRecordManager
 
-abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
+abstract class StreamScreenPushInstance : BaseStreamPushInstance(), IRecord {
 
     private var recordScreenTool: ScreenRecordManager? = null
 
     private var audioRecordTool: AudioCapture? = null
 
-    protected fun initRecoder() {
+    override fun initRecoder() {
         recordScreenTool = ScreenRecordManager()
         audioRecordTool = AudioCapture()
 
@@ -44,7 +45,7 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
         )
     }
 
-    fun usePriImgPush(usePri: Boolean) {
+    override fun usePriImgPush(usePri: Boolean) {
         if (usePri) {
             recordScreenTool?.startPushImage()
         } else {
@@ -52,7 +53,7 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
         }
     }
 
-    protected fun startRecode() {
+    override fun startRecode() {
 
         super.startPush()
 
@@ -94,7 +95,7 @@ abstract class StreamScreenPushInstance : BaseStreamPushInstance() {
 
     }
 
-    protected fun stopRecode() {
+    override fun stopRecode() {
 
         super.stopPush()
 

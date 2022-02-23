@@ -53,28 +53,6 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/pause"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:layout_weight="1"
-                android:text="pause" />
-
-            <Button
-                android:id="@+id/resume"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:layout_weight="1"
-                android:text="resume" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
                 android:id="@+id/switchCamera"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -83,12 +61,27 @@
                 android:text="switch" />
 
             <Button
-                android:id="@+id/flip"
+                android:id="@+id/toggleMirror"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_margin="5dp"
                 android:layout_weight="1"
-                android:text="flip" />
+                android:text="toggle" />
+
+            <Button
+                android:id="@+id/privateImg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:text="private" />
+            <Button
+                android:id="@+id/privateImgNo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:layout_weight="1"
+                android:text="noPrivate" />
         </LinearLayout>
 
         <LinearLayout

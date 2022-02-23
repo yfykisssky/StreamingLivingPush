@@ -1,25 +1,22 @@
-package com.living.streamlivingpush.local
+package com.living.streamlivingpush.instances.local
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.living.streamlivingpush.instances.local.interfaces.ILocal
 import com.living.streamlivingpush.record.StreamCamPushInstance
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
 import com.record.tool.utils.FileWriteTool
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class StreamCamLocaInstance : StreamCamPushInstance() {
-
-    companion object {
-        private val TAG_NAME = this::class.java.simpleName
-    }
+class StreamCamLocaInstance : StreamCamPushInstance(), ILocal {
 
     var isRecordAndEncoding = false
         private set
 
     private var fileWriteTool: FileWriteTool? = null
 
-    fun initTool() {
+    override fun initInstance() {
         super.initRecoder()
     }
 
@@ -31,9 +28,8 @@ class StreamCamLocaInstance : StreamCamPushInstance() {
 
     }
 
-    fun startPushing(needSave: Boolean = false) {
-
-        super.startRecode(0)
+    override fun startLocal(needSave: Boolean) {
+        super.startRecode()
 
         if (needSave) {
             fileWriteTool = FileWriteTool()
@@ -43,8 +39,7 @@ class StreamCamLocaInstance : StreamCamPushInstance() {
         isRecordAndEncoding = true
     }
 
-    fun stopPushing() {
-
+    override fun stopLocal() {
         super.stopRecode()
 
         fileWriteTool?.closeFile()

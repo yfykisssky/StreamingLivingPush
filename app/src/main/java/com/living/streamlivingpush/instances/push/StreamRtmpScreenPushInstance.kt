@@ -1,26 +1,22 @@
-package com.living.streamlivingpush.push
+package com.living.streamlivingpush.instances.push
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.living.streamlivingpush.record.StreamCamPushInstance
+import com.living.streamlivingpush.instances.push.interfaces.IRtmpPush
 import com.living.streamlivingpush.record.StreamScreenPushInstance
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
 import com.push.tool.rtmp.RtmpPushTool
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class StreamRtmpCamPushInstance : StreamCamPushInstance() {
-
-    companion object {
-        private val TAG_NAME = this::class.java.simpleName
-    }
+class StreamRtmpScreenPushInstance : StreamScreenPushInstance(), IRtmpPush {
 
     var isRecordAndEncoding = false
         private set
 
     private var rtmpPushTool: RtmpPushTool? = null
 
-    fun initTool() {
+    override fun initInstance() {
         super.initRecoder()
         rtmpPushTool = RtmpPushTool()
     }
@@ -33,16 +29,13 @@ class StreamRtmpCamPushInstance : StreamCamPushInstance() {
         rtmpPushTool?.addAudioFrame(frame)
     }
 
-    fun startPushing(pushUrl: String) {
-
-        super.startRecode(1)
-
+    override fun startPushing(pushUrl: String) {
         rtmpPushTool?.startPushing(pushUrl)
-
+        super.startRecode()
         isRecordAndEncoding = true
     }
 
-    fun stopPushing() {
+    override fun stopPushing() {
 
         super.stopRecode()
 

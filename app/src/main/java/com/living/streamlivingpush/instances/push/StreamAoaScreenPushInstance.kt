@@ -1,4 +1,4 @@
-package com.living.streamlivingpush.push
+package com.living.streamlivingpush.instances.push
 
 import android.content.Context
 import android.content.Intent

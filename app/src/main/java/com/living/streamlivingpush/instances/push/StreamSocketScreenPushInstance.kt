@@ -1,25 +1,22 @@
-package com.living.streamlivingpush.push
+package com.living.streamlivingpush.instances.push
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.living.streamlivingpush.instances.push.interfaces.ISocketPush
 import com.living.streamlivingpush.record.StreamScreenPushInstance
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
 import com.push.tool.socket.SocketClient
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class StreamSocketScreenPushInstance : StreamScreenPushInstance() {
-
-    companion object {
-        private val TAG_NAME = this::class.java.simpleName
-    }
+class StreamSocketScreenPushInstance : StreamScreenPushInstance(), ISocketPush {
 
     var isRecordAndEncoding = false
         private set
 
     private var socketPushTool: SocketClient? = null
 
-    fun initTool() {
+    override fun initInstance() {
         super.initRecoder()
         socketPushTool = SocketClient()
     }
@@ -32,7 +29,7 @@ class StreamSocketScreenPushInstance : StreamScreenPushInstance() {
         socketPushTool?.addAudioFrame(frame)
     }
 
-    fun startPushing(connectIp: String, connectPort: Int) {
+    override fun startPushing(connectIp: String, connectPort: Int) {
 
         super.startRecode()
 
@@ -41,7 +38,7 @@ class StreamSocketScreenPushInstance : StreamScreenPushInstance() {
         isRecordAndEncoding = true
     }
 
-    fun stopPushing() {
+    override fun stopPushing() {
 
         super.stopRecode()
 

@@ -1,27 +1,24 @@
-package com.living.streamlivingpush.push
+package com.living.streamlivingpush.instances.push
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import com.living.streamlivingpush.record.StreamScreenPushInstance
+import com.living.streamlivingpush.instances.push.interfaces.IRtmpPush
+import com.living.streamlivingpush.record.StreamCamPushInstance
 import com.push.tool.AudioFrame
 import com.push.tool.VideoFrame
 import com.push.tool.rtmp.RtmpPushTool
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
-class StreamRtmpScreenPushInstance : StreamScreenPushInstance() {
-
-    companion object {
-        private val TAG_NAME = this::class.java.simpleName
-    }
+class StreamRtmpCamPushInstance : StreamCamPushInstance(), IRtmpPush {
 
     var isRecordAndEncoding = false
         private set
 
     private var rtmpPushTool: RtmpPushTool? = null
 
-    fun initTool() {
-        rtmpPushTool = RtmpPushTool()
+    override fun initInstance() {
         super.initRecoder()
+        rtmpPushTool = RtmpPushTool()
     }
 
     override fun onVideoFrameAva(frame: VideoFrame) {
@@ -32,13 +29,16 @@ class StreamRtmpScreenPushInstance : StreamScreenPushInstance() {
         rtmpPushTool?.addAudioFrame(frame)
     }
 
-    fun startPushing(pushUrl: String) {
-        rtmpPushTool?.startPushing(pushUrl)
+    override fun startPushing(pushUrl: String) {
+
         super.startRecode()
+
+        rtmpPushTool?.startPushing(pushUrl)
+
         isRecordAndEncoding = true
     }
 
-    fun stopPushing() {
+    override fun stopPushing() {
 
         super.stopRecode()
 

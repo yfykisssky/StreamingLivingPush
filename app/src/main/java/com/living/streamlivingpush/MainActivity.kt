@@ -11,8 +11,14 @@ import androidx.annotation.RequiresApi
 import com.huawei.hms.hmsscankit.ScanUtil
 import com.huawei.hms.ml.scan.HmsScan
 import com.huawei.hms.ml.scan.HmsScanAnalyzerOptions
-import com.living.streamlivingpush.local.StreamCamLocaInstance
-import com.living.streamlivingpush.push.*
+import com.living.streamlivingpush.base.BaseStreamPushInstance
+import com.living.streamlivingpush.instances.interfaces.IInstance
+import com.living.streamlivingpush.instances.local.StreamCamLocaInstance
+import com.living.streamlivingpush.instances.local.interfaces.ILocal
+import com.living.streamlivingpush.instances.push.interfaces.IRtmpPush
+import com.living.streamlivingpush.instances.push.interfaces.ISocketPush
+import com.living.streamlivingpush.record.interfaces.ICamRecord
+import com.living.streamlivingpush.record.interfaces.IRecord
 import com.opencv.OpenCvFaceCheckTool
 import com.push.tool.socket.HostTransTool
 import com.record.tool.record.video.screen.floatwindow.StmFloatWindowHelper
@@ -30,7 +36,9 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 128
 
-    private var pushInstance = StreamSocketCamPushInstance()
+    private var pushInstance: BaseStreamPushInstance = StreamCamLocaInstance()
+
+    private var rtmpPushUrl = ""
 
     private var stmFloatWindowHelper = StmFloatWindowHelper()
 
@@ -82,21 +90,21 @@ class MainActivity : Activity() {
             toScan()
         }
 
-        /*     pause?.setOnClickListener {
-                 StreamPushInstance.instance.s()
-             }
+        switchCamera?.setOnClickListener {
+            (pushInstance as? ICamRecord)?.switchCamera()
+        }
 
-             resume?.setOnClickListener {
-                 StreamPushInstance.instance.r()
-             }
+        toggleMirror?.setOnClickListener {
+            (pushInstance as? ICamRecord)?.toggleMirror()
+        }
 
-             switchCamera?.setOnClickListener {
-                 StreamPushInstance.instance.switchCamera()
-             }
+        privateImg?.setOnClickListener {
+            (pushInstance as? IRecord)?.usePriImgPush(true)
+        }
 
-             flip?.setOnClickListener {
-                 StreamPushInstance.instance.toogle()
-             }*/
+        privateImgNo?.setOnClickListener {
+            (pushInstance as? IRecord)?.usePriImgPush(false)
+        }
 
         resetBnt?.setOnClickListener {
             val fps = editFps?.text.toString().toInt()
@@ -105,11 +113,7 @@ class MainActivity : Activity() {
             videoBitRate = bit
             videoFps = fps
 
-            /* StreamPushInstance.instance.reset(
-                     videoBitRate,
-                     videoFps,
-                     audioBitRate
-             )*/
+            pushInstance.resetVideoBit(videoBitRate)
 
             updateFpsBitShow()
         }
@@ -125,7 +129,7 @@ class MainActivity : Activity() {
     }
 
     private fun startPush() {
-        pushInstance.initTool()
+        (pushInstance as? IInstance)?.initInstance()
         pushInstance.initEncodeSettings(
             videoBitRate,
             videoFps,
@@ -134,14 +138,34 @@ class MainActivity : Activity() {
             audioBitRate
         )
 
-        cameraPreviewView?.addView(pushInstance.getPreviewView())
+        (pushInstance as? ICamRecord)?.let { push ->
+            cameraPreviewView?.addView(push.getPreviewView())
+        }
 
-        pushInstance.startPushing(socketIp,socketPort)
-        //pushInstance.startPushing(true)
+        when (pushInstance) {
+            is ILocal -> {
+                (pushInstance as? ILocal)?.startLocal(false)
+            }
+            is ISocketPush -> {
+                (pushInstance as? ISocketPush)?.startPushing(socketIp, socketPort)
+            }
+            is IRtmpPush -> {
+                (pushInstance as? IRtmpPush)?.startPushing(rtmpPushUrl)
+            }
+        }
+
     }
 
     private fun stopPush() {
-        pushInstance.stopPushing()
+        when (pushInstance) {
+            is ILocal -> {
+                (pushInstance as? ILocal)?.stopLocal()
+            }
+            is IRtmpPush,
+            is ISocketPush -> {
+                (pushInstance as? ISocketPush)?.stopPushing()
+            }
+        }
     }
 
     companion object {

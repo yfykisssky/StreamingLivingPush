@@ -15,7 +15,7 @@ import java.lang.ref.WeakReference
 abstract class BaseStreamPushInstance {
 
     companion object {
-        private val TAG_NAME = this::class.java.simpleName
+        protected val TAG_NAME: String = this::class.java.simpleName
 
         private const val DEFAULT_VIDEO_GOP = 2
 

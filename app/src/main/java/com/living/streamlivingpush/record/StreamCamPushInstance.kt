@@ -2,16 +2,23 @@ package com.living.streamlivingpush.record
 
 import android.view.TextureView
 import com.living.streamlivingpush.base.BaseStreamPushInstance
+import com.living.streamlivingpush.record.interfaces.ICamRecord
+import com.living.streamlivingpush.record.interfaces.IRecord
 import com.record.tool.record.video.camera.CameraRecordManager
 import com.record.tool.record.video.gl.TextureVideoFrame
 import com.record.tool.record.video.screen.ScreenRecordManager
 
-abstract class StreamCamPushInstance : BaseStreamPushInstance() {
+abstract class StreamCamPushInstance : BaseStreamPushInstance(), ICamRecord {
 
+    private var useCamId = 0
     private var recordCameraTool: CameraRecordManager? = null
 
-    protected fun initRecoder() {
+    override fun initRecoder() {
         recordCameraTool = CameraRecordManager()
+    }
+
+    override fun setStartUseCamId(camId: Int) {
+        useCamId = camId
     }
 
     override fun resetRecordFpsSettings(fps: Int) {
@@ -39,11 +46,11 @@ abstract class StreamCamPushInstance : BaseStreamPushInstance() {
         )
     }
 
-    fun getPreviewView(): TextureView? {
+    override fun getPreviewView(): TextureView? {
         return recordCameraTool?.getPreviewView()
     }
 
-    fun usePriImgPush(usePri: Boolean) {
+    override fun usePriImgPush(usePri: Boolean) {
         if (usePri) {
             recordCameraTool?.startPushImage()
         } else {
@@ -51,15 +58,15 @@ abstract class StreamCamPushInstance : BaseStreamPushInstance() {
         }
     }
 
-    fun toogleMirror() {
+    override fun toggleMirror() {
         recordCameraTool?.toogleMirror()
     }
 
-    fun switchCamera() {
+    override fun switchCamera() {
         recordCameraTool?.switchCamera()
     }
 
-    protected fun startRecode(useCamId: Int) {
+    override fun startRecode() {
 
         super.startPush()
 
@@ -72,7 +79,7 @@ abstract class StreamCamPushInstance : BaseStreamPushInstance() {
         recordCameraTool?.startCapture(useCamId)
     }
 
-    protected fun stopRecode() {
+    override fun stopRecode() {
 
         super.stopPush()
 
