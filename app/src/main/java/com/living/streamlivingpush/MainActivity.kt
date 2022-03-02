@@ -139,6 +139,7 @@ class MainActivity : Activity() {
         )
 
         (pushInstance as? ICamRecord)?.let { push ->
+            push.setStartUseCamId(1)
             cameraPreviewView?.addView(push.getPreviewView())
         }
 

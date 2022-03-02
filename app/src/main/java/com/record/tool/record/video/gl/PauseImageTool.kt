@@ -7,6 +7,7 @@ import com.living.streamlivingpush.AppApplication
 import com.living.streamlivingpush.R
 import com.record.tool.record.video.gl.render.EglCore
 import com.record.tool.record.video.gl.render.opengl.OpenGlUtils
+import com.record.tool.record.video.gl.utils.BitmapTool
 
 //隐私模式工具,需要运行在opengl线程
 //新建图片纹理并进行替换
@@ -48,10 +49,12 @@ class PauseImageTool {
 
     private fun loadBitmapId() {
         if (pauseImgTextureId == OpenGlUtils.NO_TEXTURE) {
-            val pauseBitmap =
-                BitmapFactory.decodeResource(appContext?.resources, R.drawable.pause_vertical)
-            pauseImgTextureId = OpenGlUtils.loadBitmapTexture(pauseBitmap, OpenGlUtils.NO_TEXTURE)
-            pauseBitmap.recycle()
+            appContext?.let { con ->
+                BitmapTool.getGlBitmapFromRes(con, R.drawable.pause_vertical)?.let { pauseBitmap ->
+                    pauseImgTextureId = OpenGlUtils.loadBitmapTexture(pauseBitmap, OpenGlUtils.NO_TEXTURE)
+                    pauseBitmap.recycle()
+                }
+            }
         }
     }
 

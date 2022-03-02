@@ -1,8 +1,12 @@
 package com.record.tool.record.video.gl.render.opengl
 
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.opengl.GLES20
+import android.view.View
+import android.view.ViewGroup
 import com.living.streamlivingpush.AppApplication
+import com.record.tool.record.video.gl.utils.BitmapTool
 import com.record.tool.record.video.gl.utils.MatTransTool
 import java.nio.FloatBuffer
 
@@ -46,20 +50,32 @@ abstract class ImgDrawFilter : GPUImageFilter {
     private fun loadBitmapId(resId: Int) {
         if (imgTextureId == OpenGlUtils.NO_TEXTURE) {
 
-            BitmapFactory.decodeResource(appContext?.resources, resId)?.let { bitmap ->
-                BitmapFactory.decodeResource(appContext?.resources, resId)
-                imgTextureId = OpenGlUtils.loadBitmapTexture(bitmap, OpenGlUtils.NO_TEXTURE)
-                imageWidth = bitmap.width
-                imageHeight = bitmap.height
-                bitmap.recycle()
+            appContext?.let { con ->
+                BitmapTool.getGlBitmapFromRes(con, resId)?.let { bitmap ->
+                    imgTextureId = OpenGlUtils.loadBitmapTexture(bitmap, OpenGlUtils.NO_TEXTURE)
+                    imageWidth = bitmap.width
+                    imageHeight = bitmap.height
+                    bitmap.recycle()
+                }
             }
 
-            //android图片纹理坐标上下镜像
+            /*   val view = View(appContext)
+               view.setBackgroundColor(Color.RED)
+
+               appContext?.let { con ->
+                   BitmapTool.getGlBitmapFromView(view, 400,400,720, 1280)?.let { bitmap ->
+                       imgTextureId = OpenGlUtils.loadBitmapTexture(bitmap, OpenGlUtils.NO_TEXTURE)
+                       imageWidth = bitmap.width
+                       imageHeight = bitmap.height
+                       bitmap.recycle()
+                   }
+               }*/
+
             OpenGlUtils.nomalCubeAndTextureBuffer(
                 imageWidth,
                 imageHeight,
                 flipHorizontal(),
-                !flipVertical()
+                flipVertical()
             ).let { buffers ->
                 mGLCubeBuffer = OpenGlUtils.getCubeBuffer(buffers.first)
                 mGLTextureBuffer = OpenGlUtils.getTextBuffer(buffers.second)
