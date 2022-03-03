@@ -51,6 +51,7 @@ Java_com_living_x264_X264NativeJni_getHeaders(JNIEnv *env, jclass clazz) {
 
     uint8_t *bufData = nullptr;
     int bufLen = x264Encoder.getX264Headers(&bufData);
+    delete []bufData;
     return as_byte_array(env, bufData, bufLen);
 
 }
