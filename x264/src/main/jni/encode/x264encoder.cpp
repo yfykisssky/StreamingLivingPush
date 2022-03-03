@@ -1,3 +1,4 @@
+#include <leak/include/MemoryTrace.hpp>
 #include "x264encoder.h"
 
 X264Encoder::X264Encoder() {
@@ -198,23 +199,30 @@ bool X264Encoder::createOutPic() {
     return true;
 }
 
-void X264Encoder::closeWithError(char *str) {
-    this->closeX264Encoder();
-    LOGE("close with error:%s", str);
-}
-
-bool X264Encoder::closeX264Encoder() {
+void X264Encoder::releaseInPic() {
     if (pPicture) {
         x264_picture_clean(pPicture);
         delete pPicture;
         pPicture = nullptr;
     }
+}
+
+void X264Encoder::releaseOutPic() {
     if (pOutput) {
         x264_picture_clean(pOutput);
         delete pOutput;
         pOutput = nullptr;
     }
-    return true;
+}
+
+void X264Encoder::closeWithError(char *str) {
+    this->closeX264Encoder();
+    LOGE("close with error:%s", str);
+}
+
+void X264Encoder::closeX264Encoder() {
+    releaseInPic();
+    releaseOutPic();
 }
 
 //一般包含3帧数据,类型判断i_type=NAL_SPS,NAL_SPS,NAL_SEI
@@ -240,7 +248,6 @@ int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
     // 前面 YByteCount 字节个 Y 灰度数据
     // 之后是 UVByteCount 字节个 VU 数据交替存储
     // UVByteCount 字节 V 数据, UVByteCount 字节 U 数据
-
     // 从 Camera 采集的 NV21 格式的 data 数据中
     // 将 YUV 中的 Y 灰度值数据, U 色彩值数据, V 色彩饱和度数据提取出来
     memcpy(pPicture->img.plane[0], pSrcData, YByteCount);
@@ -254,6 +261,9 @@ int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
         // V 色彩饱和度数据, 存储在 YByteCount 后的偶数索引位置
         *(pPicture->img.plane[2] + i) = *(pSrcData + YByteCount + i * 2);
     }
+
+    //delete []pSrcData;
+
     x264_nal_t *nals;
     int nalsCount = 0;
     int ret = x264_encoder_encode(x264EncoderHandle, &nals, &nalsCount, pPicture, pOutput);
