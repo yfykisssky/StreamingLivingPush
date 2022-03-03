@@ -22,9 +22,11 @@
 
 #include <dlfcn.h>
 #include <assert.h>
-#include <dlfcn.h>
 
 #include <stdio.h>
+
+#include <unwind.h>
+
 #include "LeakTracer_l.hpp"
 
 // glibc/eglibc: dlsym uses calloc internally now, so use weak symbol to get their symbol
@@ -32,6 +34,8 @@ extern "C" void* __libc_malloc(size_t size) __attribute__((weak));
 extern "C" void  __libc_free(void* ptr) __attribute__((weak));
 extern "C" void* __libc_realloc(void *ptr, size_t size) __attribute__((weak));
 extern "C" void* __libc_calloc(size_t nmemb, size_t size) __attribute__((weak));
+
+static Dl_info s_P2pSODlInfo;
 
 namespace leaktracer {
 
@@ -114,10 +118,12 @@ MemoryTrace::init_no_alloc_allowed()
 			if (curfunc->libcsymbol) {
 				*curfunc->localredirect = curfunc->libcsymbol;
 			} else {
-				*curfunc->localredirect = dlsym(RTLD_NEXT, curfunc->symbname); 
+				*curfunc->localredirect = dlsym(RTLD_NEXT, curfunc->symbname);
 			}
 		}
 	} 
+
+ 	dladdr((const void*)init_no_alloc_allowed, &s_P2pSODlInfo);
 
 	__instance = reinterpret_cast<MemoryTrace*>(&s_memoryTrace_instance);
 
@@ -127,9 +133,6 @@ MemoryTrace::init_no_alloc_allowed()
 	// it seems some implementation of pthread_key_create use malloc() internally (old linuxthreads)
 	// these are not supported yet
 	pthread_key_create(&__instance->__thread_internal_disabler_key, NULL);
-
-	dladdr((const void*)init_no_alloc_allowed, &s_P2pSODlInfo);
-
 }
 
 void
@@ -242,12 +245,7 @@ void MemoryTrace::MemoryTraceOnExit(void)
 		TRACE((stderr, "LeakTracer: writing leak report in %s\n", reportName));
 		leaktracer::MemoryTrace::GetInstance().writeLeaksToFile(reportName);
 	}
-	
-	const char *exitCode = getenv("LEAKTRACER_EXIT_CODE_ON_LEAKS");
-	if (exitCode != NULL && !leaktracer::MemoryTrace::GetInstance().__allocations.empty())
-	{
-		exit(atoi(exitCode));
-	}
+
 }
 
 MemoryTrace::~MemoryTrace(void)
@@ -281,6 +279,37 @@ void MemoryTrace::removeThreadOptions(ThreadMonitoringOptions *pOptions)
 	}
 }
 
+struct TraceHandle {
+    void **backtrace;
+    int pos;
+};
+
+_Unwind_Reason_Code Unwind_Trace_Fn(_Unwind_Context *context, void *hnd) {
+    struct TraceHandle *traceHandle = (struct TraceHandle *) hnd;
+    _Unwind_Word ip = _Unwind_GetIP(context);
+    if (traceHandle->pos != ALLOCATION_STACK_DEPTH) {
+        traceHandle->backtrace[traceHandle->pos] = (void *) (ip - (_Unwind_Word) s_P2pSODlInfo.dli_fbase);
+        ++traceHandle->pos;
+        return _URC_NO_REASON;
+    }
+    return _URC_END_OF_STACK;
+}
+
+// stores allocation stack, up to ALLOCATION_STACK_DEPTH
+// frames
+void MemoryTrace::storeAllocationStack(void* arr[ALLOCATION_STACK_DEPTH])
+{
+    unsigned int iIndex = 0;
+
+    TraceHandle traceHandle;
+    traceHandle.backtrace = arr;
+    traceHandle.pos = 0;
+    _Unwind_Backtrace(Unwind_Trace_Fn, &traceHandle);
+
+    // fill remaining spaces
+    for (iIndex = traceHandle.pos; iIndex < ALLOCATION_STACK_DEPTH; iIndex++)
+        arr[iIndex] = NULL;
+}
 
 // writes all memory leaks to given stream
 void MemoryTrace::writeLeaksPrivate(std::ostream &out)
@@ -326,6 +355,7 @@ void MemoryTrace::writeLeaksPrivate(std::ostream &out)
 
 			if (i > 0) out << ' ';
 			out << info->allocStack[i];
+
 		}
 		out << ", ";
 

@@ -17,12 +17,10 @@
 #include <time.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdint.h>
 #include <string.h>
 #include <iostream>
 #include <list>
 #include <dlfcn.h>
-#include <unwind.h>
 
 #ifdef USE_BACKTRACE
 #include <execinfo.h>
@@ -32,6 +30,7 @@
 #include "Mutex.hpp"
 #include "MutexLock.hpp"
 #include "MapMemoryInfo.hpp"
+#include <android/log.h>
 
 
 /////////////////////////////////////////////////////////////
@@ -63,23 +62,7 @@
 
 namespace leaktracer {
 
-    static Dl_info s_P2pSODlInfo;
 
-    struct TraceHandle {
-        void **backtrace;
-        int pos;
-    };
-
-    static _Unwind_Reason_Code Unwind_Trace_Fn(_Unwind_Context *context, void *hnd) {
-        struct TraceHandle *traceHanle = (struct TraceHandle *) hnd;
-        _Unwind_Word ip = _Unwind_GetIP(context);
-        if (traceHanle->pos != ALLOCATION_STACK_DEPTH) {
-            traceHanle->backtrace[traceHanle->pos] = (void *) (ip - (_Unwind_Word) s_P2pSODlInfo.dli_fbase);
-            ++traceHanle->pos;
-            return _URC_NO_REASON;
-        }
-        return _URC_END_OF_STACK;
-    }
 /**
  * Main class to trace memory allocations
  * and releases.
@@ -208,9 +191,6 @@ namespace leaktracer {
 
         static int signalNumberFromString(const char *signame);
 
-
-
-
         /** writes report with all memory leaks */
         void writeLeaksPrivate(std::ostream &out);
 
@@ -227,7 +207,7 @@ namespace leaktracer {
             bool isArray;
         } allocation_info_t;
 
-        inline void storeAllocationStack(void *arr[ALLOCATION_STACK_DEPTH]);
+        void storeAllocationStack(void *arr[ALLOCATION_STACK_DEPTH]);
 
         inline void storeTimestamp(struct timespec &tm);
 
@@ -236,8 +216,6 @@ namespace leaktracer {
         Mutex __allocations_mutex;
 
         void clearAllocationsInfo(void);
-
-
     };
 
 
@@ -348,66 +326,34 @@ namespace leaktracer {
     }
 
 
-
-
 // stores allocation stack, up to ALLOCATION_STACK_DEPTH
 // frames
-    inline void MemoryTrace::storeAllocationStack(void *arr[ALLOCATION_STACK_DEPTH]) {
-
-		unsigned int iIndex = 0;
-
-		TraceHandle traceHandle;
-		traceHandle.backtrace = arr;
-		traceHandle.pos = 0;
-		_Unwind_Backtrace(Unwind_Trace_Fn, &traceHandle);
-
-		// fill remaining spaces
-		for (iIndex = traceHandle.pos; iIndex < ALLOCATION_STACK_DEPTH; iIndex++)
-			arr[iIndex] = NULL;
-    	/*
-        unsigned int iIndex = 0;
-#ifdef USE_BACKTRACE
-        void* arrtmp[ALLOCATION_STACK_DEPTH+1];
-        iIndex = backtrace(arrtmp, ALLOCATION_STACK_DEPTH + 1) - 1;
-        memcpy(arr, &arrtmp[1], iIndex*sizeof(void*));
-#else
-        void *pFrame;
-        // NOTE: we can't use "for" loop, __builtin_* functions
-        // require the number to be known at compile time
-        arr[iIndex++] = ((pFrame = __builtin_frame_address(0)) != NULL) ? __builtin_return_address(
-                0) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(1)) != NULL)
-                        ? __builtin_return_address(1) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(2)) != NULL)
-                        ? __builtin_return_address(2) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(3)) != NULL)
-                        ? __builtin_return_address(3) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(4)) != NULL)
-                        ? __builtin_return_address(4) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(5)) != NULL)
-                        ? __builtin_return_address(5) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(6)) != NULL)
-                        ? __builtin_return_address(6) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(7)) != NULL)
-                        ? __builtin_return_address(7) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(8)) != NULL)
-                        ? __builtin_return_address(8) : NULL;
-        if (iIndex == ALLOCATION_STACK_DEPTH) return;
-        arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(9)) != NULL)
-                        ? __builtin_return_address(9) : NULL;
-#endif
-        // fill remaining spaces
-        for (; iIndex < ALLOCATION_STACK_DEPTH; iIndex++)
-            arr[iIndex] = NULL;*/
-    }
+//inline void MemoryTrace::storeAllocationStack(void* arr[ALLOCATION_STACK_DEPTH])
+//{
+//	unsigned int iIndex = 0;
+//#ifdef USE_BACKTRACE
+//	void* arrtmp[ALLOCATION_STACK_DEPTH+1];
+//	iIndex = backtrace(arrtmp, ALLOCATION_STACK_DEPTH + 1) - 1;
+//	memcpy(arr, &arrtmp[1], iIndex*sizeof(void*));
+//#else
+//	void *pFrame;
+//	// NOTE: we can't use "for" loop, __builtin_* functions
+//	// require the number to be known at compile time
+//	arr[iIndex++] = (                  (pFrame = __builtin_frame_address(0)) != NULL) ? __builtin_return_address(0) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(1)) != NULL) ? __builtin_return_address(1) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(2)) != NULL) ? __builtin_return_address(2) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(3)) != NULL) ? __builtin_return_address(3) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(4)) != NULL) ? __builtin_return_address(4) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(5)) != NULL) ? __builtin_return_address(5) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(6)) != NULL) ? __builtin_return_address(6) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(7)) != NULL) ? __builtin_return_address(7) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(8)) != NULL) ? __builtin_return_address(8) : NULL; if (iIndex == ALLOCATION_STACK_DEPTH) return;
+//	arr[iIndex++] = (pFrame != NULL && (pFrame = __builtin_frame_address(9)) != NULL) ? __builtin_return_address(9) : NULL;
+//#endif
+//	// fill remaining spaces
+//	for (; iIndex < ALLOCATION_STACK_DEPTH; iIndex++)
+//		arr[iIndex] = NULL;
+//}
 
 
 // adds all relevant info regarding current allocation to map
@@ -429,6 +375,12 @@ namespace leaktracer {
         // and dl_* function which uses malloc functions
         if (info != NULL) {
             storeAllocationStack(info->allocStack);
+//            Dl_info dl_info = {0};
+//            dladdr(info->allocStack[0], &dl_info);
+//            __android_log_print(ANDROID_LOG_INFO, "wsy",
+//                                "info->allocStack[0] = %ld,dlInfo: fname = %s\r\nsname = %s\r\n,fbase = %ld,\r\nsaddr = %ld",
+//                                info->allocStack[0],dl_info.dli_fname, dl_info.dli_sname,
+//                                dl_info.dli_fbase,dl_info.dli_saddr);
         }
 
         if (p == NULL) {
@@ -487,3 +439,5 @@ namespace leaktracer {
 
 
 #endif  // include once
+
+
