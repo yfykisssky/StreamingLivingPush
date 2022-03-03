@@ -95,11 +95,11 @@ class DrawImageTool {
         imgArrowDrawFilter?.updateShowScaleWithWidth(0.2f)
 
         for (i in 1..20) {
-            drawFiltersTop.add(createPostDrawFilter(width, height, 0.05f, false))
+            drawFiltersTop.add(createPostDrawFilter(width, height, 0.05f, true))
         }
 
         for (i in 1..20) {
-            drawFiltersBottom.add(createPostDrawFilter(width, height, 0.05f, true))
+            drawFiltersBottom.add(createPostDrawFilter(width, height, 0.05f, false))
         }
 
     }

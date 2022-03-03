@@ -77,9 +77,13 @@ void X264Encoder::configParams() {
     pParameter->i_height = height;
     //是否允许非确定性时线程优化
     pParameter->b_deterministic = 1;
-    //i_threads = N并行编码的时候如果b_sliced_threads=1那么是并行slice编码，
-    //如果b_sliced_threads=0，那么是并行frame编码。并行slice无延时，并行frame有延时
-    pParameter->i_threads = 1;
+    //b_sliced_threads为0时：帧级并行编码线程数
+    //b_sliced_threads为1时：slice级并行编码线程数
+    //开启多slice会提高一帧的编码速度，但是会略微降低编码质量。
+    pParameter->i_threads = 8;
+    pParameter->b_sliced_threads = 1;
+    //前向参考帧数。用于配置线程预测的帧缓存大小。
+    pParameter->i_sync_lookahead = 0;
     //编码比特流的CSP
     pParameter->i_csp = X264_CSP_I420;
     //帧率的分子
@@ -106,9 +110,11 @@ void X264Encoder::configParams() {
     //码率,单位kbps
     pParameter->rc.i_bitrate = bitrateVideo;
 
-    //是否开启基于macroblock的qp控制方法
     //这个不为0,将导致编码延时帧
     pParameter->rc.b_mb_tree = 0;
+
+    pParameter->rc.i_lookahead = 0;
+    pParameter->b_vfr_input = 0;
 
     //允许的误差
     pParameter->rc.f_rate_tolerance = 0.1;
@@ -198,23 +204,30 @@ bool X264Encoder::createOutPic() {
     return true;
 }
 
-void X264Encoder::closeWithError(char *str) {
-    this->closeX264Encoder();
-    LOGE("close with error:%s", str);
-}
-
-bool X264Encoder::closeX264Encoder() {
+void X264Encoder::releaseInPic() {
     if (pPicture) {
         x264_picture_clean(pPicture);
         delete pPicture;
         pPicture = nullptr;
     }
+}
+
+void X264Encoder::releaseOutPic() {
     if (pOutput) {
         x264_picture_clean(pOutput);
         delete pOutput;
         pOutput = nullptr;
     }
-    return true;
+}
+
+void X264Encoder::closeWithError(char *str) {
+    this->closeX264Encoder();
+    LOGE("close with error:%s", str);
+}
+
+void X264Encoder::closeX264Encoder() {
+    releaseInPic();
+    releaseOutPic();
 }
 
 //一般包含3帧数据,类型判断i_type=NAL_SPS,NAL_SPS,NAL_SEI
@@ -236,24 +249,12 @@ int X264Encoder::getX264Headers(uint8_t **outBuf) {
 }
 
 int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
-    // 参数中的 data 是 NV21 格式的
-    // 前面 YByteCount 字节个 Y 灰度数据
-    // 之后是 UVByteCount 字节个 VU 数据交替存储
-    // UVByteCount 字节 V 数据, UVByteCount 字节 U 数据
-
-    // 从 Camera 采集的 NV21 格式的 data 数据中
-    // 将 YUV 中的 Y 灰度值数据, U 色彩值数据, V 色彩饱和度数据提取出来
     memcpy(pPicture->img.plane[0], pSrcData, YByteCount);
-
-    // 取出 NV21 数据中交替存储的 VU 数据
-    // V 在前 ( 偶数位置 ), U 在后 ( 奇数位置 ), 交替存储
     for (int i = 0; i < UVByteCount; i++) {
-        // U 色相 / 色彩值数据, 存储在 YByteCount 后的奇数索引位置
         *(pPicture->img.plane[1] + i) = *(pSrcData + YByteCount + i * 2 + 1);
-
-        // V 色彩饱和度数据, 存储在 YByteCount 后的偶数索引位置
         *(pPicture->img.plane[2] + i) = *(pSrcData + YByteCount + i * 2);
     }
+
     x264_nal_t *nals;
     int nalsCount = 0;
     int ret = x264_encoder_encode(x264EncoderHandle, &nals, &nalsCount, pPicture, pOutput);

@@ -15,6 +15,7 @@ import com.living.streamlivingpush.base.BaseStreamPushInstance
 import com.living.streamlivingpush.instances.interfaces.IInstance
 import com.living.streamlivingpush.instances.local.StreamCamLocaInstance
 import com.living.streamlivingpush.instances.local.interfaces.ILocal
+import com.living.streamlivingpush.instances.push.StreamSocketCamPushInstance
 import com.living.streamlivingpush.instances.push.interfaces.IRtmpPush
 import com.living.streamlivingpush.instances.push.interfaces.ISocketPush
 import com.living.streamlivingpush.record.interfaces.ICamRecord
@@ -36,7 +37,7 @@ class MainActivity : Activity() {
 
     private var audioBitRate = 128
 
-    private var pushInstance: BaseStreamPushInstance = StreamCamLocaInstance()
+    private var pushInstance: BaseStreamPushInstance = StreamSocketCamPushInstance()
 
     private var rtmpPushUrl = ""
 

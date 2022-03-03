@@ -27,12 +27,18 @@ Java_com_living_x264_X264NativeJni_destoryEncoder(JNIEnv
 JNIEXPORT jbyteArray JNICALL
 Java_com_living_x264_X264NativeJni_nv21EncodeToH264(JNIEnv *env, jclass clazz,
                                                     jbyteArray nv21_bytes) {
-    //todo:这里好像有内存泄漏导致OOM
+
     unsigned char *array = as_unsigned_char_array(env, nv21_bytes);
     uint8_t *bufData = nullptr;
     int bufLen = x264Encoder.x264EncoderProcess(array, &bufData);
-    jbyteArray retArray = as_byte_array(env, bufData, bufLen);
-    return retArray;
+    delete[]array;
+    if (bufLen != -1) {
+        jbyteArray retArray = as_byte_array(env, bufData, bufLen);
+        delete[]bufData;
+        return retArray;
+    } else {
+        return nullptr;
+    }
 
 }
 
@@ -41,6 +47,7 @@ Java_com_living_x264_X264NativeJni_getHeaders(JNIEnv *env, jclass clazz) {
 
     uint8_t *bufData = nullptr;
     int bufLen = x264Encoder.getX264Headers(&bufData);
+    delete[]bufData;
     return as_byte_array(env, bufData, bufLen);
 
 }

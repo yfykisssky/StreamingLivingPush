@@ -20,7 +20,7 @@ public:
 
     int x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf);
 
-    bool closeX264Encoder();
+    void closeX264Encoder();
 
     void setResolution(int w, int h);
 
@@ -56,6 +56,10 @@ private:
     bool createInPic();
 
     bool createOutPic();
+
+    void releaseInPic();
+
+    void releaseOutPic();
 
     bool updateSettings();
 
