@@ -30,7 +30,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class MainActivity : Activity() {
 
     private var videoBitRate = 8000
-    private var videoFps = 60
+    private var videoFps = 10
     private var videoWith = 720
     private var videoHeight = 1280
 

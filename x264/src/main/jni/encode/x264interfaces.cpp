@@ -26,7 +26,8 @@ Java_com_living_x264_X264NativeJni_destoryEncoder(JNIEnv
     //x264Encoder.closeX264Encoder();
     leaktracer::MemoryTrace::GetInstance().stopAllMonitoring();
     LOGE("To writeLeaksToFile %s.", "/leaks.out");
-    leaktracer::MemoryTrace::GetInstance().writeLeaksToFile("/data/user/0/com.living.streamlivingpush/files/leaks.out");
+    leaktracer::MemoryTrace::GetInstance().writeLeaksToFile(
+            "/data/user/0/com.living.streamlivingpush/files/leaks.out");
     LOGE("To writeLeaksToFilesssss %s.", "/leaks.out");
 }
 
@@ -37,12 +38,14 @@ Java_com_living_x264_X264NativeJni_nv21EncodeToH264(JNIEnv *env, jclass clazz,
     unsigned char *array = as_unsigned_char_array(env, nv21_bytes);
     uint8_t *bufData = nullptr;
     int bufLen = x264Encoder.x264EncoderProcess(array, &bufData);
-    jbyteArray retArray = as_byte_array(env, bufData, bufLen);
-
-    delete []array;
-    delete []bufData;
-
-    return retArray;
+    delete[]array;
+    if (bufLen != -1) {
+        jbyteArray retArray = as_byte_array(env, bufData, bufLen);
+        delete[]bufData;
+        return retArray;
+    } else {
+        return nullptr;
+    }
 
 }
 
@@ -51,7 +54,7 @@ Java_com_living_x264_X264NativeJni_getHeaders(JNIEnv *env, jclass clazz) {
 
     uint8_t *bufData = nullptr;
     int bufLen = x264Encoder.getX264Headers(&bufData);
-    delete []bufData;
+    delete[]bufData;
     return as_byte_array(env, bufData, bufLen);
 
 }

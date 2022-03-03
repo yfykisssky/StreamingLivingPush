@@ -262,11 +262,10 @@ int X264Encoder::x264EncoderProcess(uint8_t *pSrcData, uint8_t **outBuf) {
         *(pPicture->img.plane[2] + i) = *(pSrcData + YByteCount + i * 2);
     }
 
-    //delete []pSrcData;
-
     x264_nal_t *nals;
     int nalsCount = 0;
     int ret = x264_encoder_encode(x264EncoderHandle, &nals, &nalsCount, pPicture, pOutput);
+    //return -1;
     if (ret < 0) {
         LOGE("encode error:%d", ret);
         return -1;

@@ -58,6 +58,11 @@ class VideoSoftEncoder {
     fun addRenderFrame(textureFrame: TextureVideoFrame) {
 
         createTransToolIfNeed()
+
+        if(recordVideoQueue?.size?:0>100){
+            return
+        }
+
         val nv21Bytes = transToNv21Tool?.trans(textureFrame.textureId)
         recordVideoQueue?.add(RecordVideoFrame(nv21Bytes, textureFrame.captureTimeStamp))
 
